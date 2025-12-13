@@ -30,7 +30,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_telemetry_debug_category);
 
 /* prototypes */
 
-
 static void gst_telemetry_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_telemetry_get_property (GObject * object,
@@ -49,7 +48,8 @@ static GstFlowReturn gst_telemetry_transform_frame_ip (GstVideoFilter * filter,
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_OFFSET
 };
 
 /* pad templates */
@@ -99,11 +99,16 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
   video_filter_class->transform_frame = GST_DEBUG_FUNCPTR (gst_telemetry_transform_frame);
   video_filter_class->transform_frame_ip = GST_DEBUG_FUNCPTR (gst_telemetry_transform_frame_ip);
 
+  g_object_class_install_property (gobject_class, PROP_OFFSET,
+      g_param_spec_float ("offset", "Offset",
+          "Telemetry offset in seconds (time of telemtry start relative to video start)",
+        -G_MAXFLOAT, G_MAXFLOAT, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_telemetry_init (GstTelemetry *telemetry)
 {
+  telemetry->offset = 0.0;
 }
 
 void
@@ -115,6 +120,11 @@ gst_telemetry_set_property (GObject * object, guint property_id,
   GST_DEBUG_OBJECT (telemetry, "set_property");
 
   switch (property_id) {
+    case PROP_OFFSET:
+      GST_OBJECT_LOCK (telemetry);
+      telemetry->offset = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -130,6 +140,11 @@ gst_telemetry_get_property (GObject * object, guint property_id,
   GST_DEBUG_OBJECT (telemetry, "get_property");
 
   switch (property_id) {
+    case PROP_OFFSET:
+      GST_OBJECT_LOCK (telemetry);
+      g_value_set_float (value, telemetry->offset);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;

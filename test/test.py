@@ -58,6 +58,7 @@ def create_video_branch():
     convert = Gst.ElementFactory.make("videoconvert", "vc")
 
     telemetry = Gst.ElementFactory.make("telemetry", "tele")
+    telemetry.set_property("offset", 1.0)
 
     enc = Gst.ElementFactory.make("x264enc", "enc_v")
     enc.set_property("tune", "zerolatency")

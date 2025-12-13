@@ -24,6 +24,7 @@ struct _GstTelemetry
 {
   GstVideoFilter base_telemetry;
 
+  gfloat offset;
 };
 
 struct _GstTelemetryClass
