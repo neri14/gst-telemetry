@@ -5,6 +5,9 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
+#else
+#define PACKAGE "undefined"
+#define VERSION "undefined"
 #endif
 
 #include <gst/gst.h>

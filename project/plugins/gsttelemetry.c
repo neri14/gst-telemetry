@@ -200,6 +200,8 @@ gst_telemetry_transform_frame (GstVideoFilter * filter, GstVideoFrame * inframe,
 
   GST_DEBUG_OBJECT (telemetry, "transform_frame");
 
+  gst_video_frame_copy(outframe, inframe);//FIXME for now do nothing with the frame
+
   return GST_FLOW_OK;
 }
 

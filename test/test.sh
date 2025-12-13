@@ -9,8 +9,12 @@ fi
 INPUT_FILE="$1"
 OUTPUT_FILE="$2"
 
-#tested plugin would go between videoconvert and x264enc
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GST_PLUGIN_PATH="$SCRIPT_DIR/../project/builddir"
+export GST_PLUGIN_PATH
+
+#tested plugin: telemetry
 gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
-dec. ! queue ! video/x-raw ! videoconvert ! x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
+dec. ! queue ! video/x-raw ! videoconvert ! telemetry ! x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
 dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
 mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE
