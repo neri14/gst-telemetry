@@ -1,19 +1,8 @@
-/* SPDX-License-Identifier: MIT
- *
- * Copyright (C) 2025 Przemyslaw Rokosz <neri@n3r1.com>
- */
 /**
  * SECTION:element-gsttelemetry
  *
- * The telemetry element does FIXME stuff.
- *
- * <refsect2>
- * <title>Example launch line</title>
- * |[
- * gst-launch-1.0 -v fakesrc ! telemetry ! FIXME ! fakesink
- * ]|
- * FIXME Describe what the pipeline does.
- * </refsect2>
+ * Overlays telemetry data from provided telemetry file onto video stream.
+ * 
  */
 
 #ifdef HAVE_CONFIG_H

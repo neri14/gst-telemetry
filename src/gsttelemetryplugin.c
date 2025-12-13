@@ -1,8 +1,3 @@
-/* SPDX-License-Identifier: MIT
- *
- * Copyright (C) 2025 Przemyslaw Rokosz <neri@n3r1.com>
- */
-
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #else

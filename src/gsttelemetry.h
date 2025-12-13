@@ -1,8 +1,3 @@
-/* SPDX-License-Identifier: MIT
- *
- * Copyright (C) 2025 Przemyslaw Rokosz <neri@n3r1.com>
- */
-
 #ifndef _GST_TELEMETRY_H_
 #define _GST_TELEMETRY_H_
 
