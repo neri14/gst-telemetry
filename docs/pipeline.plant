@@ -1,0 +1,18 @@
+@startuml pipeline
+
+cloud "video pipeline before" as video_in
+cloud "video pipeline after" as video_out
+
+rectangle "fit reader\nplugin" as reader_plugin
+rectangle "sync\nplugin" as sync_plugin
+rectangle "overlay\nplugin" as overlay_plugin
+
+
+video_in -> sync_plugin : video/x-raw
+reader_plugin --> sync_plugin : application/x-telemetry
+
+sync_plugin -> overlay_plugin : video/x-raw\n(with metadata)
+
+overlay_plugin -> video_out : video/x-raw
+
+@enduml
