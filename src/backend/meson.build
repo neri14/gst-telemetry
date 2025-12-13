@@ -7,4 +7,4 @@ headers += files(
   'manager.h',
 )
 
-# subdir('X')# for future subdirs
+subdir('utils')

@@ -6,22 +6,22 @@ namespace telemetry {
 
 Manager::Manager() {
     // Constructor implementation (if needed)
-    std::cout << "Manager created\n";
+    log.info("Manager created");
 };
 
 Manager::~Manager() {
     // Destructor implementation (if needed)
-    std::cout << "Manager destroyed\n";
+    log.info("Manager destroyed");
 };
 
 void Manager::init(float offset) {
     // Initialization code using the offset
-    std::cout << std::format("Manager initialized with offset {}\n", offset);
+    log.info("Manager initialized with offset {}", offset);
 }
 
 void Manager::deinit() {
     // Deinitialization code
-    std::cout << "Manager deinitialized\n";
+    log.info("Manager deinitialized");
 }
 
 } // namespace telemetry

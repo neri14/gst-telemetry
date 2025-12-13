@@ -1,6 +1,8 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#include "backend/utils/logging/logger.h"
+
 namespace telemetry {
 
 class Manager {
@@ -12,6 +14,7 @@ public:
     void deinit();
 
 private:
+    utils::logging::logger log{"manager"};
 };
 
 } // namespace telemetry
