@@ -10,7 +10,7 @@ INPUT_FILE="$1"
 OUTPUT_FILE="$2"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GST_PLUGIN_PATH="$SCRIPT_DIR/../project/builddir"
+GST_PLUGIN_PATH="$SCRIPT_DIR/../builddir"
 export GST_PLUGIN_PATH
 
 #tested plugin: telemetry

@@ -46,4 +46,4 @@ endif
 
 plugin_deps = [gst_dep, gst_base_dep, gst_video_dep]
 
-subdir('plugins')
+subdir('src')

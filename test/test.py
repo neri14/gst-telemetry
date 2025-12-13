@@ -1,5 +1,10 @@
+#!/usr/bin/env python3
+
 import argparse
+import os
 import sys
+
+os.environ["GST_PLUGIN_PATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "builddir"))
 
 import gi
 gi.require_version("Gst", "1.0")
@@ -52,7 +57,7 @@ def create_video_branch():
     q = Gst.ElementFactory.make("queue", "q_video")
     convert = Gst.ElementFactory.make("videoconvert", "vc")
 
-    # plugin = Gst.ElementFactory.make(PLUGIN, "plugin") # TODO create custom plugin
+    telemetry = Gst.ElementFactory.make("telemetry", "tele")
 
     enc = Gst.ElementFactory.make("x264enc", "enc_v")
     enc.set_property("tune", "zerolatency")
@@ -61,24 +66,22 @@ def create_video_branch():
     enc.set_property("threads", 0) # auto
     q_out = Gst.ElementFactory.make("queue", "q_video_out")
 
-    # for e in (q, convert, plugin, enc, q_out): # TODO verify custom plugin is created
-    for e in (q, convert, enc, q_out):
+    for e in (q, convert, telemetry, enc, q_out):
         if not e:
             print("Missing video element; check installed plugins")
             sys.exit(1)
 
     pipeline.add(q)
     pipeline.add(convert)
-    # pipeline.add(plugin) # TODO add custom plugin to pipeline
+    pipeline.add(telemetry)
     pipeline.add(enc)
     pipeline.add(q_out)
     q.sync_state_with_parent()
     convert.sync_state_with_parent()
-    # plugin.sync_state_with_parent() # TODO sync custom plugin
+    telemetry.sync_state_with_parent()
     enc.sync_state_with_parent()
     q_out.sync_state_with_parent()
-    # if not q.link(convert) or not convert.link(plugin) or not plugin.link(enc) or not enc.link(q_out): # TODO link custom plugin
-    if not q.link(convert) or not convert.link(enc) or not enc.link(q_out):
+    if not q.link(convert) or not convert.link(telemetry) or not telemetry.link(enc) or not enc.link(q_out):
         print("Failed to link video branch")
         sys.exit(1)
 
