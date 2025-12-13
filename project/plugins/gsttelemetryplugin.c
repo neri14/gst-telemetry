@@ -8,14 +8,14 @@
 #endif
 
 #include <gst/gst.h>
-#include "gsttelemetryoverlay.h"
+#include "gsttelemetry.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean result = TRUE;
   result = result && gst_element_register (
-    plugin, "telemetryoverlay", GST_RANK_NONE, GST_TYPE_TELEMETRY_OVERLAY);
+    plugin, "telemetry", GST_RANK_NONE, GST_TYPE_TELEMETRY);
   return result;
 }
 
@@ -23,7 +23,7 @@ GST_PLUGIN_DEFINE (
     GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     telemetry,
-    "Video telemetry overlay plugin",
+    "Video telemetry plugin",
     plugin_init,
     VERSION,
     "MIT",
