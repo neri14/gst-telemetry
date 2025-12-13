@@ -47,4 +47,3 @@ plugin_deps = [gst_dep, gst_base_dep]
 tool_deps = [gst_dep]
 
 subdir('plugins')
-subdir('tools')

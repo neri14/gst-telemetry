@@ -3,8 +3,8 @@ lib_args = common_args + []
 # sources used to compile this plug-in
 sources = [
   'gsttelemetryplugin.c',
-  'gsttelemetry.c',
-  'gsttelemetry.h'
+  'gsttelemetryoverlay.c',
+  'gsttelemetryoverlay.h'
 ]
 
 shlib = shared_library('gsttelemetry',
