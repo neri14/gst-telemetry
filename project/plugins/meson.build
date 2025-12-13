@@ -4,7 +4,7 @@ lib_args = common_args + []
 sources = [
   'gsttelemetryplugin.c',
   'gsttelemetryoverlay.c',
-  'gsttelemetryoverlay.h'
+  'gsttelemetryoverlay.h',
 ]
 
 shlib = shared_library('gsttelemetry',

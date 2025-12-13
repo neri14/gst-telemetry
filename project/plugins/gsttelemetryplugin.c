@@ -13,10 +13,10 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gst_element_register (plugin, "telemetryoverlay", GST_RANK_NONE,
-      GST_TYPE_TELEMETRY_OVERLAY);
-
-  return TRUE;
+  gboolean result = TRUE;
+  result = result && gst_element_register (
+    plugin, "telemetryoverlay", GST_RANK_NONE, GST_TYPE_TELEMETRY_OVERLAY);
+  return result;
 }
 
 GST_PLUGIN_DEFINE (
