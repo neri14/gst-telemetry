@@ -9,6 +9,8 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
+#include "manager_c_api.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_TELEMETRY   (gst_telemetry_get_type())
@@ -24,7 +26,9 @@ struct _GstTelemetry
 {
   GstVideoFilter base_telemetry;
 
-  gfloat offset;
+  ManagerHandle *manager;
+
+  float offset;
 };
 
 struct _GstTelemetryClass

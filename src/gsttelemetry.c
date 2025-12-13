@@ -109,6 +109,8 @@ static void
 gst_telemetry_init (GstTelemetry *telemetry)
 {
   telemetry->offset = 0.0;
+
+  telemetry->manager = manager_new ();
 }
 
 void
@@ -171,6 +173,7 @@ gst_telemetry_finalize (GObject * object)
   GST_DEBUG_OBJECT (telemetry, "finalize");
 
   /* clean up object here */
+  manager_free (telemetry->manager);
 
   G_OBJECT_CLASS (gst_telemetry_parent_class)->finalize (object);
 }
@@ -182,6 +185,10 @@ gst_telemetry_start (GstBaseTransform * trans)
 
   GST_DEBUG_OBJECT (telemetry, "start");
 
+  GST_OBJECT_LOCK (telemetry);
+  manager_init (telemetry->manager, telemetry->offset);
+  GST_OBJECT_UNLOCK (telemetry);
+
   return TRUE;
 }
 
@@ -191,6 +198,10 @@ gst_telemetry_stop (GstBaseTransform * trans)
   GstTelemetry *telemetry = GST_TELEMETRY (trans);
 
   GST_DEBUG_OBJECT (telemetry, "stop");
+
+  GST_OBJECT_LOCK (telemetry);
+  manager_deinit (telemetry->manager);
+  GST_OBJECT_UNLOCK (telemetry);
 
   return TRUE;
 }

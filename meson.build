@@ -1,7 +1,8 @@
-project('gst-telemetry', 'c',
+project('gst-telemetry', ['c', 'cpp'],
   version : '0.1.0',
   default_options : [ 'warning_level=1',
-                      'buildtype=debugoptimized' ])
+                      'buildtype=debugoptimized',
+                      'cpp_std=c++23' ])
 
 core_conf = configuration_data()
 core_conf.set('PACKAGE', '"@0@"'.format(meson.project_name()))
