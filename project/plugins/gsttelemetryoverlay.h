@@ -6,7 +6,8 @@
 #ifndef _GST_TELEMETRY_OVERLAY_H_
 #define _GST_TELEMETRY_OVERLAY_H_
 
-#include <gst/base/gstbasetransform.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 
 G_BEGIN_DECLS
 
@@ -21,13 +22,13 @@ typedef struct _GstTelemetryOverlayClass GstTelemetryOverlayClass;
 
 struct _GstTelemetryOverlay
 {
-  GstBaseTransform base_telemetryoverlay;
+  GstVideoFilter base_telemetryoverlay;
 
 };
 
 struct _GstTelemetryOverlayClass
 {
-  GstBaseTransformClass base_telemetryoverlay_class;
+  GstVideoFilterClass base_telemetryoverlay_class;
 };
 
 GType gst_telemetry_overlay_get_type (void);
