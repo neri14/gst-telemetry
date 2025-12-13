@@ -6,24 +6,24 @@ c_sources = [
   'gsttelemetry.c',
 ]
 
-# C++ sources for backend implementation
+# C++ sources for telemetry backend
 cpp_sources = [
-  'manager.cpp',
-  'manager_c_api.cpp',
 ]
 
 # Headers (for reference, not compiled directly)
 headers = [
   'gsttelemetry.h',
-  'manager.h',
-  'manager_c_api.h',
 ]
+
+# Include backend subdirectory
+subdir('api')
+subdir('backend')
 
 shlib = shared_library('gsttelemetry',
   c_sources + cpp_sources,
   c_args : lib_args,
   cpp_args : lib_args,
-  include_directories: [configinc],
+  include_directories: [configinc, include_directories('.')],
   dependencies : plugin_deps,
   gnu_symbol_visibility : 'hidden',
   install : true,

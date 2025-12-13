@@ -1,0 +1,10 @@
+cpp_sources += files(
+  'backend_c_api.cpp',
+  'manager.cpp',
+)
+
+headers += files(
+  'manager.h',
+)
+
+# subdir('X')# for future subdirs

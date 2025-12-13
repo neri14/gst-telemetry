@@ -1,5 +1,5 @@
-#ifndef MANAGER_C_API_H
-#define MANAGER_C_API_H
+#ifndef BACKEND_C_API_H
+#define BACKEND_C_API_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,4 +16,4 @@ void manager_deinit(ManagerHandle* handle);
 } // extern "C"
 #endif
 
-#endif // MANAGER_C_API_H
+#endif // BACKEND_C_API_H

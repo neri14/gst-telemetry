@@ -1,8 +1,7 @@
+#include "api/backend_c_api.h"
 #include "manager.h"
 
 extern "C" {
-
-typedef struct ManagerHandle ManagerHandle;
 
 ManagerHandle* manager_new(void) {
     return reinterpret_cast<ManagerHandle*>(new telemetry::Manager());

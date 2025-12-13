@@ -9,7 +9,7 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
 
-#include "manager_c_api.h"
+#include "api/backend_c_api.h"
 
 G_BEGIN_DECLS
 
