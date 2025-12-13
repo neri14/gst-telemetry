@@ -6,11 +6,11 @@ namespace telemetry {
 namespace utils {
 namespace logging {
 
-stream_sink::stream_sink(std::ostream& stream) :
+StreamSink::StreamSink(std::ostream& stream) :
     stream_(stream)
 {}
 
-void stream_sink::write(const std::string& msg)
+void StreamSink::write(const std::string& msg)
 {
     stream_ << std::format("{}\n", msg);
 }

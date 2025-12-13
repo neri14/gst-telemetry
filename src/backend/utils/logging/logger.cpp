@@ -4,9 +4,9 @@ namespace telemetry {
 namespace utils {
 namespace logging {
 
-logger::logger(const std::string& name) :
+Logger::Logger(const std::string& name) :
     name_(name),
-    backend_(backend::get_instance())
+    backend_(LogBackend::get_instance())
 {}
 
 } // namespace logging

@@ -14,7 +14,7 @@ public:
     void deinit();
 
 private:
-    utils::logging::logger log{"manager"};
+    utils::logging::Logger log{"manager"};
 };
 
 } // namespace telemetry

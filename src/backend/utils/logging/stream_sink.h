@@ -7,10 +7,10 @@ namespace telemetry {
 namespace utils {
 namespace logging {
 
-class stream_sink : public sink {
+class StreamSink : public Sink {
 public:
-    stream_sink(std::ostream& stream);
-    ~stream_sink() = default;
+    StreamSink(std::ostream& stream);
+    ~StreamSink() = default;
 
     void write(const std::string& msg) override;
 
@@ -18,7 +18,7 @@ private:
     std::ostream& stream_;
 };
 
-} // namespace logging
+} // namespace loggingd
 } // namespace utils
 } // namespace telemetry
 

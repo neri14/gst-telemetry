@@ -1,4 +1,4 @@
-#include "backend.h"
+#include "log_backend.h"
 
 #include "stream_sink.h"
 
@@ -39,7 +39,7 @@ static int get_debug_level()
     return 0;
 }
 
-backend::backend()
+LogBackend::LogBackend()
 {
     int dbg_level = get_debug_level();
     ELogLevel level = ELogLevel::Warning;
@@ -48,16 +48,16 @@ backend::backend()
     else if (dbg_level == 2)
         level = ELogLevel::Debug;
 
-    add_sink(std::make_shared<stream_sink>(std::cout), level);
+    add_sink(std::make_shared<StreamSink>(std::cout), level);
 }
 
-backend& backend::get_instance()
+LogBackend& LogBackend::get_instance()
 {
-    static backend instance;
+    static LogBackend instance;
     return instance;
 }
 
-const void backend::log(const std::string& logger_name, ELogLevel level, const std::string& msg)
+const void LogBackend::log(const std::string& logger_name, ELogLevel level, const std::string& msg)
 {
     std::string fmsg = std::format("[{}] {}: {}", consts::level_str.at(level), logger_name, msg);
 
@@ -67,12 +67,12 @@ const void backend::log(const std::string& logger_name, ELogLevel level, const s
     }
 }
 
-void backend::add_sink(std::shared_ptr<sink> sink, ELogLevel level)
+void LogBackend::add_sink(std::shared_ptr<Sink> sink, ELogLevel level)
 {
     sinks_.push_back(std::make_pair(level, sink));
 }
 
-void backend::set_log_level(std::shared_ptr<sink> sink, ELogLevel level)
+void LogBackend::set_log_level(std::shared_ptr<Sink> sink, ELogLevel level)
 {
     std::for_each(sinks_.begin(), sinks_.end(), [sink, level](auto& s) {
         if (s.second == sink)
@@ -80,7 +80,7 @@ void backend::set_log_level(std::shared_ptr<sink> sink, ELogLevel level)
     });
 }
 
-void backend::remove_sink(std::shared_ptr<sink> sink)
+void LogBackend::remove_sink(std::shared_ptr<Sink> sink)
 {
     sinks_.erase(std::remove_if(sinks_.begin(), sinks_.end(), [sink](auto& s) {
         return s.second == sink;

@@ -7,10 +7,10 @@ namespace telemetry {
 namespace utils {
 namespace logging {
 
-class sink {
+class Sink {
 public:
-    sink() = default;
-    virtual ~sink() = default;
+    Sink() = default;
+    virtual ~Sink() = default;
     virtual void write(const std::string& msg) = 0;
 };
 

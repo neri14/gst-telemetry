@@ -5,16 +5,16 @@
 #include <string>
 
 #include "log_level.h"
-#include "backend.h"
+#include "log_backend.h"
 
 namespace telemetry {
 namespace utils {
 namespace logging {
 
-class logger {
+class Logger {
 public:
-    logger(const std::string& name);
-    ~logger() = default;
+    Logger(const std::string& name);
+    ~Logger() = default;
 
     template<typename... _Args>
     const void debug(const std::string_view& msg, _Args&&... args)
@@ -48,7 +48,7 @@ private:
     }
 
     const std::string name_;
-    backend& backend_;
+    LogBackend& backend_;
 };
 
 

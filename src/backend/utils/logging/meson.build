@@ -1,11 +1,11 @@
 cpp_sources += files(
-  'backend.cpp',
+  'log_backend.cpp',
   'logger.cpp',
   'stream_sink.cpp',
 )
 
 headers += files(
-  'backend.h',
+  'log_backend.h',
   'log_level.h',
   'logger.h',
   'sink.h',
