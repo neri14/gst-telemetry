@@ -9,8 +9,8 @@ typedef struct ManagerHandle ManagerHandle;
 
 ManagerHandle* manager_new(void);
 void manager_free(ManagerHandle* handle);
-void manager_init(ManagerHandle* handle, float offset);
-void manager_deinit(ManagerHandle* handle);
+int manager_init(ManagerHandle* handle, float offset, char* track, char* layout);
+int manager_deinit(ManagerHandle* handle);
 
 #ifdef __cplusplus
 } // extern "C"

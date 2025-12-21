@@ -24,6 +24,8 @@ struct _GstTelemetry
   ManagerHandle *manager;
 
   float offset;
+  char *track;
+  char *layout;
 };
 
 struct _GstTelemetryClass

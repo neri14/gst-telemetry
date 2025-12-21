@@ -38,7 +38,9 @@ static GstFlowReturn gst_telemetry_transform_frame_ip (GstVideoFilter * filter,
 enum
 {
   PROP_0,
-  PROP_OFFSET
+  PROP_OFFSET,
+  PROP_TRACK,
+  PROP_LAYOUT,
 };
 
 /* pad templates */
@@ -90,14 +92,26 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_OFFSET,
       g_param_spec_float ("offset", "Offset",
-          "Telemetry offset in seconds (time of telemtry start relative to video start)",
+        "Telemetry offset in seconds (time of telemtry start relative to video start)",
         -G_MAXFLOAT, G_MAXFLOAT, 0.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TRACK,
+      g_param_spec_string ("track", "Track",
+        "Path to GPS track file (GPX format)",
+        NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_LAYOUT,
+      g_param_spec_string ("layout", "Layout",
+        "Path to overlay layout XML file",
+        NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
 gst_telemetry_init (GstTelemetry *telemetry)
 {
   telemetry->offset = 0.0;
+  telemetry->layout = NULL;
+  telemetry->track = NULL;
 
   telemetry->manager = manager_new ();
 }
@@ -114,6 +128,18 @@ gst_telemetry_set_property (GObject * object, guint property_id,
     case PROP_OFFSET:
       GST_OBJECT_LOCK (telemetry);
       telemetry->offset = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_TRACK:
+      GST_OBJECT_LOCK (telemetry);
+      g_free(telemetry->track);
+      telemetry->track = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_LAYOUT:
+      GST_OBJECT_LOCK (telemetry);
+      g_free(telemetry->layout);
+      telemetry->layout = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (telemetry);
       break;
     default:
@@ -134,6 +160,16 @@ gst_telemetry_get_property (GObject * object, guint property_id,
     case PROP_OFFSET:
       GST_OBJECT_LOCK (telemetry);
       g_value_set_float (value, telemetry->offset);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_TRACK:
+      GST_OBJECT_LOCK (telemetry);
+      g_value_set_string (value, telemetry->track);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_LAYOUT:
+      GST_OBJECT_LOCK (telemetry);
+      g_value_set_string (value, telemetry->layout);
       GST_OBJECT_UNLOCK (telemetry);
       break;
     default:
@@ -174,10 +210,16 @@ gst_telemetry_start (GstBaseTransform * trans)
 
   GST_DEBUG_OBJECT (telemetry, "start");
 
+  int ret = 0;
+
   GST_OBJECT_LOCK (telemetry);
-  manager_init (telemetry->manager, telemetry->offset);
+  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->layout);
   GST_OBJECT_UNLOCK (telemetry);
 
+  if (ret != 0) {
+    GST_ERROR_OBJECT (telemetry, "Failed to initialize telemetry manager");
+    return FALSE;
+  }
   return TRUE;
 }
 
@@ -188,10 +230,16 @@ gst_telemetry_stop (GstBaseTransform * trans)
 
   GST_DEBUG_OBJECT (telemetry, "stop");
 
+  int ret = 0;
+
   GST_OBJECT_LOCK (telemetry);
-  manager_deinit (telemetry->manager);
+  ret = manager_deinit (telemetry->manager);
   GST_OBJECT_UNLOCK (telemetry);
 
+  if (ret != 0) {
+    GST_ERROR_OBJECT (telemetry, "Failed to deinitialize telemetry manager");
+    return FALSE;
+  }
   return TRUE;
 }
 

@@ -10,11 +10,15 @@ public:
     Manager();
     ~Manager();
 
-    void init(float offset);
-    void deinit();
+    bool init(float offset, const char* track, const char* layout);
+    bool deinit();
 
 private:
     utils::logging::Logger log{"manager"};
+
+    float offset_;
+    std::string track_;
+    std::string layout_;
 };
 
 } // namespace telemetry

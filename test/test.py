@@ -15,10 +15,14 @@ Gst.init(None)
 parser = argparse.ArgumentParser(description="Transcode a file with GStreamer")
 parser.add_argument("input", help="input file path")
 parser.add_argument("output", help="output file path")
+parser.add_argument("--track", help="GPS track file path", default=None)
+parser.add_argument("--layout", help="Layout XML file path", default=None)
 args = parser.parse_args()
 
 INPUT = args.input
 OUTPUT = args.output
+TRACK = args.track
+LAYOUT = args.layout
 
 pipeline = Gst.Pipeline.new("test-pipeline")
 
@@ -59,6 +63,10 @@ def create_video_branch():
 
     telemetry = Gst.ElementFactory.make("telemetry", "tele")
     telemetry.set_property("offset", 1.0)
+    if TRACK:
+        telemetry.set_property("track", TRACK)
+    if LAYOUT:
+        telemetry.set_property("layout", LAYOUT)
 
     enc = Gst.ElementFactory.make("x264enc", "enc_v")
     enc.set_property("tune", "zerolatency")

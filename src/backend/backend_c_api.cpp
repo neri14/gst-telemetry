@@ -11,12 +11,14 @@ void manager_free(ManagerHandle* handle) {
     delete reinterpret_cast<telemetry::Manager*>(handle);
 }
 
-void manager_init(ManagerHandle* handle, float offset) {
-    reinterpret_cast<telemetry::Manager*>(handle)->init(offset);
+int manager_init(ManagerHandle* handle, float offset, char* track, char* layout) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->init(offset, track, layout);
+    return ok ? 0 : -1;
 }
 
-void manager_deinit(ManagerHandle* handle) {
-    reinterpret_cast<telemetry::Manager*>(handle)->deinit();
+int manager_deinit(ManagerHandle* handle) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->deinit();
+    return ok ? 0 : -1;
 }
 
 } // extern "C"
