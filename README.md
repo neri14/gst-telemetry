@@ -21,7 +21,21 @@ sudo ninja -C builddir install
 gst-inspect-1.0 telemetry
 ```
 
-## debug prints
+## background debug prints
+
+```
+export TELEMETRY_DEBUG=LVL
+```
+
+where LVL enables:
+```
+2 - DEBUG and higher severity
+1 - INFO and higher severity
+0 / other / not set - WARNING and higher severity
+
+```
+
+## gstreamer debug prints
 
 ```
 export GST_DEBUG=LVL
