@@ -26,6 +26,8 @@ struct _GstTelemetry
   float offset;
   char *track;
   char *layout;
+
+  gboolean gl_mode;
 };
 
 struct _GstTelemetryClass

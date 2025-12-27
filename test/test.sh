@@ -4,6 +4,7 @@ INPUT_FILE=""
 OUTPUT_FILE=""
 TRACK_FILE=""
 LAYOUT_FILE=""
+GPU_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -14,6 +15,10 @@ while [[ $# -gt 0 ]]; do
         --layout)
             LAYOUT_FILE="$2"
             shift 2
+            ;;
+        --gpu)
+            GPU_MODE=true
+            shift
             ;;
         *)
             if [ -z "$INPUT_FILE" ]; then
@@ -30,7 +35,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>]"
+    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--gpu]"
     exit 1
 fi
 
@@ -48,7 +53,15 @@ fi
 
 UUT="telemetry $PROPERTIES"
 
-gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
-dec. ! queue ! video/x-raw ! videoconvert ! videoflip method=automatic ! $UUT ! x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
-dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
-mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE
+if [ "$GPU_MODE" = true ]; then
+    gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
+    dec. ! queue ! video/x-raw ! glupload ! glvideoflip method=automatic ! gltransformation ! $UUT ! gloverlaycompositor ! nvh264enc bitrate=120000 ! h264parse ! queue ! mux. \
+    dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
+    mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE
+else
+    gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
+    dec. ! queue ! video/x-raw ! videoflip method=automatic ! $UUT ! \
+           x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
+    dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
+    mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE
+fi

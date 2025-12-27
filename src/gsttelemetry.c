@@ -32,8 +32,6 @@ static gboolean gst_telemetry_start (GstBaseTransform * trans);
 static gboolean gst_telemetry_stop (GstBaseTransform * trans);
 static gboolean gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info);
-static GstFlowReturn gst_telemetry_transform_frame (GstVideoFilter * filter,
-    GstVideoFrame * inframe, GstVideoFrame * outframe);
 static GstFlowReturn gst_telemetry_transform_frame_ip (GstVideoFilter * filter,
     GstVideoFrame * frame);
 
@@ -88,8 +86,9 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
   gobject_class->finalize = gst_telemetry_finalize;
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_telemetry_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_telemetry_stop);
+  base_transform_class->passthrough_on_same_caps = FALSE;
+
   video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_telemetry_set_info);
-  video_filter_class->transform_frame = GST_DEBUG_FUNCPTR (gst_telemetry_transform_frame);
   video_filter_class->transform_frame_ip = GST_DEBUG_FUNCPTR (gst_telemetry_transform_frame_ip);
 
   g_object_class_install_property (gobject_class, PROP_OFFSET,
@@ -114,6 +113,7 @@ gst_telemetry_init (GstTelemetry *telemetry)
   telemetry->offset = 0.0;
   telemetry->layout = NULL;
   telemetry->track = NULL;
+  telemetry->gl_mode = FALSE;
 
   telemetry->manager = manager_new ();
 }
@@ -212,6 +212,9 @@ gst_telemetry_start (GstBaseTransform * trans)
 
   GST_DEBUG_OBJECT (telemetry, "start");
 
+  gst_base_transform_set_passthrough (trans, FALSE);
+  gst_base_transform_set_in_place (trans, TRUE);
+
   int ret = 0;
 
   GST_OBJECT_LOCK (telemetry);
@@ -250,24 +253,30 @@ gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
-
   GST_DEBUG_OBJECT (telemetry, "set_info");
+
+  GstCapsFeatures *features = gst_caps_get_features (incaps, 0);
+  if (features && gst_caps_features_contains (features, "memory:GLMemory")) {
+    telemetry->gl_mode = TRUE;
+    GST_INFO_OBJECT (telemetry, "GL pipeline detected, operating in GL mode");
+  } else {
+    telemetry->gl_mode = FALSE;
+    GST_INFO_OBJECT (telemetry, "GL pipeline not detected, operating in CPU mode");
+  }
 
   return TRUE;
 }
 
 /* transform */
 static GstFlowReturn
-gst_telemetry_transform_frame (GstVideoFilter * filter, GstVideoFrame * inframe,
-    GstVideoFrame * outframe)
+gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 {
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
-  GST_DEBUG_OBJECT (telemetry, "transform_frame");
-
-  gst_video_frame_copy(outframe, inframe);//FIXME for now do nothing with the frame
+  GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
 
   gint overlay_width = filter->out_info.width;
   gint overlay_height = filter->out_info.height;
+
   cairo_surface_t *surface = cairo_image_surface_create(
     CAIRO_FORMAT_ARGB32, overlay_width, overlay_height);
 
@@ -314,63 +323,19 @@ gst_telemetry_transform_frame (GstVideoFilter * filter, GstVideoFrame * inframe,
   // Create composition
   GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(rect);
 
-  // Blend onto output frame (handles YUV conversion automatically)
-  gst_video_overlay_composition_blend(comp, outframe);
+  if (telemetry->gl_mode) {
+    GST_DEBUG_OBJECT (telemetry, "Attaching overlay as metadata for GL pipeline");
+    gst_buffer_add_video_overlay_composition_meta(frame->buffer, comp);
+  } else {
+    GST_DEBUG_OBJECT (telemetry, "Blending overlay directly in CPU pipeline");
+    gst_video_overlay_composition_blend(comp, frame);
+  }
 
   // Cleanup
   gst_video_overlay_composition_unref(comp);
   gst_video_overlay_rectangle_unref(rect);
   gst_buffer_unref(overlay_buffer);
   cairo_surface_destroy(surface);
-
-  // GstVideoFormat format = GST_VIDEO_FRAME_FORMAT (outframe);
-  // if (format != GST_VIDEO_FORMAT_RGBx && format != GST_VIDEO_FORMAT_xRGB &&
-  //     format != GST_VIDEO_FORMAT_BGRx && format != GST_VIDEO_FORMAT_xBGR &&
-  //     format != GST_VIDEO_FORMAT_RGBA && format != GST_VIDEO_FORMAT_BGRA &&
-  //     format != GST_VIDEO_FORMAT_ARGB && format != GST_VIDEO_FORMAT_ABGR &&
-  //     format != GST_VIDEO_FORMAT_RGB && format != GST_VIDEO_FORMAT_BGR) {
-  //   GST_WARNING_OBJECT (telemetry, "Unsupported video format for cairo overlay");
-  //   GST_DEBUG_OBJECT (telemetry, "Format: %s", gst_video_format_to_string(format));
-  //   return GST_FLOW_ERROR;
-  // }
-
-  // cairo_format_t cairo_format;
-  // if (format == GST_VIDEO_FORMAT_BGRA || format == GST_VIDEO_FORMAT_BGRx) {
-  //   cairo_format = CAIRO_FORMAT_ARGB32; // Cairo's native format on little-endian
-  // } else {
-  //   cairo_format = CAIRO_FORMAT_RGB24;
-  // }
-
-  // // int stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32,
-  // //     filter->in_info.width);
-  // gint stride = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, 0);
-  // cairo_surface_t *surface = cairo_image_surface_create_for_data (
-  //     GST_VIDEO_FRAME_PLANE_DATA (outframe, 0),
-  //     cairo_format,
-  //     filter->in_info.width,
-  //     filter->in_info.height,
-  //     stride);
-
-  // cairo_t* cr = cairo_create (surface);
-
-  // // Drawing operations would go here
-  // // example:
-  // cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0); // red color
-  // cairo_rectangle (cr, 10, 10, 100, 100);
-  // cairo_fill (cr);
-
-  // cairo_destroy(cr);
-  // cairo_surface_destroy(surface);
-
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
-{
-  GstTelemetry *telemetry = GST_TELEMETRY (filter);
-
-  GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
 
   return GST_FLOW_OK;
 }
