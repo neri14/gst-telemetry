@@ -60,6 +60,8 @@ branches = {"video": None, "audio": None}
 def create_video_branch():
     q = Gst.ElementFactory.make("queue", "q_video")
     convert = Gst.ElementFactory.make("videoconvert", "vc")
+    flip = Gst.ElementFactory.make("videoflip", "vf")
+    flip.set_property("method", "automatic")
 
     telemetry = Gst.ElementFactory.make("telemetry", "tele")
     telemetry.set_property("offset", 1.0)
@@ -75,22 +77,24 @@ def create_video_branch():
     enc.set_property("threads", 0) # auto
     q_out = Gst.ElementFactory.make("queue", "q_video_out")
 
-    for e in (q, convert, telemetry, enc, q_out):
+    for e in (q, convert, flip, telemetry, enc, q_out):
         if not e:
             print("Missing video element; check installed plugins")
             sys.exit(1)
 
     pipeline.add(q)
     pipeline.add(convert)
+    pipeline.add(flip)
     pipeline.add(telemetry)
     pipeline.add(enc)
     pipeline.add(q_out)
     q.sync_state_with_parent()
     convert.sync_state_with_parent()
+    flip.sync_state_with_parent()
     telemetry.sync_state_with_parent()
     enc.sync_state_with_parent()
     q_out.sync_state_with_parent()
-    if not q.link(convert) or not convert.link(telemetry) or not telemetry.link(enc) or not enc.link(q_out):
+    if not q.link(convert) or not convert.link(flip) or not flip.link(telemetry) or not telemetry.link(enc) or not enc.link(q_out):
         print("Failed to link video branch")
         sys.exit(1)
 

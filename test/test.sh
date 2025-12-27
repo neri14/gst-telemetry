@@ -49,6 +49,6 @@ fi
 UUT="telemetry $PROPERTIES"
 
 gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
-dec. ! queue ! video/x-raw ! videoconvert ! $UUT ! x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
+dec. ! queue ! video/x-raw ! videoconvert ! videoflip method=automatic ! $UUT ! x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
 dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
 mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE

@@ -14,6 +14,8 @@
 #include <gst/video/gstvideofilter.h>
 #include "gsttelemetry.h"
 
+#include <cairo.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_telemetry_debug_category);
 #define GST_CAT_DEFAULT gst_telemetry_debug_category
 
@@ -260,10 +262,105 @@ gst_telemetry_transform_frame (GstVideoFilter * filter, GstVideoFrame * inframe,
     GstVideoFrame * outframe)
 {
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
-
   GST_DEBUG_OBJECT (telemetry, "transform_frame");
 
   gst_video_frame_copy(outframe, inframe);//FIXME for now do nothing with the frame
+
+  gint overlay_width = filter->out_info.width;
+  gint overlay_height = filter->out_info.height;
+  cairo_surface_t *surface = cairo_image_surface_create(
+    CAIRO_FORMAT_ARGB32, overlay_width, overlay_height);
+
+  /** TEST CAIRO DRAWING **/
+  cairo_t *cr = cairo_create(surface);
+  // Clear to transparent
+  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+  cairo_paint(cr);
+  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+  // Draw your overlay content
+  cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 0.8); // semi-transparent red
+  cairo_rectangle(cr, 10, 10, 100, 100);
+  cairo_fill(cr);
+  // Draw text
+  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+  cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+  cairo_set_font_size(cr, 24);
+  cairo_move_to(cr, 10, 150);
+  cairo_show_text(cr, "Telemetry");
+  // Flush and destroy
+  cairo_surface_flush(surface);
+  cairo_destroy(cr);
+  /** TEST CAIRO DRAWING **/
+
+  // Get Cairo surface data
+  guint8 *cairo_data = cairo_image_surface_get_data(surface);
+  gint cairo_stride = cairo_image_surface_get_stride(surface);
+
+  // Create GstBuffer from Cairo surface
+  GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
+  gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * overlay_height);
+
+  // Add video meta
+  gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
+                            GST_VIDEO_FORMAT_BGRA, overlay_width, overlay_height);
+
+  // Create overlay rectangle
+  GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(
+      overlay_buffer,
+      0, 0,  // x, y position on video
+      overlay_width, overlay_height,  // render width, height
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+  // Create composition
+  GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(rect);
+
+  // Blend onto output frame (handles YUV conversion automatically)
+  gst_video_overlay_composition_blend(comp, outframe);
+
+  // Cleanup
+  gst_video_overlay_composition_unref(comp);
+  gst_video_overlay_rectangle_unref(rect);
+  gst_buffer_unref(overlay_buffer);
+  cairo_surface_destroy(surface);
+
+  // GstVideoFormat format = GST_VIDEO_FRAME_FORMAT (outframe);
+  // if (format != GST_VIDEO_FORMAT_RGBx && format != GST_VIDEO_FORMAT_xRGB &&
+  //     format != GST_VIDEO_FORMAT_BGRx && format != GST_VIDEO_FORMAT_xBGR &&
+  //     format != GST_VIDEO_FORMAT_RGBA && format != GST_VIDEO_FORMAT_BGRA &&
+  //     format != GST_VIDEO_FORMAT_ARGB && format != GST_VIDEO_FORMAT_ABGR &&
+  //     format != GST_VIDEO_FORMAT_RGB && format != GST_VIDEO_FORMAT_BGR) {
+  //   GST_WARNING_OBJECT (telemetry, "Unsupported video format for cairo overlay");
+  //   GST_DEBUG_OBJECT (telemetry, "Format: %s", gst_video_format_to_string(format));
+  //   return GST_FLOW_ERROR;
+  // }
+
+  // cairo_format_t cairo_format;
+  // if (format == GST_VIDEO_FORMAT_BGRA || format == GST_VIDEO_FORMAT_BGRx) {
+  //   cairo_format = CAIRO_FORMAT_ARGB32; // Cairo's native format on little-endian
+  // } else {
+  //   cairo_format = CAIRO_FORMAT_RGB24;
+  // }
+
+  // // int stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32,
+  // //     filter->in_info.width);
+  // gint stride = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, 0);
+  // cairo_surface_t *surface = cairo_image_surface_create_for_data (
+  //     GST_VIDEO_FRAME_PLANE_DATA (outframe, 0),
+  //     cairo_format,
+  //     filter->in_info.width,
+  //     filter->in_info.height,
+  //     stride);
+
+  // cairo_t* cr = cairo_create (surface);
+
+  // // Drawing operations would go here
+  // // example:
+  // cairo_set_source_rgba (cr, 1.0, 0.0, 0.0, 1.0); // red color
+  // cairo_rectangle (cr, 10, 10, 100, 100);
+  // cairo_fill (cr);
+
+  // cairo_destroy(cr);
+  // cairo_surface_destroy(surface);
 
   return GST_FLOW_OK;
 }

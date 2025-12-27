@@ -33,6 +33,7 @@ gst_dep = dependency('gstreamer-1.0', version : gst_req,
 gst_base_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
 gst_video_dep = dependency('gstreamer-video-1.0', version : gst_req)
+cairo_dep = dependency('cairo', required : true)
 
 # Set the directory where plugins should be installed.
 #
@@ -45,6 +46,6 @@ else
   plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 endif
 
-plugin_deps = [gst_dep, gst_base_dep, gst_video_dep]
+plugin_deps = [gst_dep, gst_base_dep, gst_video_dep, cairo_dep]
 
 subdir('src')
