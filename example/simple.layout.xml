@@ -1,0 +1,33 @@
+<layout>
+  <if expression="{time_elapsed} >= 0 and {time_remaining} >= 0">
+    <!-- show during activity -->
+    <widget type="value" x="400" y="300" font="DejaVu Sans 48" align="center"
+            color="white" border-color="black" border-width="4"
+            key="time_elapsed" format="Elapsed: {:.0f} s" />
+    <widget type="value" x="400" y="400" font="DejaVu Sans 48" align="center"
+            color="white" border-color="black" border-width="4"
+            key="time_remaining" format="Remaining: {:.0f} s" />
+  </if>
+
+  <if expression="{time_elapsed} < 0">
+    <!-- show before activity start -->
+    <variable name="countdown" expression="-{time_elapsed}" />
+    <widget type="text" x="400" y="300" font="DejaVu Sans 48" align="center"
+            color="white" border-color="black" border-width="4"
+            text="Activity starts in:" />
+    <widget type="value" x="400" y="400" font="DejaVu Sans 96" align="center"
+            color="white" border-color="black" border-width="4"
+            key="countdown" format="{:.0f} seconds" />
+  </if>
+
+  <if expression="{time_remaining} < 0">
+    <!-- show after activity end -->
+    <variable name="overtime" expression="-{time_remaining}" />
+    <widget type="text" x="400" y="300" font="DejaVu Sans 48" align="center"
+            color="white" border-color="black" border-width="4"
+            text="Activity ended:" />
+    <widget type="value" x="400" y="400" font="DejaVu Sans 96" align="center"
+            color="white" border-color="black" border-width="4"
+            key="overtime" format="{:.0f} seconds ago" />
+  </if>
+</layout>
