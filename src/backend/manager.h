@@ -2,7 +2,9 @@
 #define MANAGER_H
 
 #include <cairo.h>
+#include <stdint.h>
 #include "backend/utils/logging/logger.h"
+#include "backend/track/track.h"
 
 namespace telemetry {
 
@@ -11,17 +13,17 @@ public:
     Manager();
     ~Manager();
 
-    bool init(float offset, const char* track, const char* layout);
+    bool init(float offset, const char* track_path, const char* layout_path);
     bool deinit();
 
-    bool draw(long timestamp, cairo_surface_t* surface);
+    bool draw(int64_t timestamp, cairo_surface_t* surface);
 
 private:
     utils::logging::Logger log{"manager"};
 
-    float offset_;
-    std::string track_;
-    std::string layout_;
+    int64_t offset_;
+    std::shared_ptr<track::Track> track_;
+    // Layout layout_;
 };
 
 } // namespace telemetry

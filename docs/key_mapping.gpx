@@ -1,0 +1,137 @@
+<?xml version="1.0" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:adx="http://www.n3r1.com/xmlschemas/ActivityDataExtensions/v1" xmlns:asx="http://www.n3r1.com/xmlschemas/ActivitySegmentsExtensions/v1" xmlns:tpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v2" version="1.1" creator="fitt" schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v2 http://www.garmin.com/xmlschemas/TrackPointExtensionv2.xsd http://www.n3r1.com/xmlschemas/ActivityDataExtensions/v1 http://www.n3r1.com/xmlschemas/ActivityDataExtensionsv1.xsd http://www.n3r1.com/xmlschemas/ActivitySegmentsExtensions/v1 http://www.n3r1.com/xmlschemas/ActivitySegmentsExtensionsv1.xsd">
+  <metadata>
+    <link href="https://github.com/neri14/fitt"/>
+    <time>2025-12-09T14:29:31.000Z</time>
+    <bounds minlat="51.12731329165399" minlon="16.89688028767705" maxlat="51.16747182793915" maxlon="17.001165747642517"/>
+    <!-- metadata.minlat metadata.minlon metadata.maxlat metadata.maxlon -->
+  </metadata>
+  <trk>
+    <name>Mountain Cycling (MTB)</name> <!-- metadata.name -->
+    <src>Garmin 4634 (S/N: 3619825731)</src> <!-- metadata.src -->
+    <type>mountain_cycling</type> <!-- metadata.type -->
+    <extensions>
+      <adx:ActivityTrackExtension> 
+        <adx:elapsedtime>5413.343</adx:elapsedtime> <!-- metadata.elapsedtime-->
+        <adx:timertime>5413.343</adx:timertime> <!-- metadata.timertime -->
+        <adx:distance>30264.01</adx:distance> <!-- metadata.distance -->
+        <adx:ascent>62.0</adx:ascent> <!-- metadata.ascent -->
+        <adx:descent>61.0</adx:descent> <!-- metadata.descent -->
+        <adx:maxgrade>4.194242142590021</adx:maxgrade> <!-- metadata.maxgrade -->
+        <adx:mingrade>-3.4860470537268804</adx:mingrade> <!-- metadata.mingrade -->
+        <adx:cycles>5798</adx:cycles> <!-- metadata.cycles -->
+        <adx:strokes>5798</adx:strokes> <!-- metadata.strokes -->
+        <adx:work>743147</adx:work> <!-- metadata.work -->
+        <adx:kcal>874.0</adx:kcal> <!-- metadata.kcal -->
+        <adx:grit>6.998437404632568</adx:grit> <!-- metadata.grit -->
+        <adx:flow>2.7866644859313965</adx:flow> <!-- metadata.flow -->
+        <adx:avgspeed>5.591</adx:avgspeed> <!-- metadata.avgspeed -->
+        <adx:maxspeed>9.489</adx:maxspeed> <!-- metadata.maxspeed -->
+        <adx:avgpower>138.0</adx:avgpower> <!-- metadata.avgpower -->
+        <adx:maxpower>854.0</adx:maxpower> <!-- metadata.maxpower -->
+        <adx:normpower>173.0</adx:normpower> <!-- metadata.normpower -->
+        <adx:avgvam>0.021</adx:avgvam> <!-- metadata.avgvam -->
+        <adx:avgrr>35.78</adx:avgrr> <!-- metadata.avgrr -->
+        <adx:maxrr>43.35</adx:maxrr> <!-- metadata.maxrr -->
+        <adx:minrr>16.03</adx:minrr> <!-- metadata.minrr -->
+        <adx:jumps>0</adx:jumps> <!-- metadata.jumps -->
+        <adx:avghr>177</adx:avghr> <!-- metadata.avghr -->
+        <adx:maxhr>203</adx:maxhr> <!-- metadata.maxhr -->
+        <adx:avgcad>80</adx:avgcad> <!-- metadata.avgcad -->
+        <adx:maxcad>115</adx:maxcad> <!-- metadata.maxcad -->
+        <adx:avgatemp>15.0</adx:avgatemp> <!-- metadata.avgatemp -->
+        <adx:maxatemp>26.0</adx:maxatemp> <!-- metadata.maxatemp -->
+        <adx:minatemp>13.0</adx:minatemp> <!-- metadata.minatemp -->
+      </adx:ActivityTrackExtension>
+      <asx:ActivitySegmentsExtension>
+        <asx:segment> <!-- segments[n] anywhere;  segment - under layout "segment" node -->
+          <asx:name>Climb 1</asx:name> <!-- segment.name -->
+          <asx:type>climb</asx:type> <!-- segment.type -->
+          <asx:source>climbpro</asx:source> <!-- segment.source -->
+          <asx:starttime>2025-12-09T15:17:01.000Z</asx:starttime> <!-- segment.starttime -->
+          <asx:endtime>2025-12-09T15:18:34.000Z</asx:endtime> <!-- segment.endtime -->
+          <asx:starttimer>2850.0</asx:starttimer> <!-- segment.starttimer -->
+          <asx:endtimer>2943.0</asx:endtimer> <!-- segment.endtimer -->
+          <asx:startdist>15392.23</asx:startdist> <!-- segment.startdist -->
+          <asx:enddist>15911.94</asx:enddist> <!-- segment.enddist -->
+          <asx:startele>114.20000000000005</asx:startele> <!-- segment.startele -->
+          <asx:endele>118.39999999999998</asx:endele> <!-- segment.endele -->
+          <asx:startlat>51.160381995141506</asx:startlat> <!-- segment.startlat -->
+          <asx:startlon>16.97255470789969</asx:startlon> <!-- segment.startlon -->
+          <asx:endlat>51.15829925984144</asx:endlat> <!-- segment.endlat -->
+          <asx:endlon>16.977477818727493</asx:endlon> <!-- segment.endlon -->
+          <asx:minlat>51.15829925984144</asx:minlat> <!-- segment.minlat -->
+          <asx:minlon>16.97255470789969</asx:minlon> <!-- segment.minlon -->
+          <asx:maxlat>51.160381995141506</asx:maxlat> <!-- segment.maxlat -->
+          <asx:maxlon>16.977477818727493</asx:maxlon> <!-- segment.maxlon -->
+          <asx:elapsedtime>93.0</asx:elapsedtime> <!-- segment.elapsedtime -->
+          <asx:distance>519.710000000001</asx:distance> <!-- segment.distance -->
+          <asx:ascent>4.256578947368425</asx:ascent> <!-- segment.ascent -->
+          <asx:descent>0.16369969040250965</asx:descent> <!-- segment.descent -->
+          <asx:avggrade>0.8081693938334692</asx:avggrade> <!-- segment.avggrade -->
+          <asx:maxgrade>2.9424494316825576</asx:maxgrade> <!-- segment.maxgrade -->
+          <asx:mingrade>-0.2235032647168586</asx:mingrade> <!-- segment.mingrade -->
+          <asx:avgspeed>5.588279569892483</asx:avgspeed> <!-- segment.avgspeed -->
+          <asx:maxspeed>6.448</asx:maxspeed> <!-- segment.maxspeed -->
+          <asx:avgvam>0.05995181616011866</asx:avgvam> <!-- segment.avgvam -->
+          <asx:avgpower>182.48387096774192</asx:avgpower> <!-- segment.avgpower -->
+          <asx:maxpower>352.0</asx:maxpower> <!-- segment.maxpower -->
+          <asx:normpower>190.91018561463062</asx:normpower> <!-- segment.normpower -->
+          <asx:avghr>187</asx:avghr> <!-- segment.avghr -->
+          <asx:maxhr>191</asx:maxhr> <!-- segment.maxhr -->
+          <asx:avgcad>79</asx:avgcad> <!-- segment.avgcad -->
+          <asx:maxcad>85</asx:maxcad> <!-- segment.maxcad -->
+          <!--
+            virtual segment variables generated internally:
+            - tbd
+          -->
+        </asx:segment>
+    </extensions>
+    <trkseg>
+      <trkpt lat="51.16021360270679" lon="16.97255915030837"> <!-- point.lat point.lon -->
+        <ele>114.20000000000005</ele> <!-- point.ele -->
+        <time>2025-12-09T15:17:04.000Z</time> <!-- point.time -->
+        <extensions>
+          <tpx:TrackPointExtension>
+            <tpx:atemp>14.0</tpx:atemp> <!-- point.atemp -->
+            <tpx:hr>185</tpx:hr> <!-- point.hr -->
+            <tpx:cad>83</tpx:cad> <!-- point.cad -->
+            <tpx:speed>6.168</tpx:speed> <!-- point.speed -->
+          </tpx:TrackPointExtension>
+          <adx:ActivityTrackPointExtension>
+            <adx:timer>2853.0</adx:timer> <!-- point.timer -->
+            <adx:smoothele>114.0823529411765</adx:smoothele> <!-- point.smoothele -->
+            <adx:dist>15410.6</adx:dist> <!-- point.dist -->
+            <adx:rr>40.95</adx:rr> <!-- point.rr -->
+            <adx:power>160.0</adx:power> <!-- point.power -->
+            <adx:power3s>157.0</adx:power3s> <!-- point.power3s -->
+            <adx:power10s>153.5</adx:power10s> <!-- point.power10s -->
+            <adx:power30s>157.46666666666667</adx:power30s> <!-- point.power30s -->
+            <adx:accpower>389903.0</adx:accpower> <!-- point.accpower -->
+            <adx:grade>-0.21699223964494996</adx:grade> <!-- point.grade -->
+            <adx:vspeed>0.0</adx:vspeed> <!-- point.vspeed -->
+            <adx:ltrqeff>0.0</adx:ltrqeff> <!-- point.ltrqeff -->
+            <adx:rtrqeff>72.0</adx:rtrqeff> <!-- point.rtrqeff -->
+            <adx:lpdlsmooth>0.0</adx:lpdlsmooth> <!-- point.lpdlsmooth -->
+            <adx:rpdlsmooth>23.5</adx:rpdlsmooth> <!-- point.rpdlsmooth -->
+            <adx:grit>0.0</adx:grit> <!-- point.grit -->
+            <adx:flow>0.0</adx:flow> <!-- point.flow -->
+            <adx:climb>1</adx:climb> <!-- point.climb - note it does not relate to the index in segments[] -->
+            <adx:rgearnum>9</adx:rgearnum> <!-- point.rgearnum -->
+            <adx:rgear>16</adx:rgear> <!-- point.rgear -->
+            <!--
+              virtual segment variables generated internally:
+              - tbd
+            -->
+          </adx:ActivityTrackPointExtension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
+
+<!--
+helper variables generated internally:
+- time_elapsed    - float   - always present timer - relative to activity start - negative before start of activity
+- time_remaining  - float   - always present timer - relative to activity end - negative after end of activity
+-->

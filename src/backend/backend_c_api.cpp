@@ -21,7 +21,7 @@ int manager_deinit(ManagerHandle* handle) {
     return ok ? 0 : -1;
 }
 
-int draw(ManagerHandle* handle, long timestamp, cairo_surface_t* surface) {
+int draw(ManagerHandle* handle, int64_t timestamp, cairo_surface_t* surface) {
     bool ok = reinterpret_cast<telemetry::Manager*>(handle)->draw(timestamp, surface);
     return ok ? 0 : -1;
 }

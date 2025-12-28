@@ -7,4 +7,5 @@ headers += files(
   'manager.h',
 )
 
+subdir('track')
 subdir('utils')

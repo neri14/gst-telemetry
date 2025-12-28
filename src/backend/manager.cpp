@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "backend/utils/time.h"
+
 namespace telemetry {
 
 Manager::Manager() {
@@ -14,32 +16,41 @@ Manager::~Manager() {
     log.info("Manager destroyed");
 };
 
-bool Manager::init(float offset, const char* track, const char* layout) {
+bool Manager::init(float offset, const char* track_path, const char* layout_path) {
     // Initialization code using the offset
     log.info("Manager initialization started");
 
     bool ok = true;
-    if (track == nullptr) {
+    if (track_path == nullptr) {
         log.warning("Track file path not provided");
         ok = false;
     }
-    if (layout == nullptr) {
+    if (layout_path == nullptr) {
         log.warning("Layout file path not provided");
         ok = false;
     }
-
     if (!ok) {
-        log.error("Manager initialization failed");
+        log.error("Insufficient parameters provided for initialization");
         return false;
     }
 
-    log.info("Offset: {}", offset);
-    log.info("Track: {}", track);
-    log.info("Layout: {}", layout);
+    time::microseconds_t offset_us = time::s_to_us(static_cast<time::seconds_t>(offset));
+    log.info("Offset: {}s", offset);
+    log.info("Offset: {}us", offset_us);
+    log.info("Track path: {}", track_path);
+    log.info("Layout path: {}", layout_path);
 
-    offset_ = offset;
-    track_ = std::string(track);
-    layout_ = std::string(layout);
+    offset_ = offset_us;
+
+    track_ = std::make_shared<track::Track>(offset_us);
+    ok = track_->load(track_path);
+    if (!ok) {
+        log.error("Failed to load track from path: {}", track_path);
+        return false;
+    }
+    log.info("Track loaded successfully");
+
+    //TODO layout_ = load_layout(layout_path);
 
     return true;
 }
@@ -50,7 +61,7 @@ bool Manager::deinit() {
     return true;
 }
 
-bool Manager::draw(long timestamp, cairo_surface_t* surface) {
+bool Manager::draw(int64_t timestamp, cairo_surface_t* surface) {
     if (surface == nullptr) {
         log.error("draw: no cairo surface provided");
         return false;
@@ -73,7 +84,11 @@ bool Manager::draw(long timestamp, cairo_surface_t* surface) {
     cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
     cairo_set_font_size(cr, 24);
     cairo_move_to(cr, 10, 150);
-    cairo_show_text(cr, "Telemetry");
+
+    auto val = track_->get("point.timer", timestamp);
+    cairo_show_text(cr, val ? val.as_string().c_str() : "unknown");
+    // cairo_show_text(cr, "Telemetry");
+
     // Flush and destroy
     cairo_surface_flush(surface);
     cairo_destroy(cr);

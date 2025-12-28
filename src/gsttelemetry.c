@@ -367,7 +367,7 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
     CAIRO_FORMAT_ARGB32, width, height);
 
   // Calculate timestamp relative to initial frame
-  long timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
+  gint64 timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
   if (telemetry->initial_timestamp == GST_CLOCK_TIME_NONE) {
     telemetry->initial_timestamp = timestamp;
   }
