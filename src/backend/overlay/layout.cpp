@@ -17,6 +17,10 @@ namespace defaults {
     const double scale = 1.0;
     const char* datetime_format = "%Y-%m-%d %H:%M:%S";
     const char* timezone = "UTC";
+    const int chart_width = 200;
+    const int chart_height = 100;
+    const int chart_line_width = 2;
+    const int chart_point_size = 4;
 } // namespace defaults
 
 Layout::Layout(std::shared_ptr<track::Track> track)
@@ -92,6 +96,9 @@ bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
             node.attribute("x").as_int(0) + (parent ? parent->x : 0),
             node.attribute("y").as_int(0) + (parent ? parent->y : 0));
         log.debug("Created container element");
+    } else if (name == "if") {
+        element = make_conditional_element(parent, track_, node);
+        log.debug("Created ConditionalElement element");
     } else if (name == "widget") {
         std::string type = node.attribute("type").as_string();
 
@@ -104,13 +111,17 @@ bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
         } else if (type == "datetime") {
             element = make_datetime_widget(parent, track_, node);
             log.debug("Created DatetimeWidget element");
+        } else if (type == "chart") {
+            // element = make_chart_widget(parent, track_, node);
+            log.debug("Created ChartWidget element");
+        } else if (type == "map") {
+            //TODO
+            log.warning("MapWidget not yet implemented");
+
         } else {
             log.warning("Unknown widget type: {}", type);
         }
-    } else if (name == "if") {
-        element = make_conditional_element(parent, track_, node);
-        log.debug("Created ConditionalElement element");
-    }else {
+    } else {
         log.warning("Unknown layout element: {}", name);
     }
 
@@ -130,6 +141,23 @@ bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
     return ok;
 }
 
+std::shared_ptr<ConditionalElement> Layout::make_conditional_element(
+        std::shared_ptr<Element> parent,
+        std::shared_ptr<track::Track> track,
+        pugi::xml_node node) {
+    int x = node.attribute("x").as_int(0) + parent->x;
+    int y = node.attribute("y").as_int(0) + parent->y;
+
+    std::string key = node.attribute("key").as_string(defaults::key);
+    std::optional<EOperator> oper = operator_from_string(node.attribute("operator").as_string(""));
+    std::optional<double> value = std::nullopt;
+    if (node.attribute("value")) {
+        value = node.attribute("value").as_double();
+    }
+
+    return std::make_shared<ConditionalElement>(track, x, y, key, oper, value);
+}
+
 std::shared_ptr<TextWidget> Layout::make_text_widget(
         std::shared_ptr<Element> parent,
         std::shared_ptr<track::Track> track,
@@ -139,8 +167,8 @@ std::shared_ptr<TextWidget> Layout::make_text_widget(
     ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
     std::string font = node.attribute("font").as_string("Arial 12");
     rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
-    rgba border_color = color_from_string(node.attribute("border_color").as_string(defaults::border_color));
-    int border_width = node.attribute("border_width").as_int(defaults::border_width);
+    rgba border_color = color_from_string(node.attribute("border-color").as_string(defaults::border_color));
+    int border_width = node.attribute("border-width").as_int(defaults::border_width);
     std::string text = node.attribute("text").as_string("");
 
     return std::make_shared<TextWidget>(
@@ -156,8 +184,8 @@ std::shared_ptr<ValueWidget> Layout::make_value_widget(
     ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
     std::string font = node.attribute("font").as_string(defaults::font);
     rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
-    rgba border_color = color_from_string(node.attribute("border_color").as_string(defaults::border_color));
-    int border_width = node.attribute("border_width").as_int(defaults::border_width);
+    rgba border_color = color_from_string(node.attribute("border-color").as_string(defaults::border_color));
+    int border_width = node.attribute("border-width").as_int(defaults::border_width);
     std::string key = node.attribute("key").as_string(defaults::key);
     std::string format = node.attribute("format").as_string(defaults::format);
     double scale = node.attribute("scale").as_double(defaults::scale);
@@ -175,8 +203,8 @@ std::shared_ptr<DatetimeWidget> Layout::make_datetime_widget(
     ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
     std::string font = node.attribute("font").as_string(defaults::font);
     rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
-    rgba border_color = color_from_string(node.attribute("border_color").as_string(defaults::border_color));
-    int border_width = node.attribute("border_width").as_int(defaults::border_width);
+    rgba border_color = color_from_string(node.attribute("border-color").as_string(defaults::border_color));
+    int border_width = node.attribute("border-width").as_int(defaults::border_width);
     std::string key = node.attribute("key").as_string(defaults::key);
     std::string format = node.attribute("format").as_string(defaults::datetime_format);
     std::string timezone = node.attribute("timezone").as_string(defaults::timezone);
@@ -185,22 +213,24 @@ std::shared_ptr<DatetimeWidget> Layout::make_datetime_widget(
         track, x, y, align, font, color, border_color, border_width, key, format, timezone);
 }
 
-std::shared_ptr<ConditionalElement> Layout::make_conditional_element(
-        std::shared_ptr<Element> parent,
-        std::shared_ptr<track::Track> track,
-        pugi::xml_node node) {
-    int x = node.attribute("x").as_int(0) + parent->x;
-    int y = node.attribute("y").as_int(0) + parent->y;
+// std::shared_ptr<ChartWidget> Layout::make_chart_widget(
+//         std::shared_ptr<Element> parent,
+//         std::shared_ptr<track::Track> track,
+//         pugi::xml_node node) {
+//     int x = node.attribute("x").as_int(0) + parent->x;
+//     int y = node.attribute("y").as_int(0) + parent->y;
+//     int width = node.attribute("width").as_int(defaults::chart_width);
+//     int height = node.attribute("height").as_int(defaults::chart_height);
+//     rgba line_color = color_from_string(node.attribute("line-color").as_string(defaults::color));
+//     int line_width = node.attribute("line-width").as_int(defaults::chart_line_width);
+//     rgba point_color = color_from_string(node.attribute("point-color").as_string(defaults::color));
+//     int point_size = node.attribute("point-size").as_int(defaults::chart_point_size);
+//     std::string x_key = node.attribute("x-key").as_string(defaults::key);
+//     std::string y_key = node.attribute("y-key").as_string(defaults::key);
 
-    std::string key = node.attribute("key").as_string(defaults::key);
-    std::optional<EOperator> oper = operator_from_string(node.attribute("operator").as_string(""));
-    std::optional<double> value = std::nullopt;
-    if (node.attribute("value")) {
-        value = node.attribute("value").as_double();
-    }
-
-    return std::make_shared<ConditionalElement>(track, x, y, key, oper, value);
-}
+//     return std::make_shared<ChartWidget>(
+//         track, x, y, width, height, line_color, line_width, point_color, point_size, x_key, y_key);
+// }
 
 } // namespace overlay
 } // namespace telemetry
