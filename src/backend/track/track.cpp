@@ -69,6 +69,10 @@ field_id_t Track::get_field_id(const std::string& field_name) const {
     return INVALID_FIELD;
 }
 
+Track::trackpoint_ts_view_t Track::get_trackpoint_timestamps() const {
+    return std::views::keys(trackpoints_);
+}
+
 Value Track::get(const std::string& key, time::microseconds_t timestamp) const {
     field_id_t field_id = get_field_id(key);
     return get(field_id, timestamp);

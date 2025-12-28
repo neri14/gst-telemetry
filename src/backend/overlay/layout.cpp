@@ -112,7 +112,7 @@ bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
             element = make_datetime_widget(parent, track_, node);
             log.debug("Created DatetimeWidget element");
         } else if (type == "chart") {
-            // element = make_chart_widget(parent, track_, node);
+            element = make_chart_widget(parent, track_, node);
             log.debug("Created ChartWidget element");
         } else if (type == "map") {
             //TODO
@@ -213,24 +213,24 @@ std::shared_ptr<DatetimeWidget> Layout::make_datetime_widget(
         track, x, y, align, font, color, border_color, border_width, key, format, timezone);
 }
 
-// std::shared_ptr<ChartWidget> Layout::make_chart_widget(
-//         std::shared_ptr<Element> parent,
-//         std::shared_ptr<track::Track> track,
-//         pugi::xml_node node) {
-//     int x = node.attribute("x").as_int(0) + parent->x;
-//     int y = node.attribute("y").as_int(0) + parent->y;
-//     int width = node.attribute("width").as_int(defaults::chart_width);
-//     int height = node.attribute("height").as_int(defaults::chart_height);
-//     rgba line_color = color_from_string(node.attribute("line-color").as_string(defaults::color));
-//     int line_width = node.attribute("line-width").as_int(defaults::chart_line_width);
-//     rgba point_color = color_from_string(node.attribute("point-color").as_string(defaults::color));
-//     int point_size = node.attribute("point-size").as_int(defaults::chart_point_size);
-//     std::string x_key = node.attribute("x-key").as_string(defaults::key);
-//     std::string y_key = node.attribute("y-key").as_string(defaults::key);
+std::shared_ptr<ChartWidget> Layout::make_chart_widget(
+        std::shared_ptr<Element> parent,
+        std::shared_ptr<track::Track> track,
+        pugi::xml_node node) {
+    int x = node.attribute("x").as_int(0) + parent->x;
+    int y = node.attribute("y").as_int(0) + parent->y;
+    int width = node.attribute("width").as_int(defaults::chart_width);
+    int height = node.attribute("height").as_int(defaults::chart_height);
+    rgba line_color = color_from_string(node.attribute("line-color").as_string(defaults::color));
+    int line_width = node.attribute("line-width").as_int(defaults::chart_line_width);
+    rgba point_color = color_from_string(node.attribute("point-color").as_string(defaults::color));
+    int point_size = node.attribute("point-size").as_int(defaults::chart_point_size);
+    std::string x_key = node.attribute("x-key").as_string(defaults::key);
+    std::string y_key = node.attribute("y-key").as_string(defaults::key);
 
-//     return std::make_shared<ChartWidget>(
-//         track, x, y, width, height, line_color, line_width, point_color, point_size, x_key, y_key);
-// }
+    return std::make_shared<ChartWidget>(
+        track, x, y, width, height, line_color, line_width, point_color, point_size, x_key, y_key);
+}
 
 } // namespace overlay
 } // namespace telemetry

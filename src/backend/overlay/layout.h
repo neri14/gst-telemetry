@@ -10,7 +10,7 @@
 #include "elements/text_widget.h"
 #include "elements/value_widget.h"
 #include "elements/datetime_widget.h"
-// #include "elements/chart_widget.h"
+#include "elements/chart_widget.h"
 
 #include "backend/utils/logging/logger.h"
 #include "backend/track/track.h"
@@ -39,8 +39,8 @@ private:
         std::shared_ptr<track::Track> track, pugi::xml_node node);
     std::shared_ptr<DatetimeWidget> make_datetime_widget(std::shared_ptr<Element> parent,
         std::shared_ptr<track::Track> track, pugi::xml_node node);
-    // std::shared_ptr<ChartWidget> make_chart_widget(std::shared_ptr<Element> parent,
-    //     std::shared_ptr<track::Track> track, pugi::xml_node node);
+    std::shared_ptr<ChartWidget> make_chart_widget(std::shared_ptr<Element> parent,
+        std::shared_ptr<track::Track> track, pugi::xml_node node);
 
     std::shared_ptr<track::Track> track_;
     std::shared_ptr<Element> root_;

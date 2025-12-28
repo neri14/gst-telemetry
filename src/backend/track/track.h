@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <variant>
 #include <stdint.h>
@@ -25,12 +26,18 @@ static constexpr field_id_t INVALID_FIELD = UINT32_MAX;
 
 class Track {
 public:
+    using fields_map_t = std::map<field_id_t, Value>;
+    using trackpoint_data_map_t = std::map<time::microseconds_t, std::shared_ptr<fields_map_t>>;
+    using trackpoint_ts_view_t = std::ranges::keys_view<std::ranges::ref_view<const trackpoint_data_map_t>>;
+
     Track(time::microseconds_t offset = 0);
     ~Track() = default;
 
     bool load(const std::string& path);
 
     field_id_t get_field_id(const std::string& field_name) const;
+
+    trackpoint_ts_view_t get_trackpoint_timestamps() const;
 
     //TODO add argument to getters to specify retrieve LAST, NEXT or INTERPOLATED value
     Value get(const std::string& key, time::microseconds_t timestamp = time::INVALID_TIME) const;
@@ -78,8 +85,8 @@ private:
     std::map<std::string, field_id_t> field_ids_;
     field_id_t next_field_id_ = 0;
 
-    std::map<field_id_t, Value> metadata_;
-    std::map<time::microseconds_t, std::shared_ptr<std::map<field_id_t, Value>>> trackpoints_;
+    fields_map_t metadata_;
+    trackpoint_data_map_t trackpoints_;
     std::map<field_id_t, std::function<Value(time::microseconds_t)>> virtual_data_mapping_;
 
     time::microseconds_t min_timestamp_ = time::INVALID_TIME;
