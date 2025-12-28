@@ -1,6 +1,7 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#include <cairo.h>
 #include "backend/utils/logging/logger.h"
 
 namespace telemetry {
@@ -12,6 +13,8 @@ public:
 
     bool init(float offset, const char* track, const char* layout);
     bool deinit();
+
+    bool draw(long timestamp, cairo_surface_t* surface);
 
 private:
     utils::logging::Logger log{"manager"};

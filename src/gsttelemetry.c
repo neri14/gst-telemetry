@@ -47,18 +47,15 @@ enum
 
 /* pad templates */
 
-
 #define VIDEO_SRC_CAPS \
     GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory, meta:GstVideoOverlayComposition", "RGBA") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory", "RGBA")
 
-
 #define VIDEO_SINK_CAPS \
     GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory, meta:GstVideoOverlayComposition", "RGBA") "; " \
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory", "RGBA")
-
 
 /* class initialization */
 
@@ -118,6 +115,7 @@ static void
 gst_telemetry_init (GstTelemetry *telemetry)
 {
   telemetry->offset = 0.0;
+  telemetry->initial_timestamp = GST_CLOCK_TIME_NONE;
   telemetry->layout = NULL;
   telemetry->track = NULL;
   telemetry->gl_mode = FALSE;
@@ -367,26 +365,12 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   cairo_surface_t *surface = cairo_image_surface_create(
     CAIRO_FORMAT_ARGB32, overlay_width, overlay_height);
 
-  /** TEST CAIRO DRAWING **/
-  cairo_t *cr = cairo_create(surface);
-  // Clear to transparent
-  cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-  cairo_paint(cr);
-  cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-  // Draw your overlay content
-  cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 0.8); // semi-transparent red
-  cairo_rectangle(cr, 10, 10, 100, 100);
-  cairo_fill(cr);
-  // Draw text
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-  cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_font_size(cr, 24);
-  cairo_move_to(cr, 10, 150);
-  cairo_show_text(cr, "Telemetry");
-  // Flush and destroy
-  cairo_surface_flush(surface);
-  cairo_destroy(cr);
-  /** TEST CAIRO DRAWING **/
+  long timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
+  if (telemetry->initial_timestamp == GST_CLOCK_TIME_NONE) {
+    telemetry->initial_timestamp = timestamp;
+  }
+  timestamp -= telemetry->initial_timestamp;
+  draw(telemetry->manager, timestamp, surface);
 
   // Get Cairo surface data
   guint8 *cairo_data = cairo_image_surface_get_data(surface);

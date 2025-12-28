@@ -22,6 +22,7 @@ struct _GstTelemetry
   GstVideoFilter base_telemetry;
 
   ManagerHandle *manager;
+  long initial_timestamp;
 
   float offset;
   char *track;
