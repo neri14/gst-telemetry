@@ -17,7 +17,8 @@ ValueWidget::ValueWidget(std::shared_ptr<track::Track> track,
                        rgba border_color,
                        int border_width,
                        const std::string& key,
-                       const std::string& format)
+                       const std::string& format,
+                       double scale)
     : Element(track, x, y),
       align_(align),
       font_(font),
@@ -26,7 +27,8 @@ ValueWidget::ValueWidget(std::shared_ptr<track::Track> track,
       border_width_(border_width),
       key_(key),
       key_id_(track->get_field_id(key)),
-      format_(format) {
+      format_(format),
+      scale_(scale) {
 }
 
 void ValueWidget::draw(time::microseconds_t timestamp, cairo_t* cr) {
@@ -36,6 +38,7 @@ void ValueWidget::draw(time::microseconds_t timestamp, cairo_t* cr) {
     if (value.is_valid()) {
         if (value.is_double()) {
             double val = value.as_double();
+            val *= scale_;
             str = std::vformat(format_, std::make_format_args(val));
         } else if (value.is_time_point()) {
             auto tp = value.as_time_point();

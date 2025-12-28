@@ -18,7 +18,8 @@ struct ValueWidget: public Element {
                rgba border_color,
                int border_width,
                const std::string& key,
-               const std::string& format);
+               const std::string& format,
+               double scale);
     virtual ~ValueWidget() = default;
 
     void draw(time::microseconds_t timestamp, cairo_t* cr) override;
@@ -32,6 +33,7 @@ private:
     std::string key_;
     track::field_id_t key_id_;
     std::string format_;
+    double scale_;
 };
 
 } // namespace overlay

@@ -14,6 +14,7 @@ namespace defaults {
     const char* align = "left";
     const char* key = "";
     const char* format = "";
+    const double scale = 1.0;
     const char* datetime_format = "%Y-%m-%d %H:%M:%S";
     const char* timezone = "UTC";
 } // namespace defaults
@@ -86,6 +87,11 @@ bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
         root_ = std::make_shared<Element>(track_);
         element = root_;
         log.debug("Created root layout element");
+    } else if (name == "container") {
+        element = std::make_shared<Element>(track_,
+            node.attribute("x").as_int(0) + (parent ? parent->x : 0),
+            node.attribute("y").as_int(0) + (parent ? parent->y : 0));
+        log.debug("Created container element");
     } else if (name == "widget") {
         std::string type = node.attribute("type").as_string();
 
@@ -154,9 +160,10 @@ std::shared_ptr<ValueWidget> Layout::make_value_widget(
     int border_width = node.attribute("border_width").as_int(defaults::border_width);
     std::string key = node.attribute("key").as_string(defaults::key);
     std::string format = node.attribute("format").as_string(defaults::format);
+    double scale = node.attribute("scale").as_double(defaults::scale);
 
     return std::make_shared<ValueWidget>(
-        track, x, y, align, font, color, border_color, border_width, key, format);
+        track, x, y, align, font, color, border_color, border_width, key, format, scale);
 }
 
 std::shared_ptr<DatetimeWidget> Layout::make_datetime_widget(
