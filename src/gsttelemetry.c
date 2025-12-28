@@ -252,7 +252,8 @@ gst_telemetry_stop (GstBaseTransform * trans)
   }
   return TRUE;
 }
-GstCaps *
+
+static GstCaps *
 gst_telemetry_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * filter)
 {
@@ -322,7 +323,6 @@ gst_telemetry_transform_caps (GstBaseTransform * trans, GstPadDirection directio
   return result;
 }
 
-
 static gboolean
 gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
@@ -359,84 +359,52 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
   GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
 
-  gint overlay_width = filter->out_info.width;
-  gint overlay_height = filter->out_info.height;
+  gint width = filter->out_info.width;
+  gint height = filter->out_info.height;
 
+  // Create Cairo surface for drawing
   cairo_surface_t *surface = cairo_image_surface_create(
-    CAIRO_FORMAT_ARGB32, overlay_width, overlay_height);
+    CAIRO_FORMAT_ARGB32, width, height);
 
+  // Calculate timestamp relative to initial frame
   long timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
   if (telemetry->initial_timestamp == GST_CLOCK_TIME_NONE) {
     telemetry->initial_timestamp = timestamp;
   }
   timestamp -= telemetry->initial_timestamp;
+
+  // Call manager to draw telemetry onto Cairo surface
+  GST_DEBUG_OBJECT (telemetry, "drawing telemetry for timestamp: %ld us", timestamp);
   draw(telemetry->manager, timestamp, surface);
 
-  // Get Cairo surface data
+  // Get Cairo surface data and stride
   guint8 *cairo_data = cairo_image_surface_get_data(surface);
   gint cairo_stride = cairo_image_surface_get_stride(surface);
 
-  // Create GstBuffer from Cairo surface
-  // GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
-  // gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * overlay_height);
-
-
-
-
-  // Convert BGRA to RGBA for GL compatibility
-  GstBuffer *overlay_buffer;
-  // if (telemetry->gl_mode) {
-  //   // For GL mode, convert BGRA to RGBA
-  //   overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
-  //   GstMapInfo map;
-  //   gst_buffer_map(overlay_buffer, &map, GST_MAP_WRITE);
-    
-  //   for (gint y = 0; y < overlay_height; y++) {
-  //     guint8 *src = cairo_data + y * cairo_stride;
-  //     guint8 *dst = map.data + y * cairo_stride;
-  //     for (gint x = 0; x < overlay_width; x++) {
-  //       // Cairo ARGB32 is BGRA in memory (little-endian)
-  //       // Convert to RGBA for GL
-  //       guint8 b = src[x * 4 + 0];
-  //       guint8 g = src[x * 4 + 1];
-  //       guint8 r = src[x * 4 + 2];
-  //       guint8 a = src[x * 4 + 3];
-        
-  //       dst[x * 4 + 0] = r;
-  //       dst[x * 4 + 1] = g;
-  //       dst[x * 4 + 2] = b;
-  //       dst[x * 4 + 3] = a;
-  //     }
-  //   }
-  //   gst_buffer_unmap(overlay_buffer, &map);
-  // } else {
-    // For CPU mode, use BGRA directly
-    overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
-    gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * overlay_height);
-  // }
+  // Create GstBuffer from Cairo surface data
+  GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * height, NULL);
+  gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * height);
 
   // Add video meta
   gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
-                            GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, overlay_width, overlay_height);
-
-  // // Add video meta
-  // gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
-  //                           GST_VIDEO_FORMAT_BGRA, overlay_width, overlay_height);
+                            GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, width, height);
 
   // Create overlay rectangle
   GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(
       overlay_buffer,
       0, 0,  // x, y position on video
-      overlay_width, overlay_height,  // render width, height
+      width, height,  // render width, height
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
   // Create composition
   GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(rect);
 
   if (telemetry->gl_mode) {
+    // In GL mode, attach as metadata
     GST_DEBUG_OBJECT (telemetry, "Attaching overlay as metadata for GL pipeline");
     gst_buffer_add_video_overlay_composition_meta(frame->buffer, comp);
   } else {
+    // In CPU mode, blend directly
     GST_DEBUG_OBJECT (telemetry, "Blending overlay directly in CPU pipeline");
     gst_video_overlay_composition_blend(comp, frame);
   }
