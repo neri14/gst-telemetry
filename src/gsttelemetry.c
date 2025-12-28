@@ -377,6 +377,9 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   GST_DEBUG_OBJECT (telemetry, "drawing telemetry for timestamp: %ld us", timestamp);
   draw(telemetry->manager, timestamp, surface);
 
+  // Flush Cairo surface to ensure all drawing operations are complete
+  cairo_surface_flush(surface);
+
   // Get Cairo surface data and stride
   guint8 *cairo_data = cairo_image_surface_get_data(surface);
   gint cairo_stride = cairo_image_surface_get_stride(surface);
@@ -408,6 +411,18 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
     GST_DEBUG_OBJECT (telemetry, "Blending overlay directly in CPU pipeline");
     gst_video_overlay_composition_blend(comp, frame);
   }
+
+  //BEGIN ugly hack - hold on to the old composition reference until next frame is drawn;
+  //    combination of GPU processing and GST_GL_WINDOW=surfaceless sometimes causes
+  //    reference to composition to be lost too early resulting in gloverlaycompositor
+  //    to draw old overlay resulting in overlay being choppy (freezing for few seconds)
+  static GstVideoOverlayComposition *old_comp = NULL;
+  if (old_comp) {
+      gst_video_overlay_composition_unref(old_comp);
+      old_comp = NULL;
+  }
+  old_comp = gst_video_overlay_composition_ref(comp);
+  //END ugly hack
 
   // Cleanup
   gst_video_overlay_composition_unref(comp);
