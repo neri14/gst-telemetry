@@ -134,4 +134,7 @@
 helper variables generated internally:
 - time_elapsed    - float   - always present timer - relative to activity start - negative before start of activity
 - time_remaining  - float   - always present timer - relative to activity end - negative after end of activity
+- countdown       - float   - time until activity start - unavailable after activity start
+- overtime        - float   - time since activity end - unavailable before activity end
+- active          - boolean - true when activity is ongoing
 -->

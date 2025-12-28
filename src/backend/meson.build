@@ -7,5 +7,6 @@ headers += files(
   'manager.h',
 )
 
+subdir('overlay')
 subdir('track')
 subdir('utils')

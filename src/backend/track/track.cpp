@@ -26,21 +26,7 @@ namespace consts {
 Track::Track(time::microseconds_t offset): start_offset_(offset) {
     log.info("Track created with offset: {} us", offset);
 
-    virtual_data_mapping_[register_virtual_field("time_elapsed")] = [this](time::microseconds_t timestamp) -> Value {
-        if (min_timestamp_ != time::INVALID_TIME) {
-            return Value(time::us_to_s(timestamp - min_timestamp_));
-        } else {
-            return Value();
-        }
-    };
-
-    virtual_data_mapping_[register_virtual_field("time_remaining")] = [this](time::microseconds_t timestamp) -> Value {
-        if (max_timestamp_ != 0) {
-            return Value(time::us_to_s(max_timestamp_ - timestamp));
-        } else {
-            return Value();
-        }
-    };
+    create_virtual_fields();
 }
 
 bool Track::load(const std::string& path) {
@@ -60,7 +46,7 @@ bool Track::load(const std::string& path) {
     }
 
     if (std::distance(doc.children().begin(), doc.children().end()) > 1) {
-        log.error("More than one root node in layout file");
+        log.error("More than one root node in track file");
         return false;
     }
 
@@ -73,8 +59,6 @@ bool Track::load(const std::string& path) {
     bool ok = parse_gpx(root);
 
     return ok;
-    (void)ok;
-    return false;
 }
 
 field_id_t Track::get_field_id(const std::string& field_name) const {
@@ -426,6 +410,51 @@ bool Track::store_trackpoint_data(time::microseconds_t timestamp,
     return true;
 }
 
+void Track::create_virtual_fields() {
+    virtual_data_mapping_[register_virtual_field("time_elapsed")] = [this](time::microseconds_t timestamp) -> Value {
+        if (min_timestamp_ != time::INVALID_TIME) {
+            return Value(time::us_to_s(timestamp - min_timestamp_));
+        } else {
+            return Value();
+        }
+    };
+
+    virtual_data_mapping_[register_virtual_field("time_remaining")] = [this](time::microseconds_t timestamp) -> Value {
+        if (max_timestamp_ != 0) {
+            return Value(time::us_to_s(max_timestamp_ - timestamp));
+        } else {
+            return Value();
+        }
+    };
+
+    virtual_data_mapping_[register_virtual_field("active")] = [this](time::microseconds_t timestamp) -> Value {
+        if (min_timestamp_ != time::INVALID_TIME && max_timestamp_ != 0) {
+            return Value(timestamp >= min_timestamp_ && timestamp <= max_timestamp_);
+        } else {
+            return Value(false);
+        }
+    };
+
+    virtual_data_mapping_[register_virtual_field("countdown")] = [this](time::microseconds_t timestamp) -> Value {
+        if (min_timestamp_ != time::INVALID_TIME) {
+            time::microseconds_t diff = min_timestamp_ - timestamp;
+            if (diff >= 0) {
+                return Value(time::us_to_s(diff));
+            }
+        }
+        return Value();
+    };
+
+    virtual_data_mapping_[register_virtual_field("overtime")] = [this](time::microseconds_t timestamp) -> Value {
+        if (max_timestamp_ != 0) {
+            time::microseconds_t diff = timestamp - max_timestamp_;
+            if (diff >= 0) {
+                return Value(time::us_to_s(diff));
+            }
+        }
+        return Value();
+    };
+}
 
 field_id_t Track::register_metadata_field(const std::string& key) {
     std::string metakey = consts::metadata_prefix_ + key;

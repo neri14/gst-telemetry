@@ -66,6 +66,7 @@ private:
     bool store_trackpoint_data(
         time::microseconds_t timestamp,
         const std::string& key, const Value& value);
+    void create_virtual_fields();
 
     field_id_t register_metadata_field(const std::string& key);
     field_id_t register_trackpoint_field(const std::string& key);

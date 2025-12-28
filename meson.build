@@ -34,6 +34,7 @@ gst_base_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
 gst_video_dep = dependency('gstreamer-video-1.0', version : gst_req)
 cairo_dep = dependency('cairo', required : true)
+pangocairo_dep = dependency('pangocairo', required : true)
 pugi_dep = dependency('pugixml', required : true)
 
 # Set the directory where plugins should be installed.
@@ -47,6 +48,6 @@ else
   plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 endif
 
-plugin_deps = [gst_dep, gst_base_dep, gst_video_dep, cairo_dep, pugi_dep]
+plugin_deps = [gst_dep, gst_base_dep, gst_video_dep, cairo_dep, pangocairo_dep, pugi_dep]
 
 subdir('src')

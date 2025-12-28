@@ -12,10 +12,11 @@ namespace telemetry {
 namespace track {
 
 struct Value {
-    std::optional<std::variant<std::string, double, time::time_point_t>> data;
+    std::optional<std::variant<std::string, double, bool, time::time_point_t>> data;
 
     bool is_string() const;
     bool is_double() const;
+    bool is_bool() const;
     bool is_time_point() const;
 
     bool is_valid() const;
@@ -23,11 +24,13 @@ struct Value {
 
     std::string as_string() const;//TODO format argument?
     double as_double() const;
+    bool as_bool() const;
     time::time_point_t as_time_point() const;
 
     Value();
     Value(const std::string& str);
     Value(double d);
+    Value(bool b);
     Value(time::time_point_t tp);
 };
 
