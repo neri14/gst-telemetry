@@ -60,3 +60,6 @@ builddir/
 
 # editors
 .vscode/
+
+# temporary files
+tmp/

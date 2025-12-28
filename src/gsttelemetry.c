@@ -30,6 +30,8 @@ static void gst_telemetry_finalize (GObject * object);
 
 static gboolean gst_telemetry_start (GstBaseTransform * trans);
 static gboolean gst_telemetry_stop (GstBaseTransform * trans);
+static GstCaps * gst_telemetry_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
     GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info);
 static GstFlowReturn gst_telemetry_transform_frame_ip (GstVideoFilter * filter,
@@ -45,13 +47,17 @@ enum
 
 /* pad templates */
 
-/* FIXME: add/remove formats you can handle */
-#define VIDEO_SRC_CAPS \
-    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }")
 
-/* FIXME: add/remove formats you can handle */
+#define VIDEO_SRC_CAPS \
+    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }") "; " \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory, meta:GstVideoOverlayComposition", "RGBA") "; " \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory", "RGBA")
+
+
 #define VIDEO_SINK_CAPS \
-    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }")
+    GST_VIDEO_CAPS_MAKE("{ I420, Y444, Y42B, UYVY, RGBA }") "; " \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory, meta:GstVideoOverlayComposition", "RGBA") "; " \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:GLMemory", "RGBA")
 
 
 /* class initialization */
@@ -86,6 +92,7 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
   gobject_class->finalize = gst_telemetry_finalize;
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_telemetry_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_telemetry_stop);
+  base_transform_class->transform_caps = GST_DEBUG_FUNCPTR (gst_telemetry_transform_caps);
   base_transform_class->passthrough_on_same_caps = FALSE;
 
   video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_telemetry_set_info);
@@ -247,6 +254,76 @@ gst_telemetry_stop (GstBaseTransform * trans)
   }
   return TRUE;
 }
+GstCaps *
+gst_telemetry_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
+    GstCaps * caps, GstCaps * filter)
+{
+  GstTelemetry *telemetry = GST_TELEMETRY (trans);
+  GstCaps *result, *tmp;
+  guint i;
+  
+  GST_DEBUG_OBJECT (telemetry, "transform_caps direction: %s", 
+                    direction == GST_PAD_SINK ? "sink->src" : "src->sink");
+
+  result = gst_caps_new_empty ();
+  
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *structure = gst_caps_get_structure (caps, i);
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+    GstCapsFeatures *new_features;
+    
+    // Add the original caps
+    tmp = gst_caps_new_full (gst_structure_copy (structure), NULL);
+    if (features) {
+      new_features = gst_caps_features_copy (features);
+      gst_caps_set_features (tmp, 0, new_features);
+    }
+    result = gst_caps_merge (result, tmp);
+    
+    // If transforming from sink to src (downstream), also advertise that we can ADD overlay composition
+    if (direction == GST_PAD_SINK) {
+      // Check if it's a GL memory caps
+      if (features && gst_caps_features_contains (features, "memory:GLMemory")) {
+        // If it doesn't already have the overlay composition meta, add a variant that does
+        if (!gst_caps_features_contains (features, "meta:GstVideoOverlayComposition")) {
+          tmp = gst_caps_new_full (gst_structure_copy (structure), NULL);
+          new_features = gst_caps_features_copy (features);
+          gst_caps_features_add (new_features, "meta:GstVideoOverlayComposition");
+          gst_caps_set_features (tmp, 0, new_features);
+          result = gst_caps_merge (result, tmp);
+        }
+      }
+    }
+    // If transforming from src to sink (upstream), also allow accepting without overlay composition
+    else if (direction == GST_PAD_SRC) {
+      // Check if it's requesting GL memory with overlay composition
+      if (features && 
+          gst_caps_features_contains (features, "memory:GLMemory") &&
+          gst_caps_features_contains (features, "meta:GstVideoOverlayComposition")) {
+        // Also advertise that we can accept without the meta
+        tmp = gst_caps_new_full (gst_structure_copy (structure), NULL);
+        new_features = gst_caps_features_copy (features);
+        gst_caps_features_remove (new_features, "meta:GstVideoOverlayComposition");
+        gst_caps_set_features (tmp, 0, new_features);
+        result = gst_caps_merge (result, tmp);
+      }
+    }
+  }
+  
+  // Apply the filter if provided
+  if (filter) {
+    tmp = gst_caps_intersect_full (result, filter, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (result);
+    result = tmp;
+  }
+  
+  gchar *result_str = gst_caps_to_string (result);
+  GST_DEBUG_OBJECT (telemetry, "transformed caps: %s", result_str);
+  g_free (result_str);
+  
+  return result;
+}
+
 
 static gboolean
 gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
@@ -254,6 +331,16 @@ gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
 {
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
   GST_DEBUG_OBJECT (telemetry, "set_info");
+
+  // Debug print input and output caps
+  gchar *incaps_str = gst_caps_to_string (incaps);
+  gchar *outcaps_str = gst_caps_to_string (outcaps);
+  
+  GST_INFO_OBJECT (telemetry, "Input caps: %s", incaps_str);
+  GST_INFO_OBJECT (telemetry, "Output caps: %s", outcaps_str);
+  
+  g_free (incaps_str);
+  g_free (outcaps_str);
 
   GstCapsFeatures *features = gst_caps_get_features (incaps, 0);
   if (features && gst_caps_features_contains (features, "memory:GLMemory")) {
@@ -306,12 +393,51 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   gint cairo_stride = cairo_image_surface_get_stride(surface);
 
   // Create GstBuffer from Cairo surface
-  GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
-  gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * overlay_height);
+  // GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
+  // gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * overlay_height);
+
+
+
+
+  // Convert BGRA to RGBA for GL compatibility
+  GstBuffer *overlay_buffer;
+  // if (telemetry->gl_mode) {
+  //   // For GL mode, convert BGRA to RGBA
+  //   overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
+  //   GstMapInfo map;
+  //   gst_buffer_map(overlay_buffer, &map, GST_MAP_WRITE);
+    
+  //   for (gint y = 0; y < overlay_height; y++) {
+  //     guint8 *src = cairo_data + y * cairo_stride;
+  //     guint8 *dst = map.data + y * cairo_stride;
+  //     for (gint x = 0; x < overlay_width; x++) {
+  //       // Cairo ARGB32 is BGRA in memory (little-endian)
+  //       // Convert to RGBA for GL
+  //       guint8 b = src[x * 4 + 0];
+  //       guint8 g = src[x * 4 + 1];
+  //       guint8 r = src[x * 4 + 2];
+  //       guint8 a = src[x * 4 + 3];
+        
+  //       dst[x * 4 + 0] = r;
+  //       dst[x * 4 + 1] = g;
+  //       dst[x * 4 + 2] = b;
+  //       dst[x * 4 + 3] = a;
+  //     }
+  //   }
+  //   gst_buffer_unmap(overlay_buffer, &map);
+  // } else {
+    // For CPU mode, use BGRA directly
+    overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * overlay_height, NULL);
+    gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * overlay_height);
+  // }
 
   // Add video meta
   gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
-                            GST_VIDEO_FORMAT_BGRA, overlay_width, overlay_height);
+                            GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, overlay_width, overlay_height);
+
+  // // Add video meta
+  // gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
+  //                           GST_VIDEO_FORMAT_BGRA, overlay_width, overlay_height);
 
   // Create overlay rectangle
   GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(

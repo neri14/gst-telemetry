@@ -54,13 +54,16 @@ fi
 UUT="telemetry $PROPERTIES"
 
 if [ "$GPU_MODE" = true ]; then
+    export GST_GL_WINDOW=surfaceless
     gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
-    dec. ! queue ! video/x-raw ! glupload ! glvideoflip method=automatic ! gltransformation ! $UUT ! gloverlaycompositor ! nvh264enc bitrate=120000 ! h264parse ! queue ! mux. \
+    dec. ! queue ! video/x-raw ! videoconvert ! glupload ! \
+           glvideoflip video-direction=auto ! taginject tags="image-orientation=rotate-0" !  \
+           $UUT ! 'video/x-raw(memory:GLMemory, meta:GstVideoOverlayComposition)' ! gloverlaycompositor ! nvh264enc bitrate=120000 ! h264parse ! queue ! mux. \
     dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
     mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE
 else
     gst-launch-1.0 -v filesrc location=$INPUT_FILE ! decodebin name=dec \
-    dec. ! queue ! video/x-raw ! videoflip method=automatic ! $UUT ! \
+    dec. ! queue ! videoconvert ! videoflip video-direction=auto ! $UUT ! \
            x264enc bitrate=120000 speed-preset=ultrafast tune=zerolatency ! queue ! mux. \
     dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
     mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE

@@ -60,3 +60,10 @@ export GST_DEBUG=2,telemetry:5
 ```
 
 [see description in gstreamer documentation](https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html?gi-language=c)
+
+
+## gstreamer generate dot pipeline diagram
+
+```
+export GST_DEBUG_DUMP_DOT_DIR=./tmp
+```
