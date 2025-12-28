@@ -3,6 +3,7 @@ cpp_sources += files(
   'conditional_element.cpp',
   'text_widget.cpp',
   'value_widget.cpp',
+  'datetime_widget.cpp',
 )
 
 headers += files(
@@ -10,6 +11,7 @@ headers += files(
   'conditional_element.h',
   'text_widget.h',
   'value_widget.h',
+  'datetime_widget.h',
 )
 
 subdir('common')

@@ -1,0 +1,79 @@
+<!-- widget (x,y) in global reference plane is always sum of it's tag and all parent tags x's and y's -->
+<!-- align: Left means widget's left edge is at x, Center means widget's center is at x, Right means widget's right edge is at x -->
+
+<layout>
+    <!-- timestamp -->
+    <widget type="datetime" x="10" y="10" align="left" font="DejaVu Sans 32"
+            color="white" border-color="black" border-width="2"
+            key="point.time" format="{:%Y-%m-%d %H:%M:%S}"
+            timezone="Europe/Warsaw" />
+
+    <!-- charts -->
+    <!-- <container x="2990" y="50">
+        <widget type="map" x="0" y="0" width="800" height="800" line-color="white" line-width="6" point-color="red" point-size="14" />
+        <widget type="chart" x="0" y="850" width="800" height="100" line-color="white" line-width="4" point-color="red" point-size="12" x-key="distance" y-key="smooth_altitude" />
+    </container> -->
+
+    <!-- speed moving chart -->
+    <!-- <container x="720" y="1910">
+        <widget type="rectangle" x="0" y="0" width="600" height="204" bg-color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
+        <widget type="moving-chart" x="0" y="2" width="600" height="200" line-color="white" line-width="4" key="speed" window="15" 
+                text-font="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.1f} KM/H"/>
+    </container> -->
+
+    <!-- power moving chart -->
+    <!-- <container x="1620" y="1910">
+        <widget type="rectangle" x="0" y="0" width="600" height="204" bg-color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
+        <widget type="moving-chart" x="0" y="2" width="600" height="200" line-color="white" line-width="4" key="power" window="15"
+                text-font="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.0f} W"/>
+    </container> -->
+
+    <!-- gradient moving chart -->
+    <!-- <container x="2520" y="1910">
+        <widget type="line" x1="0" y1="100" x2="600" y2="102" color="#ffffffb0" width="2" />
+        <widget type="rectangle" x="0" y="0" width="600" height="204" bg-color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
+        <widget type="moving-chart" x="0" y="2" width="600" height="200" line-color="white" line-width="4" key="gradient" window="15" symmetric="true"
+                text-font="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.1f} %"/>
+    </container> -->
+
+    <!-- left column -->
+    <!-- <container x="230" y="1360">
+        <container x="0" y="0">
+        </container>
+        <container x="0" y="150">
+            <widget type="string" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="KM/H" />
+            <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="speed" precision="1" />
+        </container>
+        <container x="0" y="300">
+            <widget type="string" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="WATT" />
+            <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="power" precision="0" />
+        </container>
+        <container x="0" y="450">
+            <widget type="string" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="RPM" />
+            <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="cadence" precision="0" />
+        </container>
+        <container x="0" y="600">
+            <widget type="string" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="GEAR" />
+            <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="rear_gear_num" precision="0" />
+        </container>
+    </container> -->
+
+    <!-- right column -->
+    <!-- <container x="3770" y="1360">
+        <container x="0" y="0">
+        </container>
+        <container x="0" y="150">
+        </container>
+        <container x="0" y="300">
+        </container>
+        <container x="0" y="450">
+            <widget type="string" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="GRADIENT (%)" />
+            <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="gradient" precision="1" />
+        </container>
+        <container x="0" y="600">
+            <widget type="string" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="KM" />
+            <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="distance" precision="1" />
+        </container>
+    </container> -->
+</layout>
+

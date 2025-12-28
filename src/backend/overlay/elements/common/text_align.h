@@ -16,7 +16,7 @@ enum class ETextAlign {
     Right
 };
 
-inline ETextAlign from_string(const std::string& align) {
+inline ETextAlign text_align_from_string(const std::string& align) {
     if (align == "left") {
         return ETextAlign::Left;
     } else if (align == "center") {

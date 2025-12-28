@@ -12,6 +12,10 @@ namespace defaults {
     const char* border_color = "black";
     const int border_width = 0;
     const char* align = "left";
+    const char* key = "";
+    const char* format = "";
+    const char* datetime_format = "%Y-%m-%d %H:%M:%S";
+    const char* timezone = "UTC";
 } // namespace defaults
 
 Layout::Layout(std::shared_ptr<track::Track> track)
@@ -91,6 +95,9 @@ bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
         } else if (type == "value") {
             element = make_value_widget(parent, track_, node);
             log.debug("Created ValueWidget element");
+        } else if (type == "datetime") {
+            element = make_datetime_widget(parent, track_, node);
+            log.debug("Created DatetimeWidget element");
         } else {
             log.warning("Unknown widget type: {}", type);
         }
@@ -123,7 +130,7 @@ std::shared_ptr<TextWidget> Layout::make_text_widget(
         pugi::xml_node node) {
     int x = node.attribute("x").as_int(0) + parent->x;
     int y = node.attribute("y").as_int(0) + parent->y;
-    ETextAlign align = from_string(node.attribute("align").as_string(defaults::align));
+    ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
     std::string font = node.attribute("font").as_string("Arial 12");
     rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
     rgba border_color = color_from_string(node.attribute("border_color").as_string(defaults::border_color));
@@ -140,16 +147,35 @@ std::shared_ptr<ValueWidget> Layout::make_value_widget(
         pugi::xml_node node) {
     int x = node.attribute("x").as_int(0) + parent->x;
     int y = node.attribute("y").as_int(0) + parent->y;
-    ETextAlign align = from_string(node.attribute("align").as_string(defaults::align));
+    ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
     std::string font = node.attribute("font").as_string(defaults::font);
     rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
     rgba border_color = color_from_string(node.attribute("border_color").as_string(defaults::border_color));
     int border_width = node.attribute("border_width").as_int(defaults::border_width);
-    std::string key = node.attribute("key").as_string("");
-    std::string format = node.attribute("format").as_string("");
+    std::string key = node.attribute("key").as_string(defaults::key);
+    std::string format = node.attribute("format").as_string(defaults::format);
 
     return std::make_shared<ValueWidget>(
         track, x, y, align, font, color, border_color, border_width, key, format);
+}
+
+std::shared_ptr<DatetimeWidget> Layout::make_datetime_widget(
+        std::shared_ptr<Element> parent,
+        std::shared_ptr<track::Track> track,
+        pugi::xml_node node) {
+    int x = node.attribute("x").as_int(0) + parent->x;
+    int y = node.attribute("y").as_int(0) + parent->y;
+    ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
+    std::string font = node.attribute("font").as_string(defaults::font);
+    rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
+    rgba border_color = color_from_string(node.attribute("border_color").as_string(defaults::border_color));
+    int border_width = node.attribute("border_width").as_int(defaults::border_width);
+    std::string key = node.attribute("key").as_string(defaults::key);
+    std::string format = node.attribute("format").as_string(defaults::datetime_format);
+    std::string timezone = node.attribute("timezone").as_string(defaults::timezone);
+
+    return std::make_shared<DatetimeWidget>(
+        track, x, y, align, font, color, border_color, border_width, key, format, timezone);
 }
 
 std::shared_ptr<ConditionalElement> Layout::make_conditional_element(
@@ -159,7 +185,7 @@ std::shared_ptr<ConditionalElement> Layout::make_conditional_element(
     int x = node.attribute("x").as_int(0) + parent->x;
     int y = node.attribute("y").as_int(0) + parent->y;
 
-    std::string key = node.attribute("key").as_string("");
+    std::string key = node.attribute("key").as_string(defaults::key);
     std::optional<EOperator> oper = operator_from_string(node.attribute("operator").as_string(""));
     std::optional<double> value = std::nullopt;
     if (node.attribute("value")) {
