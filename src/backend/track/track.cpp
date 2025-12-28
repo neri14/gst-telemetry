@@ -16,6 +16,7 @@ namespace consts {
     const field_id_t metadata_id_mask = 0x08000000;
     const field_id_t trackpoint_id_mask = 0x04000000;
     const field_id_t segment_id_mask = 0x02000000;
+    const field_id_t virtual_id_mask = 0x01000000;
 
     const std::string metadata_prefix_ = "metadata.";
     const std::string trackpoint_prefix_ = "point.";
@@ -24,6 +25,22 @@ namespace consts {
 
 Track::Track(time::microseconds_t offset): start_offset_(offset) {
     log.info("Track created with offset: {} us", offset);
+
+    virtual_data_mapping_[register_virtual_field("time_elapsed")] = [this](time::microseconds_t timestamp) -> Value {
+        if (min_timestamp_ != time::INVALID_TIME) {
+            return Value(time::us_to_s(timestamp - min_timestamp_));
+        } else {
+            return Value();
+        }
+    };
+
+    virtual_data_mapping_[register_virtual_field("time_remaining")] = [this](time::microseconds_t timestamp) -> Value {
+        if (max_timestamp_ != 0) {
+            return Value(time::us_to_s(max_timestamp_ - timestamp));
+        } else {
+            return Value();
+        }
+    };
 }
 
 bool Track::load(const std::string& path) {
@@ -83,6 +100,8 @@ Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
         //      there can be multiple segments active at same time
         log.warning("Segment field data retrieval not implemented yet");
         return Value();
+    } else if (field_id & consts::virtual_id_mask) {
+        return get_virtual_data(field_id, timestamp);
     } else {
         log.warning("Unknown field id: {}", field_id);
         return Value();
@@ -122,6 +141,21 @@ Value Track::get_trackpoint_data(field_id_t field_id, time::microseconds_t times
             return field_it->second;
         }
     }
+    return Value();
+}
+
+Value Track::get_virtual_data(const std::string& key, time::microseconds_t timestamp) const {
+    field_id_t field_id = get_field_id(key);
+    return get_virtual_data(field_id, timestamp);
+}
+
+Value Track::get_virtual_data(field_id_t field_id, time::microseconds_t timestamp) const {
+    auto it = virtual_data_mapping_.find(field_id);
+    if (it != virtual_data_mapping_.end()) {
+        return it->second(timestamp);
+    }
+
+    log.warning("Unknown virtual field id: {}", field_id);
     return Value();
 }
 
@@ -378,6 +412,13 @@ bool Track::store_trackpoint_data(time::microseconds_t timestamp,
     } else {
         tp_data = std::make_shared<std::map<field_id_t, Value>>();
         trackpoints_[timestamp] = tp_data;
+
+        if (timestamp < min_timestamp_) {
+            min_timestamp_ = timestamp;
+        }
+        if (timestamp > max_timestamp_) {
+            max_timestamp_ = timestamp;
+        }
     }
 
     field_id_t field_id = register_trackpoint_field(key);
@@ -428,6 +469,20 @@ field_id_t Track::register_segment_field(const std::string& key) {
     field_ids_[segkey] = id;
 
     log.debug("Registered new segment field: {} with id {}", segkey, id);
+    return id;
+}
+
+field_id_t Track::register_virtual_field(const std::string& key) {
+    auto id = get_field_id(key);
+    if (id != INVALID_FIELD) {
+        return id;
+    }
+
+    id = next_field_id_++;
+    id |= consts::virtual_id_mask;
+    field_ids_[key] = id;
+
+    log.debug("Registered new virtual field: {} with id {}", key, id);
     return id;
 }
 

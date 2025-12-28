@@ -85,7 +85,8 @@ bool Manager::draw(int64_t timestamp, cairo_surface_t* surface) {
     cairo_set_font_size(cr, 24);
     cairo_move_to(cr, 10, 150);
 
-    auto val = track_->get("point.timer", timestamp);
+    // auto val = track_->get("point.timer", timestamp);
+    auto val = track_->get("time_elapsed", timestamp);
     cairo_show_text(cr, val ? val.as_string().c_str() : "unknown");
     // cairo_show_text(cr, "Telemetry");
 

@@ -32,6 +32,7 @@ public:
 
     field_id_t get_field_id(const std::string& field_name) const;
 
+    //TODO add argument to getters to specify retrieve LAST, NEXT or INTERPOLATED value
     Value get(const std::string& key, time::microseconds_t timestamp = time::INVALID_TIME) const;
     Value get(field_id_t field_id, time::microseconds_t timestamp = time::INVALID_TIME) const;
 
@@ -40,6 +41,9 @@ public:
 
     Value get_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
+
+    Value get_virtual_data(const std::string& key, time::microseconds_t timestamp) const;
+    Value get_virtual_data(field_id_t field_id, time::microseconds_t timestamp) const;
 
 private:
     mutable utils::logging::Logger log{"track"};
@@ -66,6 +70,7 @@ private:
     field_id_t register_metadata_field(const std::string& key);
     field_id_t register_trackpoint_field(const std::string& key);
     field_id_t register_segment_field(const std::string& key);
+    field_id_t register_virtual_field(const std::string& key);
 
     time::microseconds_t to_relative_time_domain(time::time_point_t timestamp) const;
 
@@ -74,6 +79,10 @@ private:
 
     std::map<field_id_t, Value> metadata_;
     std::map<time::microseconds_t, std::shared_ptr<std::map<field_id_t, Value>>> trackpoints_;
+    std::map<field_id_t, std::function<Value(time::microseconds_t)>> virtual_data_mapping_;
+
+    time::microseconds_t min_timestamp_ = time::INVALID_TIME;
+    time::microseconds_t max_timestamp_ = 0;
 
     time::time_point_t start_time_ = time::INVALID_TIME_POINT;
     time::microseconds_t start_offset_ = 0;
