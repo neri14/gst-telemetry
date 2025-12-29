@@ -6,4 +6,4 @@ headers += files(
   'layout.h',
 )
 
-subdir('elements')
+subdir('widgets')

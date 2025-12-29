@@ -1,6 +1,6 @@
 #include "layout.h"
-#include "elements/common/text_align.h"
-#include "elements/common/color.h"
+#include "backend/utils/text_align.h"
+#include "backend/utils/color.h"
 #include <chrono>
 
 namespace telemetry {
@@ -44,7 +44,7 @@ void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed = t2 - t1;
-    log.debug("Layout draw time: {} ms", elapsed.count());
+    log.debug("Layout drawing time: {} ms", elapsed.count());
 }
 
 bool Layout::load(const std::string& path) {
@@ -74,162 +74,56 @@ bool Layout::load(const std::string& path) {
         return false;
     }
 
-    bool ok = parse_node(nullptr, node);
+    root_ = parse_node(node);
 
-    return ok;
+    return root_ != nullptr;
 }
 
-bool Layout::parse_node(std::shared_ptr<Element> parent, pugi::xml_node node) {
+std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     log.debug("Parsing layout node: {}", node.name());
 
-    bool ok = true;
-
     std::string name = node.name();
-    std::shared_ptr<Element> element = nullptr;
+    std::shared_ptr<Widget> element = nullptr;
 
     if (name == "layout") {
-        root_ = std::make_shared<Element>(track_);
-        element = root_;
-        log.debug("Created root layout element");
-    } else if (name == "container") {
-        element = std::make_shared<Element>(track_,
-            node.attribute("x").as_int(0) + (parent ? parent->x : 0),
-            node.attribute("y").as_int(0) + (parent ? parent->y : 0));
-        log.debug("Created container element");
-    } else if (name == "if") {
-        element = make_conditional_element(parent, track_, node);
-        log.debug("Created ConditionalElement element");
-    } else if (name == "widget") {
-        std::string type = node.attribute("type").as_string();
+        element = std::make_shared<Widget>(track_);
+        log.debug("Created base widget");
+    // } else if (name == "container") {
+    //     element = std::make_shared<Element>(track_,
+    //         node.attribute("x").as_int(0) + (parent ? parent->x : 0),
+    //         node.attribute("y").as_int(0) + (parent ? parent->y : 0));
+    //     log.debug("Created container element");
+    // } else if (name == "if") {
+    //     element = make_conditional_element(parent, track_, node);
+    //     log.debug("Created ConditionalElement element");
+    // } else if (name == "widget") {
+    //     std::string type = node.attribute("type").as_string();
 
-        if (type == "text") {
-            element = make_text_widget(parent, track_, node);
-            log.debug("Created TextWidget element");
-        } else if (type == "value") {
-            element = make_value_widget(parent, track_, node);
-            log.debug("Created ValueWidget element");
-        } else if (type == "datetime") {
-            element = make_datetime_widget(parent, track_, node);
-            log.debug("Created DatetimeWidget element");
-        } else if (type == "chart") {
-            element = make_chart_widget(parent, track_, node);
-            log.debug("Created ChartWidget element");
-        } else if (type == "map") {
-            //TODO
-            log.warning("MapWidget not yet implemented");
-
-        } else {
-            log.warning("Unknown widget type: {}", type);
-        }
+    //     if (type == "text") {
+    //         element = make_text_widget(parent, track_, node);
+    //         log.debug("Created TextWidget element");
+    //     } else {
+    //         log.warning("Unknown widget type: {}", type);
+    //     }
     } else {
         log.warning("Unknown layout element: {}", name);
     }
 
     if (element) {
-        if (parent) {
-            parent->children.push_back(element);
-        }
-
         for (auto child : node.children()) {
-            ok = parse_node(element, child) && ok;
+            auto child_element = parse_node(child);
+
+            if (child_element) {
+                element->add_child(child_element);
+            } else {
+                log.warning("Failed to create child element {} under element {}", child.name(), name);
+            }
         }
     } else {
         log.warning("Failed to create element for node: {}", name);
-        ok = false;
     }
 
-    return ok;
-}
-
-std::shared_ptr<ConditionalElement> Layout::make_conditional_element(
-        std::shared_ptr<Element> parent,
-        std::shared_ptr<track::Track> track,
-        pugi::xml_node node) {
-    int x = node.attribute("x").as_int(0) + parent->x;
-    int y = node.attribute("y").as_int(0) + parent->y;
-
-    std::string key = node.attribute("key").as_string(defaults::key);
-    std::optional<EOperator> oper = operator_from_string(node.attribute("operator").as_string(""));
-    std::optional<double> value = std::nullopt;
-    if (node.attribute("value")) {
-        value = node.attribute("value").as_double();
-    }
-
-    return std::make_shared<ConditionalElement>(track, x, y, key, oper, value);
-}
-
-std::shared_ptr<TextWidget> Layout::make_text_widget(
-        std::shared_ptr<Element> parent,
-        std::shared_ptr<track::Track> track,
-        pugi::xml_node node) {
-    int x = node.attribute("x").as_int(0) + parent->x;
-    int y = node.attribute("y").as_int(0) + parent->y;
-    ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
-    std::string font = node.attribute("font").as_string("Arial 12");
-    rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
-    rgba border_color = color_from_string(node.attribute("border-color").as_string(defaults::border_color));
-    int border_width = node.attribute("border-width").as_int(defaults::border_width);
-    std::string text = node.attribute("text").as_string("");
-
-    return std::make_shared<TextWidget>(
-        track, x, y, align, font, color, border_color, border_width, text);
-}
-
-std::shared_ptr<ValueWidget> Layout::make_value_widget(
-        std::shared_ptr<Element> parent,
-        std::shared_ptr<track::Track> track,
-        pugi::xml_node node) {
-    int x = node.attribute("x").as_int(0) + parent->x;
-    int y = node.attribute("y").as_int(0) + parent->y;
-    ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
-    std::string font = node.attribute("font").as_string(defaults::font);
-    rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
-    rgba border_color = color_from_string(node.attribute("border-color").as_string(defaults::border_color));
-    int border_width = node.attribute("border-width").as_int(defaults::border_width);
-    std::string key = node.attribute("key").as_string(defaults::key);
-    std::string format = node.attribute("format").as_string(defaults::format);
-    double scale = node.attribute("scale").as_double(defaults::scale);
-
-    return std::make_shared<ValueWidget>(
-        track, x, y, align, font, color, border_color, border_width, key, format, scale);
-}
-
-std::shared_ptr<DatetimeWidget> Layout::make_datetime_widget(
-        std::shared_ptr<Element> parent,
-        std::shared_ptr<track::Track> track,
-        pugi::xml_node node) {
-    int x = node.attribute("x").as_int(0) + parent->x;
-    int y = node.attribute("y").as_int(0) + parent->y;
-    ETextAlign align = text_align_from_string(node.attribute("align").as_string(defaults::align));
-    std::string font = node.attribute("font").as_string(defaults::font);
-    rgba color = color_from_string(node.attribute("color").as_string(defaults::color));
-    rgba border_color = color_from_string(node.attribute("border-color").as_string(defaults::border_color));
-    int border_width = node.attribute("border-width").as_int(defaults::border_width);
-    std::string key = node.attribute("key").as_string(defaults::key);
-    std::string format = node.attribute("format").as_string(defaults::datetime_format);
-    std::string timezone = node.attribute("timezone").as_string(defaults::timezone);
-
-    return std::make_shared<DatetimeWidget>(
-        track, x, y, align, font, color, border_color, border_width, key, format, timezone);
-}
-
-std::shared_ptr<ChartWidget> Layout::make_chart_widget(
-        std::shared_ptr<Element> parent,
-        std::shared_ptr<track::Track> track,
-        pugi::xml_node node) {
-    int x = node.attribute("x").as_int(0) + parent->x;
-    int y = node.attribute("y").as_int(0) + parent->y;
-    int width = node.attribute("width").as_int(defaults::chart_width);
-    int height = node.attribute("height").as_int(defaults::chart_height);
-    rgba line_color = color_from_string(node.attribute("line-color").as_string(defaults::color));
-    int line_width = node.attribute("line-width").as_int(defaults::chart_line_width);
-    rgba point_color = color_from_string(node.attribute("point-color").as_string(defaults::color));
-    int point_size = node.attribute("point-size").as_int(defaults::chart_point_size);
-    std::string x_key = node.attribute("x-key").as_string(defaults::key);
-    std::string y_key = node.attribute("y-key").as_string(defaults::key);
-
-    return std::make_shared<ChartWidget>(
-        track, x, y, width, height, line_color, line_width, point_color, point_size, x_key, y_key);
+    return element;
 }
 
 } // namespace overlay
