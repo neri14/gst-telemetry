@@ -30,6 +30,10 @@ inline std::optional<EOperator> operator_from_string(const std::string& str) {
     return std::nullopt;
 }
 
+//TODO add support for bool negation - "!" or "not" operator
+//TODO add support for "if value present / not present" - probably resue bool like handling
+//TODO maybe add support for "value between x and y" (so double if no longer needed)
+
 struct ConditionalElement: public Element {
     ConditionalElement(std::shared_ptr<track::Track> track,
         int x, int y, const std::string& key,

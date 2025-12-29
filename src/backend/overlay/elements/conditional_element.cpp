@@ -22,25 +22,26 @@ void ConditionalElement::draw(time::microseconds_t timestamp, cairo_t* cr) {
     if (!oper_) {
         condition_met = val.as_bool();
     } else if (val.is_double() && value_) {
-        double v = val.as_double();
+        double condition = *value_;
+        double current = val.as_double();
         switch (*oper_) {
             case EOperator::EQUAL:
-                condition_met = (v == *value_);
+                condition_met = (current == condition);
                 break;
             case EOperator::NOT_EQUAL:
-                condition_met = (v != *value_);
+                condition_met = (current != condition);
                 break;
             case EOperator::LESS:
-                condition_met = (v < *value_);
+                condition_met = (current < condition);
                 break;
             case EOperator::LESS_EQUAL:
-                condition_met = (v <= *value_);
+                condition_met = (current <= condition);
                 break;
             case EOperator::GREATER:
-                condition_met = (v > *value_);
+                condition_met = (current > condition);
                 break;
             case EOperator::GREATER_EQUAL:
-                condition_met = (v >= *value_);
+                condition_met = (current >= condition);
                 break;
             default:
                 break;

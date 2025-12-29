@@ -70,7 +70,18 @@
             <container x="0" y="450">
                 <!-- TODO: images - e.g. angle svg instead of "GRADE" -->
                 <widget type="text" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="GRADE (%)" />
-                <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="white" border-color="black" border-width="4" key="point.grade" format="{:.1f}" />
+                <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="#ffffff" border-color="black" border-width="4" key="point.grade" format="{:.1f}" />
+                <!-- <if key="point.grade" operator="<=" value="2">
+                    <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="#ffffff" border-color="black" border-width="4" key="point.grade" format="{:.1f}" />
+                </if>
+                <if key="point.grade" operator=">" value="2">
+                    <if key="point.grade" operator="<=" value="5">
+                        <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="#b8be10" border-color="black" border-width="4" key="point.grade" format="{:.1f}" />
+                    </if>
+                </if>
+                <if key="point.grade" operator=">" value="5">
+                    <widget type="value" x="0" y="38" align="right" font="DejaVu Sans 64" color="#bb7011" border-color="black" border-width="4" key="point.grade" format="{:.1f}" />
+                </if> -->
             </container>
             <container x="0" y="600">
                 <widget type="text" x="0" y="0" align="right" font="DejaVu Sans 32" color="white" border-color="black" border-width="4" text="KM" />
