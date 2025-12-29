@@ -1,0 +1,11 @@
+[wrap-file]
+directory = exprtk-0.0.3
+
+source_url = https://github.com/ArashPartow/exprtk/archive/refs/tags/0.0.3.tar.gz
+source_filename = exprtk-0.0.3.tar.gz
+source_hash = f9dec6975e86c702033d6a65ba9a0368eba31a61b89d74f2b5d24457c02c8439
+
+patch_directory = exprtk
+
+[provide]
+exprtk = exprtk_dep

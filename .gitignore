@@ -58,8 +58,19 @@ dkms.conf
 build/
 builddir/
 
+# Meson subprojects (downloaded dependencies)
+subprojects/*/
+subprojects/.wraplock
+!subprojects/*.wrap
+!subprojects/packagefiles/
+
 # editors
 .vscode/
 
 # temporary files
 tmp/
+
+# Compiled Python files
+__pycache__/
+*.py[cod]
+*$py.class
