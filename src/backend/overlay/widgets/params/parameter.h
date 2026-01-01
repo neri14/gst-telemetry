@@ -39,6 +39,7 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
 
 //TODO move those to marmkdown files for documentation on layout definition
 
+    //DONE
     // --> class: NumericParameter
     // for numeric attributes (x, y, radius, border-width):
     //    numeric value        -> use as is

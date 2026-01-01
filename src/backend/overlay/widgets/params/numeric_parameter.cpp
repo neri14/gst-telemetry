@@ -10,9 +10,14 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
 
     // if begins with "eval(" and ends with ")" - expression
     if (definition.rfind("eval(", 0) == 0 && definition.back() == ')') {
-        //TODO to be implemented
-        log.warning("Expression-based parameters not yet implemented");
-        return nullptr;
+        auto expression = std::make_shared<Expression>(definition.substr(5, definition.size() - 6), track);
+        if (expression) {
+            log.debug("Created expression-based numeric parameter");
+            return std::make_shared<NumericParameter>(expression);
+        } else {
+            log.warning("Failed to create expression from definition '{}'", definition);
+            return nullptr;
+        }
     }
 
     // if begins with "key(" and ends with ")" - track key
@@ -22,6 +27,7 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
         return std::make_shared<NumericParameter>(key, track);
     }
 
+    // otherwise try to parse as static double value
     try {
         double static_value = std::stod(definition);
         log.debug("Created static numeric parameter with value {}", static_value);
@@ -30,6 +36,11 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
         log.warning("Unparsable parameter definition '{}'", definition);
         return nullptr;
     }
+}
+
+NumericParameter::NumericParameter(std::shared_ptr<Expression> expression)
+        : update_strategy_(UpdateStrategy::Expression),
+          expression_(expression) {
 }
 
 NumericParameter::NumericParameter(const std::string& key, std::shared_ptr<track::Track> track)
@@ -48,8 +59,14 @@ bool NumericParameter::update(time::microseconds_t timestamp) {
         case UpdateStrategy::Static:
             return false; // static value does not change
         case UpdateStrategy::Expression:
-            //TODO to be implemented - return true only if value_ changed
-            return true;
+            if (expression_) {
+                double new_value = expression_->evaluate(timestamp);
+                if (new_value != value_) {
+                    value_ = new_value;
+                    return true;
+                }
+            }
+            return false;
         case UpdateStrategy::TrackKey:
             if (track_) {
                 track::Value v = track_->get(field_id, timestamp);
@@ -68,13 +85,6 @@ bool NumericParameter::update(time::microseconds_t timestamp) {
 double NumericParameter::get_value(time::microseconds_t timestamp) const {
     return value_;
 }
-
-    // --> class: NumericParameter
-    // for numeric attributes (x, y, radius, border-width):
-    //    numeric value        -> use as is
-    //    "eval(...)"          -> evaluate string inside parentheses as expression
-    //    "key(...)"           -> get value from track at timestamp using key name inside parentheses
-    //                            (note it can be achieved by eval(...) too, but this has less overhead)
 
 } // namespace telemetry
 } // namespace overlay

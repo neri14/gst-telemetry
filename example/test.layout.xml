@@ -1,10 +1,8 @@
 <layout>
-    <circle x="1920" y="1080" radius="200" color="white" border-width="5" border-color="black">
-            <circle x="-50" y="0" radius="50" color="black" border-width="5" border-color="red"/>
-            <circle x="50" y="0" radius="key(video_time)" color="yellow" border-width="5" border-color="black"/>
-    </circle>
-    <!-- <circle x="eval(3840*(video_time%15)/15.0)" y="1080" radius="10"
-            color="white" border-width="2" border-color="black"/> -->
+    <circle x="eval(3840*(video_time%15)/15.0)" y="1080" radius="10"
+            color="white" border-width="2" border-color="black"/>
+    <circle x="1920" y="900" radius="key(video_time)"
+            color="red" border-width="4" border-color="black"/>
 
     <!-- interpolated keys to be indicated by prefix -->
     <!-- "lerp_" for linear interpolation "pchip_" for piecewise cubic hermite interpolation -->

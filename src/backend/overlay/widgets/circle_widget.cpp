@@ -91,8 +91,6 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         }
 
         if (cache_update_needed) {
-            //TODO read other params here
-            //TODO redraw the cache here
             double radius = radius_->get_value(timestamp);
             double border_width = border_width_->get_value(timestamp);
 

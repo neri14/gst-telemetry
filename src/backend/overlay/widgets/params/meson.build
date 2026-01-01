@@ -3,6 +3,7 @@ cpp_sources += files(
   'numeric_parameter.cpp',
   'color_parameter.cpp',
   'boolean_parameter.cpp',
+  'expression.cpp',
 )
 
 headers += files(
@@ -10,4 +11,5 @@ headers += files(
   'numeric_parameter.h',
   'color_parameter.h',
   'boolean_parameter.h',
+  'expression.h',
 )

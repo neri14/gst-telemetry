@@ -27,30 +27,6 @@ void Widget::add_child(std::shared_ptr<Widget> child) {
 }
 
 void Widget::draw(time::microseconds_t timestamp, cairo_t* cr, double x_offset, double y_offset) {
-    //FIXME remove
-    // /* TEST */
-    // typedef exprtk::symbol_table<double> symbol_table_t;
-    // typedef exprtk::expression<double>   expression_t;
-    // typedef exprtk::parser<double>       parser_t;
-
-    // // std::string expression_string = "3840 * (video_time % 15) / 15";
-    // std::string expression_string = "video_time";
-    
-    // double video_time = time::us_to_s(timestamp);
-    
-    // symbol_table_t symbol_table;
-    // symbol_table.add_variable("video_time", video_time);
-    
-    // expression_t expression;
-    // expression.register_symbol_table(symbol_table);
-    
-    // parser_t parser;
-    // parser.compile(expression_string, expression);
-    
-    // double result = expression.value();
-    // log.error("Result: {}", result);
-    // /* TEST */
-
     for (auto& child : children_) {
         child->draw(timestamp, cr, x_offset, y_offset);
     }
