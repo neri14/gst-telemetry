@@ -4,7 +4,9 @@
 
 #include "backend/utils/text_align.h"
 #include "backend/utils/color.h"
+
 #include "widgets/circle_widget.h"
+#include "widgets/conditional_widget.h"
 
 #include "widgets/params/numeric_parameter.h"
 #include "widgets/params/color_parameter.h"
@@ -100,6 +102,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     if (name == "layout") {
         widget = parse_widget<Widget>(node);
         log.debug("Created base widget");
+    } else if (name == "if") {
+        widget = parse_widget<ConditionalWidget>(node);
+        log.debug("Created Conditional widget");
     } else if (name == "circle") {
         widget = parse_widget<CircleWidget>(node);
         log.debug("Created Circle widget");

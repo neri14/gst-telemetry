@@ -66,7 +66,7 @@ std::shared_ptr<CircleWidget> CircleWidget::create(parameter_map_ptr parameters)
 }
 
 CircleWidget::CircleWidget()
-        : Widget("circle_widget") {
+        : Widget("CircleWidget") {
 }
 
 void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
