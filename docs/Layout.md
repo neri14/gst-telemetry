@@ -2,7 +2,41 @@
 
 ## Widget Types
 
-### Circle
+
+
+### layout
+
+Base widget, no parameters
+
+#### Example
+```xml
+<layout>
+...
+</layout>
+```
+
+
+### if
+
+Conditonal widget, draw encapsulated widgets only if condition is met.
+
+#### Example
+```xml
+<if condition="eval(round(video_time)%2)">
+...
+</if>
+```
+
+#### Parameters
+|      name      |  type     |  required  |  default  |              description              |
+|----------------|-----------|------------|-----------|---------------------------------------|
+|  condition     |  boolean  |  yes       |           |  show widgets children if true        |
+
+
+
+### circle
+
+Draw a circle with center at x,y.
 
 #### Example
 ```xml
@@ -14,15 +48,17 @@
 coordinates of widgets located under circle are relative to circle center
 
 #### Parameters
-|      name      |  type     |  required  |  default  |              description              |
-|----------------|-----------|------------|-----------|---------------------------------------|
-|  x             |  numeric  |  yes       |           |  circle center x coordinate           |
-|  y             |  numeric  |  yes       |           |  circle center y coordinate           |
-|  radius        |  numeric  |  yes       |           |  circle radius                        |
-|  color         |  color    |  no        |  white    |  background color                     |
-|  border-width  |  numeric  |  no        |  0        |  border width; 0 = no border          |
-|  border-color  |  color    |  no        |  black    |  border color                         |
-|  visible       |  boolean  |  no        |  true     |  show widget and its children         |
+|      name      |  type     |  required  |  default  |              description               |
+|----------------|-----------|------------|-----------|----------------------------------------|
+|  x             |  numeric  |  yes       |           |  circle center x coordinate            |
+|  y             |  numeric  |  yes       |           |  circle center y coordinate            |
+|  radius        |  numeric  |  yes       |           |  circle radius                         |
+|  color         |  color    |  no        |  white    |  background color                      |
+|  border-width  |  numeric  |  no        |  0        |  border width; 0 = no border           |
+|  border-color  |  color    |  no        |  black    |  border color                          |
+|  visible       |  boolean  |  no        |  true     |  show widget and its children if true  |
+
+
 
 
 ## Widget Parameter Types
@@ -37,6 +73,8 @@ coordinates of widgets located under circle are relative to circle center
 
 **Note:** ExprTk expressions are tested with simple arithmetic functionality only.
 
+
+
 ### Color
 
 |    value          |    examples                        |                description                                                              |
@@ -49,9 +87,11 @@ coordinates of widgets located under circle are relative to circle center
 |  string value     |  `white`, `red`                    |  basic color name                                                                       |
 
 
+
 ### Boolean
 
 todo
+
 
 
 ## GPX Key mapping
