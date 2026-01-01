@@ -45,6 +45,28 @@ namespace color {// TODO more predefined colors
     const rgb purple  {0.50, 0.00, 0.50};
     const rgb teal    {0.00, 0.50, 0.50};
     const rgb navy    {0.00, 0.00, 0.50};
+    const rgb orange  {1.00, 0.65, 0.00};
+    const rgb brown   {0.65, 0.16, 0.16};
+    const rgb pink    {1.00, 0.75, 0.80};
+    const rgb indigo  {0.29, 0.00, 0.51};
+    const rgb violet  {0.93, 0.51, 0.93};
+    const rgb gold    {1.00, 0.84, 0.00};
+    const rgb coral   {1.00, 0.50, 0.31};
+    const rgb salmon  {0.98, 0.50, 0.45};
+    const rgb crimson {0.86, 0.08, 0.24};
+    const rgb skyblue {0.53, 0.81, 0.92};
+    const rgb lightblue {0.68, 0.85, 0.90};
+    const rgb darkblue  {0.00, 0.00, 0.55};
+    const rgb lightgreen{0.56, 0.93, 0.56};
+    const rgb darkgreen {0.00, 0.39, 0.00};
+    const rgb khaki   {0.94, 0.90, 0.55};
+    const rgb beige   {0.96, 0.96, 0.86};
+    const rgb chocolate{0.82, 0.41, 0.12};
+    const rgb turquoise{0.25, 0.88, 0.82};
+    const rgb orchid  {0.85, 0.44, 0.84};
+    const rgb plum    {0.87, 0.63, 0.87};
+    const rgb tan     {0.82, 0.71, 0.55};
+    const rgb wheat   {0.96, 0.87, 0.70};
     const rgb invalid {-1.0, -1.0, -1.0, -1.0};
 
     const std::map<std::string, rgba> map = {
@@ -65,7 +87,29 @@ namespace color {// TODO more predefined colors
         {"green"  , color::green},
         {"purple" , color::purple},
         {"teal"   , color::teal},
-        {"navy"   , color::navy}
+        {"navy"   , color::navy},
+        {"orange" , color::orange},
+        {"brown"  , color::brown},
+        {"pink"   , color::pink},
+        {"indigo" , color::indigo},
+        {"violet" , color::violet},
+        {"gold"   , color::gold},
+        {"coral"  , color::coral},
+        {"salmon" , color::salmon},
+        {"crimson", color::crimson},
+        {"skyblue", color::skyblue},
+        {"lightblue", color::lightblue},
+        {"darkblue" , color::darkblue},
+        {"lightgreen", color::lightgreen},
+        {"darkgreen" , color::darkgreen},
+        {"khaki"  , color::khaki},
+        {"beige"  , color::beige},
+        {"chocolate", color::chocolate},
+        {"turquoise", color::turquoise},
+        {"orchid" , color::orchid},
+        {"plum"   , color::plum},
+        {"tan"    , color::tan},
+        {"wheat"  , color::wheat}
     };
 }
 
