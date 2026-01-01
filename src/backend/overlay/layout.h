@@ -5,7 +5,6 @@
 #include <pugixml.hpp>
 #include <string>
 
-//TODO the widgets
 #include "widgets/widget.h"
 
 #include "backend/utils/logging/logger.h"

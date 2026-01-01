@@ -63,9 +63,10 @@
             <circle x="200" y="0" radius="30" color="cyan" border-width="5" border-color="black"/>
         </container>
 
-    <!-- interpolated keys to be indicated by prefix -->
+    <!-- ToDo interpolated keys - to be indicated by prefix -->
     <!-- "lerp_" for linear interpolation "pchip_" for piecewise cubic hermite interpolation -->
 
+        <!-- ToDo text, image, ...-->
     <!-- <if condition="key_exists(point_speed)">
         <text x="100" y="200" font-size="48" color="yellow"
               value="eval(point_speed*3.6)" format="Speed: {:.1f} km/h"/>
