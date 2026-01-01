@@ -151,8 +151,9 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         // draw childern relative to circle center
         // (only if circle is visible)
         Widget::draw(timestamp, cr, x, y);
+    } else {
+        log.debug("Visibility is false, skipping drawing");
     }
-
 }
 
 } // namespace overlay

@@ -50,6 +50,18 @@
         <if condition="eval(round(video_time)%2)"><!-- visible every second for 1 second offset by 0.5s -->
             <circle x="1500" y="650" radius="40" color="pink" border-width="5" border-color="black"/>
         </if>
+
+        <container x="1700" y="750">
+            <circle x="0" y="0" radius="30" color="orange" border-width="5" border-color="black"/>
+            <circle x="100" y="0" radius="30" color="purple" border-width="5" border-color="black"/>
+            <circle x="200" y="0" radius="30" color="cyan" border-width="5" border-color="black"/>
+        </container>
+
+        <container x="2000" y="750" visible="eval((video_time*10)%10 < 2)"> <!-- visible every second for 0.2s -->
+            <circle x="0" y="0" radius="30" color="orange" border-width="5" border-color="black"/>
+            <circle x="100" y="0" radius="30" color="purple" border-width="5" border-color="black"/>
+            <circle x="200" y="0" radius="30" color="cyan" border-width="5" border-color="black"/>
+        </container>
     <!-- interpolated keys to be indicated by prefix -->
     <!-- "lerp_" for linear interpolation "pchip_" for piecewise cubic hermite interpolation -->
 

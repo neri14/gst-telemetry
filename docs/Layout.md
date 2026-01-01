@@ -16,6 +16,25 @@ Base widget, no parameters
 ```
 
 
+### container
+
+Container widget, draw encapsulated widgets at position relative to x,y.
+
+#### Example
+```xml
+<container x="1700" y="750">
+...
+</container>
+```
+
+#### Parameters
+|      name      |  type     |  required  |  default  |              description           |
+|----------------|-----------|------------|-----------|------------------------------------|
+|  x             |  numeric  |  yes       |           |  container x coordinate            |
+|  y             |  numeric  |  yes       |           |  container y coordinate            |
+|  visible       |  boolean  |  no        |  true     |  show widgets children if true     |
+
+
 ### if
 
 Conditonal widget, draw encapsulated widgets only if condition is met.

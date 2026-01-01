@@ -5,8 +5,10 @@
 #include "backend/utils/text_align.h"
 #include "backend/utils/color.h"
 
-#include "widgets/circle_widget.h"
+#include "widgets/container_widget.h"
 #include "widgets/conditional_widget.h"
+#include "widgets/circle_widget.h"
+
 
 #include "widgets/params/numeric_parameter.h"
 #include "widgets/params/color_parameter.h"
@@ -102,6 +104,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     if (name == "layout") {
         widget = parse_widget<Widget>(node);
         log.debug("Created base widget");
+    } else if (name == "container") {
+        widget = parse_widget<ContainerWidget>(node);
+        log.debug("Created Container widget");
     } else if (name == "if") {
         widget = parse_widget<ConditionalWidget>(node);
         log.debug("Created Conditional widget");
