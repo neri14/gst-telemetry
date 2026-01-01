@@ -21,8 +21,14 @@ class Parameter {
 public:
     Parameter() = default;
     virtual ~Parameter() = default;
-
     virtual bool update(time::microseconds_t timestamp) = 0;
+
+protected:
+    enum class UpdateStrategy {
+        Static,
+        Expression,
+        TrackKey
+    };
 };
 
 using parameter_ptr_t = std::shared_ptr<Parameter>;
@@ -30,27 +36,7 @@ using parameter_map_t = std::map<std::string, parameter_ptr_t>;
 using parameter_map_ptr = std::shared_ptr<parameter_map_t>;
 using parameter_type_map_t = std::map<std::string, ParameterType>;
 
-    // for: x, y, radius, bg-color, border-width, border-color
-    //      (so all config attributes actually..)
-    //
-    // interpretation rules:
-    //
-    // --> class: NumericParameter
-    // for numeric attributes (x, y, radius, border-width):
-    //    numeric value        -> use as is
-    //    "eval(...)"          -> evaluate string inside parentheses as expression
-    //    "key(...)"           -> get value from track at timestamp using key name inside parentheses
-    //                            (note it can be achieved by eval(...) too, but this has less overhead)
 
-
-    // --> class: ColorParameter
-    // for color attributes (bg-color, border-color):
-    //    string value         -> color name from predefined colors or "#RRGGBB" / "#RRGGBBAA" hex code
-    //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
-    //    "rgb(r,g,b)"         -> color from r,g,b values (0-1.0)
-    //    "rgba(r,g,b,a)"      -> color from r,g,b,a values (0-1.0)
-    //             each of r,g,b,a is interpreted like numeric attributes - same rules apply
-    //             resulting value is clamped to 0.0-1.0 range
 
 
     // --> class: StringParameter
@@ -59,23 +45,6 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses
 
     
-    // --> class: BooleanParameter
-    // for boolean attributes (e.g. visibility, condition):
-    //    "false"/"no"/empty string        -> use as boolean false
-    //    "true"/"yes"/generic string       -> use as boolean true
-    //    numeric value                   -> 0 = false, non-zero = true
-    //    "key(...)"                  -> get string value from track at timestamp using key name inside parentheses
-    //                                   (interpreted:
-    //                                      if value is bool - as is
-    //                                      if value is numeric - as above (0 = false, non-zero = true)
-    //                                      if value is string - as above ("false"/"no"/empty = false, other = true)
-    //                                      if key does not exist - false)
-    //    "eval(...)"                 -> evaluate string inside parentheses as expression (resulting value interpreted as above bool/numeric)
-    //    "key_exists(...)"           -> check if key inside parentheses is available in track at timestamp (resulting value is bool)
-    //
-    //    "not(...)"                  -> logical NOT of the boolean inside parentheses (only one NOT allowed)
-
-
     // --> class: FormattedValueParameter
     // for string/numeric attribute - special "value" attribute case (can evaluate to string or numeric internally):
     //    string value         -> use as is (as string)

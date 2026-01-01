@@ -11,7 +11,9 @@ namespace overlay {
 
 class NumericParameter : public Parameter {
 public:
-    NumericParameter(const std::string& definition, std::shared_ptr<track::Track> track);
+    static std::shared_ptr<NumericParameter> create(
+        const std::string& definition, std::shared_ptr<track::Track> track);
+    // NumericParameter(... std::shared_ptr<track::Track> track);
     NumericParameter(double static_value);
     ~NumericParameter() override = default;
 
@@ -19,9 +21,10 @@ public:
     double get_value(time::microseconds_t timestamp) const;
 
 private:
-    std::string definition_;
-    std::shared_ptr<track::Track> track_;
-    double static_value_ = 0.0;
+    UpdateStrategy update_strategy_;
+
+    std::shared_ptr<track::Track> track_ = nullptr;
+    double value_ = 0.0;
 };
 
 } // namespace telemetry

@@ -8,14 +8,12 @@ std::shared_ptr<Widget> Widget::create(parameter_map_ptr parameters) {
     utils::logging::Logger log{"Widget::create"};
     log.info("Creating base Widget");
 
-    auto widget = std::make_shared<Widget>();
-
     if (parameters->size() > 0) {
-        widget->log.warning("Base Widget does not support parameters, ignoring {} parameters",
+        log.warning("Base Widget does not support parameters, ignoring {} parameters",
                     parameters->size());
     }
 
-    return widget;
+    return std::make_shared<Widget>();
 }
 
 Widget::Widget() : log("widget") {

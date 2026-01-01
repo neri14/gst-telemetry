@@ -29,3 +29,22 @@ private:
 } // namespace overlay
 
 #endif // BOOLEAN_PARAMETER_H
+
+
+
+    // --> class: BooleanParameter
+    // for boolean attributes (e.g. visibility, condition):
+    //    "false"/"no"/empty string        -> use as boolean false
+    //    "true"/"yes"/generic string       -> use as boolean true
+    //    numeric value                   -> 0 = false, non-zero = true
+    //    "key(...)"                  -> get string value from track at timestamp using key name inside parentheses
+    //                                   (interpreted:
+    //                                      if value is bool - as is
+    //                                      if value is numeric - as above (0 = false, non-zero = true)
+    //                                      if value is string - as above ("false"/"no"/empty = false, other = true)
+    //                                      if key does not exist - false)
+    //    "eval(...)"                 -> evaluate string inside parentheses as expression (resulting value interpreted as above bool/numeric)
+    //    "key_exists(...)"           -> check if key inside parentheses is available in track at timestamp (resulting value is bool)
+    //
+    //    "not(...)"                  -> logical NOT of the boolean inside parentheses (only one NOT allowed)
+

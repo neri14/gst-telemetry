@@ -137,7 +137,7 @@ parameter_map_ptr Layout::parse_parameters(
         if (it != param_types.end()) {
             switch (it->second) {
                 case ParameterType::Numeric:
-                    (*params)[attr_name] = std::make_shared<NumericParameter>(attr_value, track_);
+                    (*params)[attr_name] = NumericParameter::create(attr_value, track_);
                     break;
                 case ParameterType::Color:
                     (*params)[attr_name] = std::make_shared<ColorParameter>(attr_value, track_);
