@@ -3,6 +3,8 @@
 
 #include <string>
 #include <map>
+#include <limits>
+#include <cmath>
 
 namespace telemetry {
 
@@ -11,6 +13,16 @@ struct rgba {
     double g;
     double b;
     double a = 1.0;
+
+    bool operator==(const rgba& other) const {
+        return std::abs(r - other.r) < std::numeric_limits<double>::epsilon() &&
+               std::abs(g - other.g) < std::numeric_limits<double>::epsilon() &&
+               std::abs(b - other.b) < std::numeric_limits<double>::epsilon() &&
+               std::abs(a - other.a) < std::numeric_limits<double>::epsilon();
+    }
+    bool operator!=(const rgba& other) const {
+        return !(*this == other);
+    }
 };
 using rgb = rgba;
 
@@ -33,6 +45,7 @@ namespace color {// TODO more predefined colors
     const rgb purple  {0.50, 0.00, 0.50};
     const rgb teal    {0.00, 0.50, 0.50};
     const rgb navy    {0.00, 0.00, 0.50};
+    const rgb invalid {-1.0, -1.0, -1.0, -1.0};
 
     const std::map<std::string, rgba> map = {
         {"black"  , color::black},
@@ -74,6 +87,8 @@ inline rgba color_from_string(const std::string& str)
         return res;
     }
 
+    utils::logging::Logger log{"color_from_string"};
+    log.warning("Unrecognized color string '{}', defaulting to white", str);
     return color::white;
 }
 

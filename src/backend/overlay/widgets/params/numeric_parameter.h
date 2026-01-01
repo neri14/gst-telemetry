@@ -26,6 +26,8 @@ public:
     double get_value(time::microseconds_t timestamp) const;
 
 private:
+    mutable utils::logging::Logger log{"NumericParameter"};
+
     UpdateStrategy update_strategy_;
     double value_ = std::numeric_limits<double>::quiet_NaN();
 

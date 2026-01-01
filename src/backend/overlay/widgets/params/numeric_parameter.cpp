@@ -1,39 +1,44 @@
 #include "numeric_parameter.h"
 
+#include "backend/utils/string_utils.h"
+
 namespace telemetry {
 namespace overlay {
 
 std::shared_ptr<NumericParameter> NumericParameter::create(
         const std::string& definition, std::shared_ptr<track::Track> track) {
     utils::logging::Logger log{"NumericParameter::create"};
-    log.debug("Creating NumericParameter with definition: {}", definition);
+    std::string def{definition};
+    trim(def);
+
+    log.debug("Creating NumericParameter with definition: {}", def);
 
     // if begins with "eval(" and ends with ")" - expression
-    if (definition.rfind("eval(", 0) == 0 && definition.back() == ')') {
-        auto expression = std::make_shared<Expression>(definition.substr(5, definition.size() - 6), track);
+    if (def.rfind("eval(", 0) == 0 && def.back() == ')') {
+        auto expression = std::make_shared<Expression>(def.substr(5, def.size() - 6), track);
         if (expression) {
             log.debug("Created expression-based numeric parameter");
             return std::make_shared<NumericParameter>(expression);
         } else {
-            log.warning("Failed to create expression from definition '{}'", definition);
+            log.warning("Failed to create expression from definition '{}'", def);
             return nullptr;
         }
     }
 
     // if begins with "key(" and ends with ")" - track key
-    if (definition.rfind("key(", 0) == 0 && definition.back() == ')') {
-        std::string key = definition.substr(4, definition.size() - 5);
+    if (def.rfind("key(", 0) == 0 && def.back() == ')') {
+        std::string key = def.substr(4, def.size() - 5);
         log.debug("Created track-key-based numeric parameter with key '{}'", key);
         return std::make_shared<NumericParameter>(key, track);
     }
 
     // otherwise try to parse as static double value
     try {
-        double static_value = std::stod(definition);
+        double static_value = std::stod(def);
         log.debug("Created static numeric parameter with value {}", static_value);
         return std::make_shared<NumericParameter>(static_value);
     } catch (const std::invalid_argument&) {
-        log.warning("Unparsable parameter definition '{}'", definition);
+        log.warning("Unparsable parameter definition '{}'", def);
         return nullptr;
     }
 }
@@ -78,11 +83,16 @@ bool NumericParameter::update(time::microseconds_t timestamp) {
             }
             return false;
         default:
+            log.warning("Unknown update strategy in NumericParameter");
             return false;
     }
 }
 
 double NumericParameter::get_value(time::microseconds_t timestamp) const {
+    if (std::isnan(value_)) {
+        log.warning("NumericParameter has NaN value at timestamp {}, defaulting to 0.0", timestamp);
+        return 0.0;
+    }
     return value_;
 }
 

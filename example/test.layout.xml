@@ -1,8 +1,22 @@
 <layout>
-    <circle x="eval(3840*(video_time%15)/15.0)" y="1080" radius="10"
-            color="white" border-width="2" border-color="black"/>
-    <circle x="1920" y="900" radius="key(video_time)"
-            color="red" border-width="4" border-color="black"/>
+        <circle x="eval(3840*(video_time%15)/15.0)" y="100" radius="10"
+                color="white" border-width="2" border-color="black"/>
+        <circle x="1920" y="200" radius="key(video_time)"
+                color="red" border-width="4" border-color="black"/>
+
+        <circle x="150" y="400" radius="140"
+                color="rgba(1, 0, 0, 0.5)" border-width="5" border-color="black"/>
+        <circle x="450" y="400" radius="140"
+                color="rgb(0, 1, 0)" border-width="5" border-color="black"/>
+        <circle x="750" y="400" radius="140"
+                color="rgb(0, 0, 1)" border-width="5" border-color="black"/>
+
+        <circle x="1050" y="400" radius="140"
+                color="rgb(eval((video_time%5)/5.0), 0, 0)" border-width="5" border-color="black"/>
+        <circle x="1350" y="400" radius="140"
+                color="rgb(0, eval(1-(video_time%5.0)/5.0), 0)" border-width="5" border-color="black"/>
+        <circle x="1650" y="400" radius="140"
+                color="rgb(0, 0, eval(video_time%1.0))" border-width="5" border-color="black"/>
 
     <!-- interpolated keys to be indicated by prefix -->
     <!-- "lerp_" for linear interpolation "pchip_" for piecewise cubic hermite interpolation -->
