@@ -109,10 +109,43 @@ coordinates of widgets located under circle are relative to circle center
 
 ### Boolean
 
-todo
+*ToDo: to be described*
 
 
 
 ## GPX Key mapping
 
-todo
+**Note** extension fields have namespace trimmed - the field name is preserved.
+
+- metadata (data applicable to whole trk) has `meta_` prefix appended
+- point related data (data applicable to single trkpt) has `point_` prefix appended
+- point related data is available as a "latched value" - last received value is provided
+- (to be implemented) linear interpolation of point fields values have `lerp_` appended before `point_`
+- (to be implemented) piecewise cubic hermite interpolation of point fields values have `pchip_` appended before `point_`
+
+
+|  GPX path                     |  layout key mapping           |  description                                                                          |
+|-------------------------------|-------------------------------|---------------------------------------------------------------------------------------|
+|  metadata/bounds.minlat       |  meta_minlat                  |  minimal latitude                                                                     |
+|  metadata/bounds.maxlat       |  meta_maxlat                  |  maximal latitude                                                                     |
+|  metadata/bounds.minlon       |  meta_minlon                  |  minimal longitude                                                                    |
+|  metadata/bounds.maxlon       |  meta_maxlon                  |  maximal longitude                                                                    |
+|  metadata/name                |  meta_name                    |  activity name (later name in gpx file is preserved)                                  |
+|  trk/name                     |  meta_name                    |  activity name (later name in gpx file is preserved)                                  |
+|  trk/src                      |  meta_src                     |  source of gpx file (e.g. device used to record data)                                 |
+|  trk/type                     |  meta_typ                     |  type of activity (usually a sport identifier)                                        |
+|                               |                               |                                                                                       |
+|  *ToDo metadata extensions*   |                               |                                                                                       |
+|                               |                               |                                                                                       |
+|  *ToDo segments*              |                               |                                                                                       |
+|                               |                               |                                                                                       |
+|  *ToDo trackpoint fields*     |                               |                                                                                       |
+|                               |                               |                                                                                       |
+|                               |  timestamp                    |  virtual - timestamp available over whole video not only when track is active         |
+|                               |  video_time                   |  virtual - video runtime in seconds counting from 0                                   |
+|                               |  time_elapsed                 |  virtual - elapsed activity time in seconds (negative before start)                   |
+|                               |  time_remaining               |  virtual - remaining time of activity in seconds (negative after end)                 |
+|                               |  active                       |  virtual - boolean flag indicating if activity is ongoing                             |
+|                               |  countdown                    |  virtual - time till activity starts in seconds, exists only before activity          |
+|                               |  overtime                     |  virtual - time since activity finished in seconds, exists only after activity        |
+|                               |                               |                                                                                       |

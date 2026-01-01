@@ -18,9 +18,9 @@ namespace consts {
     const field_id_t segment_id_mask = 0x02000000;
     const field_id_t virtual_id_mask = 0x01000000;
 
-    const std::string metadata_prefix_ = "metadata_";
+    const std::string metadata_prefix_ = "meta_";
     const std::string trackpoint_prefix_ = "point_";
-    const std::string segment_prefix_ = "segment_"; //not used yet
+    const std::string segment_prefix_ = "s_"; //not used yet
 }
 
 Track::Track(time::microseconds_t offset): start_offset_(offset) {
