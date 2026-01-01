@@ -5,7 +5,6 @@
 #include <map>
 
 namespace telemetry {
-namespace overlay {
 
 struct rgba {
     double r;
@@ -15,7 +14,7 @@ struct rgba {
 };
 using rgb = rgba;
 
-namespace color {
+namespace color {// TODO more predefined colors
     const rgb black   {0.00, 0.00, 0.00};
     const rgb white   {1.00, 1.00, 1.00};
     const rgb red     {1.00, 0.00, 0.00};
@@ -78,8 +77,6 @@ inline rgba color_from_string(const std::string& str)
     return color::white;
 }
 
-
-} // namespace overlay
 } // namespace telemetry
 
 #endif // COLOR_H

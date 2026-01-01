@@ -8,7 +8,6 @@ extern "C" {
 }
 
 namespace telemetry {
-namespace overlay {
 
 enum class ETextAlign {
     Left,
@@ -40,7 +39,6 @@ inline PangoAlignment to_pango_align(ETextAlign align) {
     }
 }
 
-} // namespace overlay
 } // namespace telemetry
 
 #endif // COMMON_H

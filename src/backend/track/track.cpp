@@ -18,9 +18,9 @@ namespace consts {
     const field_id_t segment_id_mask = 0x02000000;
     const field_id_t virtual_id_mask = 0x01000000;
 
-    const std::string metadata_prefix_ = "metadata.";
-    const std::string trackpoint_prefix_ = "point.";
-    const std::string segment_prefix_ = "segment.";
+    const std::string metadata_prefix_ = "metadata_";
+    const std::string trackpoint_prefix_ = "point_";
+    const std::string segment_prefix_ = "segment_"; //not used yet
 }
 
 Track::Track(time::microseconds_t offset): start_offset_(offset) {
@@ -366,6 +366,14 @@ bool Track::parse_trkpt(pugi::xml_node node) {
                         log.debug("Track point extension data: {} = {}", data_key, value);
                         store_trackpoint_data(ts, data_key, Value(value));
                     }
+                } else if (ext_key == "power") { // special case for Strava gpx files
+                    if (ext_child.text().empty()) {
+                        log.debug("Track point extension data: power has no data");
+                        continue; // no data
+                    }
+                    double value = ext_child.text().as_double();
+                    log.debug("Track point extension data: power = {}", value);
+                    store_trackpoint_data(ts, "power", Value(value));
                 } else {
                     log.debug("Ignoring unknown track point extension: {}", ext_key);
                 }
@@ -415,6 +423,15 @@ bool Track::store_trackpoint_data(time::microseconds_t timestamp,
 }
 
 void Track::create_virtual_fields() {
+    virtual_data_mapping_[register_virtual_field("timestamp")] = [this](time::microseconds_t timestamp) -> Value {
+        time::time_point_t tp = start_time_ + std::chrono::microseconds(timestamp - start_offset_);
+        return Value(tp);
+    };
+
+    virtual_data_mapping_[register_virtual_field("video_time")] = [this](time::microseconds_t timestamp) -> Value {
+        return Value(time::us_to_s(timestamp));
+    };
+
     virtual_data_mapping_[register_virtual_field("time_elapsed")] = [this](time::microseconds_t timestamp) -> Value {
         if (min_timestamp_ != time::INVALID_TIME) {
             return Value(time::us_to_s(timestamp - min_timestamp_));
@@ -442,7 +459,7 @@ void Track::create_virtual_fields() {
     virtual_data_mapping_[register_virtual_field("countdown")] = [this](time::microseconds_t timestamp) -> Value {
         if (min_timestamp_ != time::INVALID_TIME) {
             time::microseconds_t diff = min_timestamp_ - timestamp;
-            if (diff >= 0) {
+            if (diff > 0) {
                 return Value(time::us_to_s(diff));
             }
         }
@@ -452,7 +469,7 @@ void Track::create_virtual_fields() {
     virtual_data_mapping_[register_virtual_field("overtime")] = [this](time::microseconds_t timestamp) -> Value {
         if (max_timestamp_ != 0) {
             time::microseconds_t diff = timestamp - max_timestamp_;
-            if (diff >= 0) {
+            if (diff > 0) {
                 return Value(time::us_to_s(diff));
             }
         }

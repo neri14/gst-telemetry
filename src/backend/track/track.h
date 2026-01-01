@@ -100,3 +100,79 @@ private:
 } // namespace telemetry
 
 #endif // TRACK_H
+
+
+// NOTES ON SEGMENTS:
+
+// ### SEGMENT DATA ###
+// # put segment summary data (as is in the gpx)
+// # into (...)_meta_(...)
+// # and where applicable create virtual fields
+// # like the ones for point but relative to segment start/end
+// # AND DOCUMENT EVERYTHING IN MARKDOWN TABLE IN REPO
+// # which fields from gpx are visible how etc...
+
+// # e.g.
+// s_climb_next_meta_ascent # next climb total ascent
+// s_climb_dist # current climb distance since climb start
+// s_segment_timer # current strava segment time since start
+
+
+// ### SEGMENT PREFIXES ###
+
+// # prefixes (tbd prev or last?)
+
+// s_TYPE_        # currently active
+// s_TYPE_prev_   # next active
+// s_TYPE_next_   # last active
+
+// # lists
+
+// # all active segments in order of start
+// #(making a list where last finished stays for few seconds before dissapears will be tricky)
+// #(but should be doable)
+
+// s_TYPE_N_         # all currently active segments of a type ordered by start time ascending
+// s_TYPE_prev_N_    # ordered by finish time descending (so last, second to last to finish etc)
+// s_TYPE_next_N_    # ordered by start time aascending
+
+// # where N:=<1, ...)
+// # and s_TYPE_1_ == s_TYPE_
+// # and s_TYPE_prev_1_ == s_TYPE_prev_
+// # and s_TYPE_next_1_ == s_TYPE_next_
+
+
+
+// # plus all segments list
+
+// s_TYPE_lst_N_   # all segments of a type (e.g. for a summary screen)
+
+
+// # examples
+
+// s_climb_next_meta_ascent         # total ascent of next climb
+// s_segment_prev_meta_elapsedtime  # total time of last strava segment
+
+
+
+
+// NOTES ON SEGMENT GRAPHS
+
+// # graphs (for segments, but actually same design could be reused between segments and "moving graphs" just with different start-end points(?)
+
+// graph widget needs to take parameters (naming tbd):
+// start_time = ..
+// end_time = ..
+
+// (a new type of widget parameter?)
+
+// use cases:
+// - segments: keys from which to take start and end timestamp of graph (wont change as long as segment is visible)
+// - elevation graph: whole activity - either no params or keywords "begin" "end" or virtual(?) keys providing begin and end times?
+// - moving graph: either - end_time="time" key, start_time??? or if numeric value provided - treat it as relative to current time and then start_time=-30 end_time=0 ?
+
+
+// also need to take care of how to treat continous graphs?
+// e.g. if the interpolated value is provided use x-step parameter to define distance between points (with some reasonable default), if non-interpolated key used no x-step needed?
+
+// (also need to consider how to treat mix of x-interpolated y-nonointerpolated and other way around)

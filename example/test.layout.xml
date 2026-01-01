@@ -1,2 +1,37 @@
 <layout>
+    <circle x="1920" y="1080" radius="200" color="white" border-width="5" border-color="black">
+            <circle x="-50" y="0" radius="50" color="black" border-width="5" border-color="red"/>
+    </circle>
+    <!-- <circle x="eval(3840*(video_time%15)/15.0)" y="1080" radius="10"
+            color="white" border-width="2" border-color="black"/> -->
+
+    <!-- interpolated keys to be indicated by prefix -->
+    <!-- "lerp_" for linear interpolation "pchip_" for piecewise cubic hermite interpolation -->
+
+    <!-- <if condition="key_exists(point_speed)">
+        <text x="100" y="200" font-size="48" color="yellow"
+              value="eval(point_speed*3.6)" format="Speed: {:.1f} km/h"/>
+    </if> -->
+
+    <!-- <if condition="key_exists(point_speed)">
+        <image x="100" y="300" width="64" height="64" source="icons/gauge.png"
+               rotation="eval(180*(point_speed/19))"/>
+    </if> -->
+
+    <!-- <if condition="active">
+        <image x="200" y="300" width="64" height="64" source="icons/bike.png"
+                rotation="eval(45*pchip_point_grade/100)"/>
+    </if> -->
+    <!-- if bike in icon points to left, and rotation is CW => 100% is 45 degree uphill -->
+
+    <!-- animated bike 4fps -->
+    <!-- <image x="200" y="300" width="64" height="64" source="icons/bike-1.png"
+                visible="eval((video_time*4)%4 < 1)" />
+    <image x="200" y="300" width="64" height="64" source="icons/bike-2.png"
+                visible="eval((video_time*4)%4 >= 1 && (video_time*4)%4 < 2)" />
+    <image x="200" y="300" width="64" height="64" source="icons/bike-3.png"
+                visible="eval((video_time*4)%4 >= 2 && (video_time*4)%4 < 3)" />
+    <image x="200" y="300" width="64" height="64" source="icons/bike-4.png"
+                visible="eval((video_time*4)%4 >= 3)" /> -->
+
 </layout>
