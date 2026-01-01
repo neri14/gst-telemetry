@@ -146,7 +146,7 @@ parameter_map_ptr Layout::parse_parameters(
                 //     (*params)[attr_name] = std::make_shared<StringParameter>(attr_value, track_);
                 //     break;
                 case ParameterType::Boolean:
-                    (*params)[attr_name] = std::make_shared<BooleanParameter>(attr_value, track_);
+                    (*params)[attr_name] = BooleanParameter::create(attr_value, track_);
                     break;
                 // case ParameterType::FormattedValue:
                 //     (*params)[attr_name] = std::make_shared<FormattedValueParameter>(attr_value, track_);

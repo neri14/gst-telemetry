@@ -27,6 +27,7 @@ protected:
     enum class UpdateStrategy {
         Static,
         TrackKey,
+        TrackKeyExistance,
         Expression,
         SubParameter
     };
@@ -41,23 +42,6 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
 //TODO move those to marmkdown files for documentation on layout definition
 
     //DONE
-    // --> class: NumericParameter
-    // for numeric attributes (x, y, radius, border-width):
-    //    numeric value        -> use as is
-    //    "eval(...)"          -> evaluate string inside parentheses as expression
-    //    "key(...)"           -> get value from track at timestamp using key name inside parentheses
-    //                            (note it can be achieved by eval(...) too, but this has less overhead)
-
-    //DONE
-    // --> class: ColorParameter
-    // for color attributes (bg-color, border-color):
-    //    string value         -> color name from predefined colors or "#RRGGBB" / "#RRGGBBAA" hex code
-    //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
-    //    "rgb(r,g,b)"         -> color from r,g,b values (0-1.0)
-    //    "rgba(r,g,b,a)"      -> color from r,g,b,a values (0-1.0)
-    //             each of r,g,b,a is interpreted like numeric attributes - same rules apply
-    //             resulting value is clamped to 0.0-1.0 range
-
     // --> class: BooleanParameter
     // for boolean attributes (e.g. visibility, condition):
     //    "false"/"no"/empty string        -> use as boolean false
@@ -69,10 +53,10 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //                                      if value is numeric - as above (0 = false, non-zero = true)
     //                                      if value is string - as above ("false"/"no"/empty = false, other = true)
     //                                      if key does not exist - false)
-    //    "eval(...)"                 -> evaluate string inside parentheses as expression (resulting value interpreted as above bool/numeric)
-    //    "key_exists(...)"           -> check if key inside parentheses is available in track at timestamp (resulting value is bool)
+    //    "eval(...)"                 -> evaluate string inside parentheses as expression (resulting value interpreted as above numeric)
+    //    "exists(...)"           -> check if key inside parentheses is available in track at timestamp (resulting value is bool)
     //
-    //    "not(...)"                  -> logical NOT of the boolean inside parentheses (only one NOT allowed)
+    //    "not(...)"                  -> logical NOT of the value inside parentheses (interpreted as above) - single NOT allowed as a top level wrapper
 
     // --> class: StringParameter
     // for string attributes (e.g. font name):

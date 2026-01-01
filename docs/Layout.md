@@ -35,6 +35,7 @@ coordinates of widgets located under circle are relative to circle center
 |  `eval(...)`    |  `eval(point_speed*3.6)`  |  ExprTk expression inside parenthesis defines value  |
 |  numeric value  |  `1`, `3.14`              |  static value to be used as is                       |
 
+**Note:** ExprTk expressions are tested with simple arithmetic functionality only.
 
 ### Color
 

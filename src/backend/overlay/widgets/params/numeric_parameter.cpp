@@ -13,9 +13,9 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
 
     log.debug("Creating NumericParameter with definition: {}", def);
 
-    // if begins with "eval(" and ends with ")" - expression
-    if (def.rfind("eval(", 0) == 0 && def.back() == ')') {
-        auto expression = std::make_shared<Expression>(def.substr(5, def.size() - 6), track);
+    if (get_function_name(def) == "eval") { // expression
+        auto expression_str = get_function_argstr(def);
+        auto expression = std::make_shared<Expression>(expression_str, track);
         if (expression) {
             log.debug("Created expression-based numeric parameter");
             return std::make_shared<NumericParameter>(expression);
@@ -25,9 +25,8 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
         }
     }
 
-    // if begins with "key(" and ends with ")" - track key
-    if (def.rfind("key(", 0) == 0 && def.back() == ')') {
-        std::string key = def.substr(4, def.size() - 5);
+    if (get_function_name(def) == "key") { // track key value
+        std::string key = get_function_argstr(def);
         log.debug("Created track-key-based numeric parameter with key '{}'", key);
         return std::make_shared<NumericParameter>(key, track);
     }

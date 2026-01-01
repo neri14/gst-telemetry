@@ -47,6 +47,9 @@ double Value::as_double() const {
     if (is_double()) {
         return std::get<double>(*data);
     }
+    if (is_bool()) {
+        return std::get<bool>(*data) ? 1.0 : 0.0;
+    }
     return 0.0;
 }
 

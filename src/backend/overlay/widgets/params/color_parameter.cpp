@@ -13,13 +13,13 @@ std::shared_ptr<ColorParameter> ColorParameter::create(
     utils::logging::Logger log{"ColorParameter::create"};
     log.debug("Creating ColorParameter with definition: {}", def);
 
-    bool rgb_def = def.rfind("rgb(", 0) == 0;
-    bool rgba_def = def.rfind("rgba(", 0) == 0;
-    if ((rgb_def || rgba_def) && def.back() == ')') {
+    bool rgb_def = get_function_name(def) == "rgb";
+    bool rgba_def = get_function_name(def) == "rgba";
+    if (rgb_def || rgba_def) {
 
         std::string r_def, g_def, b_def, a_def;
 
-        def = def.substr(def.find('(') + 1, def.size() - def.find('(') - 2);
+        def = get_function_argstr(def);
 
         size_t pos1 = def.find(',');
         size_t pos2 = def.find(',', pos1 + 1);
@@ -53,8 +53,8 @@ std::shared_ptr<ColorParameter> ColorParameter::create(
     }
 
     // if begins with "key(" and ends with ")" - track key
-    if (def.rfind("key(", 0) == 0 && def.back() == ')') {
-        std::string key = def.substr(4, def.size() - 5);
+    if (get_function_name(def) == "key") {
+        std::string key = get_function_argstr(def);
         log.debug("Created track-key-based color parameter with key '{}'", key);
         return std::make_shared<ColorParameter>(key, track);
     }
@@ -105,19 +105,19 @@ bool ColorParameter::update(time::microseconds_t timestamp) {
             bool changed = false;
             rgb new_value = value_;
 
-            if (!valid || (r_param_ && r_param_->update(timestamp))) {
+            if (r_param_ && (!valid || r_param_->update(timestamp))) {
                 new_value.r = std::clamp(r_param_->get_value(timestamp), 0.0, 1.0);
                 changed = true;
             }
-            if (!valid || (g_param_ && g_param_->update(timestamp))) {
+            if (g_param_ && (!valid || g_param_->update(timestamp))) {
                 new_value.g =  std::clamp(g_param_->get_value(timestamp), 0.0, 1.0);
                 changed = true;
             }
-            if (!valid || (b_param_ && b_param_->update(timestamp))) {
+            if (b_param_ && (!valid || b_param_->update(timestamp))) {
                 new_value.b =  std::clamp(b_param_->get_value(timestamp), 0.0, 1.0);
                 changed = true;
             }
-            if (!valid || (a_param_ && a_param_->update(timestamp))) {
+            if (a_param_ && (!valid || a_param_->update(timestamp))) {
                 new_value.a =  std::clamp(a_param_->get_value(timestamp), 0.0, 1.0);
                 changed = true;
             }
