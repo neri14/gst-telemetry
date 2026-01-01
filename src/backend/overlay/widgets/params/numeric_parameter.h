@@ -5,6 +5,7 @@
 #include "backend/track/track.h"
 #include "backend/utils/time.h"
 #include <string>
+#include <limits>
 
 namespace telemetry {
 namespace overlay {
@@ -13,8 +14,10 @@ class NumericParameter : public Parameter {
 public:
     static std::shared_ptr<NumericParameter> create(
         const std::string& definition, std::shared_ptr<track::Track> track);
-    // NumericParameter(... std::shared_ptr<track::Track> track);
+    
+    NumericParameter(const std::string& key, std::shared_ptr<track::Track> track);
     NumericParameter(double static_value);
+
     ~NumericParameter() override = default;
 
     bool update(time::microseconds_t timestamp) override;
@@ -24,7 +27,9 @@ private:
     UpdateStrategy update_strategy_;
 
     std::shared_ptr<track::Track> track_ = nullptr;
-    double value_ = 0.0;
+    double value_ = std::numeric_limits<double>::quiet_NaN();
+
+    track::field_id_t field_id = track::INVALID_FIELD;
 };
 
 } // namespace telemetry

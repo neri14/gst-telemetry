@@ -10,7 +10,7 @@ namespace telemetry {
 namespace overlay {
 namespace defaults {
     const rgb color = color::white;
-    const int border_width = 1;
+    const int border_width = 0; // if border not defined - no border
     const rgb border_color = color::black;
 } // namespace defaults
 
@@ -80,7 +80,7 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             // discarding return value since x,y change does not invalidate cache
         }
 
-        bool cache_update_needed = false;
+        bool cache_update_needed = !cache_drawn;
         // since we recalculate the params only if widget is visible
         // change to params that impact cache will be detected here
         // if they changed while widget was not visible
@@ -120,21 +120,28 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 cache_drawn = false;
             }
 
-            rgb color = color_->get_value(timestamp);
-            rgb border_color = border_color_->get_value(timestamp);
+            if (radius > 0) {
+                rgb color = color_->get_value(timestamp);
+                rgb border_color = border_color_->get_value(timestamp);
 
-            cairo_arc(cache_cr, cache_width/2.0, cache_height/2.0, radius, 0, 2 * M_PI);
+                cairo_arc(cache_cr, cache_width/2.0, cache_height/2.0, radius, 0, 2 * M_PI);
 
-            cairo_set_source_rgba(cache_cr, color.r, color.g, color.b, color.a);
-            cairo_fill_preserve(cache_cr);
+                cairo_set_source_rgba(cache_cr, color.r, color.g, color.b, color.a);
+                cairo_fill_preserve(cache_cr);
 
-            cairo_set_line_width(cache_cr, border_width);
-            cairo_set_source_rgba(cache_cr, border_color.r, border_color.g, border_color.b, border_color.a);
-            cairo_stroke(cache_cr);
+                if (border_width > 0) {
+                    cairo_set_line_width(cache_cr, border_width);
+                    cairo_set_source_rgba(cache_cr, border_color.r, border_color.g, border_color.b, border_color.a);
+                    cairo_stroke(cache_cr);
+                }//border width 0 is not an error - it means no border (silently ignore negative border)
 
-            cairo_surface_flush(cache);
+                cairo_surface_flush(cache);
+                cache_drawn = true;
+            } else {
+                log.warning("CircleWidget radius is non-positive ({}), skipping drawing", radius);
+            }
+
             cairo_destroy(cache_cr);
-            cache_drawn = true;
         }
 
         double x = x_offset + x_->get_value(timestamp);

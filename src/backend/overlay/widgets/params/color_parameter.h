@@ -31,11 +31,3 @@ private:
 #endif // COLOR_PARAMETER_H
 
 
-    // --> class: ColorParameter
-    // for color attributes (bg-color, border-color):
-    //    string value         -> color name from predefined colors or "#RRGGBB" / "#RRGGBBAA" hex code
-    //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
-    //    "rgb(r,g,b)"         -> color from r,g,b values (0-1.0)
-    //    "rgba(r,g,b,a)"      -> color from r,g,b,a values (0-1.0)
-    //             each of r,g,b,a is interpreted like numeric attributes - same rules apply
-    //             resulting value is clamped to 0.0-1.0 range

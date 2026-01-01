@@ -11,32 +11,36 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
     // if begins with "eval(" and ends with ")" - expression
     if (definition.rfind("eval(", 0) == 0 && definition.back() == ')') {
         //TODO to be implemented
-        log.warning("NumericParameter::create: expression-based parameters not yet implemented");
+        log.warning("Expression-based parameters not yet implemented");
         return nullptr;
     }
 
     // if begins with "key(" and ends with ")" - track key
     if (definition.rfind("key(", 0) == 0 && definition.back() == ')') {
-        //TODO to be implemented
-        log.warning("NumericParameter::create: track key-based parameters not yet implemented");
-        return nullptr;
+        std::string key = definition.substr(4, definition.size() - 5);
+        log.debug("Created track-key-based numeric parameter with key '{}'", key);
+        return std::make_shared<NumericParameter>(key, track);
     }
 
     try {
         double static_value = std::stod(definition);
+        log.debug("Created static numeric parameter with value {}", static_value);
         return std::make_shared<NumericParameter>(static_value);
     } catch (const std::invalid_argument&) {
-        log.warning("NumericParameter::create: unparsable parameter definition '{}'", definition);
+        log.warning("Unparsable parameter definition '{}'", definition);
         return nullptr;
     }
 }
 
-// NumericParameter::NumericParameter(std::shared_ptr<track::Track> track)
-//         : track_(track) {
-// }
+NumericParameter::NumericParameter(const std::string& key, std::shared_ptr<track::Track> track)
+        : update_strategy_(UpdateStrategy::TrackKey),
+          track_(track),
+          field_id(track->get_field_id(key)) {
+}
 
 NumericParameter::NumericParameter(double static_value)
-        : update_strategy_(UpdateStrategy::Static), value_(static_value) {
+        : update_strategy_(UpdateStrategy::Static),
+          value_(static_value) {
 }
 
 bool NumericParameter::update(time::microseconds_t timestamp) {
@@ -47,8 +51,15 @@ bool NumericParameter::update(time::microseconds_t timestamp) {
             //TODO to be implemented - return true only if value_ changed
             return true;
         case UpdateStrategy::TrackKey:
-            //TODO to be implemented - return true only if value_ changed
-            return true;
+            if (track_) {
+                track::Value v = track_->get(field_id, timestamp);
+                double new_value = v.as_double();
+                if (new_value != value_) {
+                    value_ = new_value;
+                    return true;
+                }
+            }
+            return false;
         default:
             return false;
     }
