@@ -53,6 +53,12 @@ Conditonal widget, draw encapsulated widgets only if condition is met.
 
 
 
+### text
+
+*ToDo: to be described*
+
+
+
 ### circle
 
 Draw a circle with center at x,y.
@@ -93,6 +99,10 @@ coordinates of widgets located under circle are relative to circle center
 **Note:** ExprTk expressions are tested with simple arithmetic functionality only.
 
 
+### String
+
+*ToDo: to be described*
+
 
 ### Color
 
@@ -105,6 +115,10 @@ coordinates of widgets located under circle are relative to circle center
 |  `#RRGGBBAA`      |  `#000000f0`                       |  hex color code with alpha                                                              |
 |  string value     |  `white`, `red`                    |  basic color name                                                                       |
 
+
+### TextAlign
+
+*ToDo: to be described*
 
 
 ### Boolean

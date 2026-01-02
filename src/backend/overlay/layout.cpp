@@ -7,11 +7,13 @@
 
 #include "widgets/container_widget.h"
 #include "widgets/conditional_widget.h"
+#include "widgets/text_widget.h"
 #include "widgets/circle_widget.h"
 
-
-#include "widgets/params/numeric_parameter.h"
 #include "widgets/params/color_parameter.h"
+#include "widgets/params/alignment_parameter.h"
+#include "widgets/params/numeric_parameter.h"
+#include "widgets/params/string_parameter.h"
 #include "widgets/params/boolean_parameter.h"
 
 namespace telemetry {
@@ -110,6 +112,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     } else if (name == "if") {
         widget = parse_widget<ConditionalWidget>(node);
         log.debug("Created Conditional widget");
+    } else if (name == "text") {
+        widget = parse_widget<TextWidget>(node);
+        log.debug("Created Text widget");
     } else if (name == "circle") {
         widget = parse_widget<CircleWidget>(node);
         log.debug("Created Circle widget");
@@ -152,9 +157,12 @@ parameter_map_ptr Layout::parse_parameters(
                 case ParameterType::Color:
                     (*params)[attr_name] = ColorParameter::create(attr_value, track_);
                     break;
-                // case ParameterType::String:
-                //     (*params)[attr_name] = std::make_shared<StringParameter>(attr_value, track_);
-                //     break;
+                case ParameterType::Alignment:
+                    (*params)[attr_name] = AlignmentParameter::create(attr_value, track_);
+                    break;
+                case ParameterType::String:
+                    (*params)[attr_name] = StringParameter::create(attr_value, track_);
+                    break;
                 case ParameterType::Boolean:
                     (*params)[attr_name] = BooleanParameter::create(attr_value, track_);
                     break;

@@ -12,9 +12,10 @@ namespace overlay {
 enum class ParameterType {
     Numeric,
     Color,
+    Alignment,
     String,
     Boolean,
-    FormattedValue
+    Formatted
 };
 
 class Parameter {
@@ -63,8 +64,12 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //    string value         -> use as is
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses
 
+    // --> class: AlignmentParameter
+    // for string attributes (e.g. font name):
+    //    string value         -> use as is - only allowed: left, right, center
+    //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
 
-    // --> class: FormattedValueParameter
+    // --> class: FormattedParameter
     // for string/numeric attribute - special "value" attribute case (can evaluate to string or numeric internally):
     //    string value         -> use as is (as string)
     //    numeric value        -> use as is (as double)
