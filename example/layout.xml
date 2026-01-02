@@ -30,9 +30,10 @@
             <!-- and right aligned -->
         <composite-text x="550" y="10" align="left" font-name="DejaVu Sans" font-size="32"
               color="white" border-width="2" border-color="black"
-              format="{:.3f} s / {:.3f} s"
-              value-1="eval(time_elapsed)"
-              value-2="eval(time_remaining)" />
+              format="{:.0f}:{:02.0f}:{:06.3f}"
+              value-1="eval(floor(time_elapsed/3600))"
+              value-2="eval(floor((time_elapsed%3600)/60))"
+              value-3="eval(time_elapsed%60)" />
 
         <!-- left column -->
         <container x="230" y="1360">

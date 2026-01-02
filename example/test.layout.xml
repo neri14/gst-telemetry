@@ -91,6 +91,17 @@
         <circle x="eval(2500+1000*(pchip_point_speed*3.6/30))" y="810"
                 radius="10" color="green" border-width="2" border-color="black"/>
 
+        <timestamp x="50" y="800" align="left" font-name="DejaVu Sans" font-size="32"
+                   color="white" border-color="black" border-width="2"
+                   value="key(timestamp)" format="{:%Y-%m-%d %H:%M:%S}"
+                   precision="3" timezone="Europe/Warsaw" />
+
+        <composite-text x="50" y="850" align="left" font-name="DejaVu Sans" font-size="32"
+              color="white" border-width="2" border-color="black"
+              format="{:.3f} s / {:.3f} s"
+              value-1="eval(time_elapsed)"
+              value-2="eval(time_remaining)" />
+
 
         <!-- ToDo image, chart, moving chart, ...-->
     <!-- <if condition="key_exists(point_speed)">
