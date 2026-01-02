@@ -1,6 +1,7 @@
 #include "track.h"
 
 #include "backend/utils/time.h"
+#include <cmath>
 
 
 std::string drop_ns(const std::string& name) {
@@ -181,10 +182,10 @@ Value Track::get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t 
             }
         }
         else {
-            log.warning("Field id {} not found in both bounding trackpoints for lerp interpolation", data_field_id);
+            log.debug("Field id {} not found in both bounding trackpoints for lerp interpolation", data_field_id);
         }
     } else {
-        log.warning("Not enough trackpoints for lerp interpolation at timestamp {}", timestamp);
+        log.debug("Not enough trackpoints for lerp interpolation at timestamp {}", timestamp);
     }
     return Value();
 }
@@ -195,9 +196,96 @@ Value Track::get_pchip_trackpoint_data(const std::string& key, time::microsecond
 }
 
 Value Track::get_pchip_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const {
-    //TODO implement piecewise cubic hermite interpolation retrieval
-    log.warning("PCHIP interpolation retrieval not implemented yet for field id: {}", field_id);
-    return Value();
+    field_id_t data_field_id = field_id ^ consts::pchip_id_mask;
+
+    auto it2 = trackpoints_.upper_bound(timestamp);
+    auto it1 = (it2 != trackpoints_.begin()) ? std::prev(it2) : trackpoints_.end();
+    auto it0 = (it1 != trackpoints_.begin()) ? std::prev(it1) : trackpoints_.end();
+    auto it3 = (it2 != trackpoints_.end()) ? std::next(it2) : trackpoints_.end();
+
+    if (it0 == trackpoints_.end() || it1 == trackpoints_.end() ||
+        it2 == trackpoints_.end() || it3 == trackpoints_.end()) {
+        log.debug("Not enough trackpoints for PCHIP interpolation at timestamp {}", timestamp);
+        return Value();
+    }
+
+    auto data_it0 = it0->second->find(data_field_id);
+    auto data_it1 = it1->second->find(data_field_id);
+    auto data_it2 = it2->second->find(data_field_id);
+    auto data_it3 = it3->second->find(data_field_id);
+
+    if (data_it0 == it0->second->end() || data_it1 == it1->second->end() ||
+        data_it2 == it2->second->end() || data_it3 == it3->second->end()) {
+        log.debug("Field id {} not found in all bounding trackpoints for PCHIP interpolation", data_field_id);
+        return Value();
+    }
+
+    if (it0->first >= it1->first || it1->first >= it2->first || it2->first >= it3->first) {
+        log.error("Timestamps for PCHIP interpolation are not strictly increasing");
+        return Value();
+    }
+
+    if (timestamp < it1->first || timestamp > it2->first) {
+        log.error("Timestamp {} for PCHIP interpolation is out of bounds [{}, {}]", timestamp, it1->first, it2->first);
+        return Value();
+    }
+
+    double t = time::us_to_s(timestamp);
+
+    double t0 = time::us_to_s(it0->first);
+    double t1 = time::us_to_s(it1->first);
+    double t2 = time::us_to_s(it2->first);
+    double t3 = time::us_to_s(it3->first);
+
+    if (t == t1) {
+        return Value(data_it1->second);
+    }
+    if (t == t2) {
+        return Value(data_it2->second);
+    }
+
+    double x0 = data_it0->second.as_double();
+    double x1 = data_it1->second.as_double();
+    double x2 = data_it2->second.as_double();
+    double x3 = data_it3->second.as_double();
+
+    //pchip interpolation algorithm
+
+    // intervals
+    double h0 = t1 - t0;
+    double h1 = t2 - t1;
+    double h2 = t3 - t2;
+
+    // secant slopes
+    double d0 = (x1 - x0) / h0;
+    double d1 = (x2 - x1) / h1;
+    double d2 = (x3 - x2) / h2;
+
+    // derivative at t1
+    double m1 = 0;
+    if (d0 * d1 > 0) {
+        m1 = (h0 + h1) / ((h1 / d0) + (h0 / d1));
+    }
+
+    // defivative at t2
+    double m2 = 0;
+    if (d1 * d2 > 0) {
+        m2 = (h1 + h2) / ((h2 / d1) + (h1 / d2));
+    }
+
+    // normalized parameter
+    double s = (t - t1) / h1;
+
+    // hermite basiss
+    double h00 = 2 * std::pow(s, 3) - 3 * std::pow(s, 2) + 1;
+    double h10 = std::pow(s, 3) - 2 * std::pow(s, 2) + s;
+    double h01 = -2 * std::pow(s, 3) + 3 * std::pow(s, 2);
+    double h11 = std::pow(s, 3) - std::pow(s, 2);
+
+    // interpolated value
+    double x = h00 * x1 + h10 * h1 * m1 + h01 * x2 + h11 * h1 * m2;
+
+    return Value(x);
 }
 
 Value Track::get_virtual_data(const std::string& key, time::microseconds_t timestamp) const {
