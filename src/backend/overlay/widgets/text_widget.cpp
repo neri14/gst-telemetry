@@ -216,15 +216,17 @@ void TextWidget::draw_text(cairo_t* cr, int width, int height, int margin,
     pango_layout_set_alignment(layout, to_pango_align(align));
 
     //  check if clipping may occur
+    int w_in_margin = width - 2 * margin;
+    int h_in_margin = height - 2 * margin;
     int w,h;
     pango_layout_get_pixel_size(layout, &w, &h);
-    if (w > width-2*margin || h > height-2*margin) {
-        log.warning("TextWidget text size ({}x{}) exceeds cache size ({}x{}), clipping may occur", w, h, width, height);
+    if (w > w_in_margin || h > h_in_margin) {
+        log.warning("TextWidget text size ({}x{}) exceeds cache size less margin ({}x{}), clipping may occur", w, h, w_in_margin, h_in_margin);
     }
 
     // set layout size to cache size
-    pango_layout_set_width(layout, (width-2*margin) * PANGO_SCALE);
-    pango_layout_set_height(layout, (height-2*margin) * PANGO_SCALE);
+    pango_layout_set_width(layout, w_in_margin * PANGO_SCALE);
+    pango_layout_set_height(layout, h_in_margin * PANGO_SCALE);
 
     // draw border
     cairo_move_to(cr, margin, margin);

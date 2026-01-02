@@ -7,7 +7,7 @@
 
     <if condition="eval(time_elapsed>=0 and time_remaining>=0)"> <!-- FIXME key active doesnt work properly -->
         <!-- FIXME - datetime needs special handling - second level precision + timezone -->
-        <text x="10" y="10" align="left" font="DejaVu Sans" font-size="32"
+        <text x="10" y="10" align="left" font-name="DejaVu Sans" font-size="32"
               color="white" border-color="black" border-width="2"
               value="key(point_time)" format="{:%Y-%m-%d %H:%M:%S}" />
 
@@ -16,39 +16,39 @@
             <container x="0" y="0">
             </container>
             <container x="0" y="150">
-                <text x="0" y="0" align="right" font="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="KM/H" />
+                <text x="0" y="0" align="right" font-name="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="KM/H" />
                 <if condition="exists(pchip_point_speed)">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_speed*3.6)" format="{:.1f}" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_speed*3.6)" format="{:.1f}" />
                 </if>
                 <if condition="not(exists(pchip_point_speed))">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
                 </if>
             </container>
             <container x="0" y="300">
-                <text x="0" y="0" align="right" font="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="WATT" />
+                <text x="0" y="0" align="right" font-name="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="WATT" />
                 <if condition="exists(pchip_point_power)">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_power)" format="{:.0f}" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_power)" format="{:.0f}" />
                 </if>
                 <if condition="not(exists(pchip_point_power))">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
                 </if>
             </container>
             <container x="0" y="450">
-                <text x="0" y="0" align="right" font="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="RPM" />
+                <text x="0" y="0" align="right" font-name="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="RPM" />
                 <if condition="exists(pchip_point_cad)">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_cad)" format="{:.0f}" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_cad)" format="{:.0f}" />
                 </if>
                 <if condition="not(exists(pchip_point_cad))">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
                 </if>
             </container>
             <container x="0" y="600">
-                <text x="0" y="0" align="right" font="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="GEAR" />
+                <text x="0" y="0" align="right" font-name="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="GEAR" />
                 <if condition="exists(point_rgearnum)">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(point_rgearnum)" format="{:.0f}" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(point_rgearnum)" format="{:.0f}" />
                 </if>
                 <if condition="not(exists(point_rgearnum))">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
                 </if>
             </container>
         </container>
@@ -62,21 +62,21 @@
             <container x="0" y="300">
             </container>
             <container x="0" y="450">
-                <text x="0" y="0" align="right" font="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="GRADE (%)" />
+                <text x="0" y="0" align="right" font-name="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="GRADE (%)" />
                 <if condition="exists(pchip_point_grade)">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_grade)" format="{:.1f}" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_grade)" format="{:.1f}" />
                 </if>
                 <if condition="not(exists(pchip_point_grade))">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
                 </if>
             </container>
             <container x="0" y="600">
-                <text x="0" y="0" align="right" font="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="KM" />
+                <text x="0" y="0" align="right" font-name="DejaVu Sans" font-size="32" color="white" border-color="black" border-width="4" value="KM" />
                 <if condition="exists(pchip_point_dist)">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_dist/1000)" format="{:.2f}" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="eval(pchip_point_dist/1000)" format="{:.2f}" />
                 </if>
                 <if condition="not(exists(pchip_point_dist))">
-                    <text x="0" y="38" align="right" font="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
+                    <text x="0" y="38" align="right" font-name="DejaVu Sans" font-size="64" color="white" border-color="black" border-width="4" value="-" />
                 </if>
             </container>
         </container>
@@ -96,14 +96,14 @@
 <!-- <container x="720" y="1910">
     <widget type="rectangle" x="0" y="0" width="600" height="204" bg-color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
     <widget type="moving-chart" x="0" y="2" width="600" height="200" line-color="white" line-width="4" key="speed" window="15" 
-            text-font="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.1f} KM/H"/>
+            text-font-name="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.1f} KM/H"/>
 </container> -->
 
 <!-- power moving chart -->
 <!-- <container x="1620" y="1910">
     <widget type="rectangle" x="0" y="0" width="600" height="204" bg-color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
     <widget type="moving-chart" x="0" y="2" width="600" height="200" line-color="white" line-width="4" key="power" window="15"
-            text-font="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.0f} W"/>
+            text-font-name="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.0f} W"/>
 </container> -->
 
 <!-- gradient moving chart -->
@@ -111,5 +111,5 @@
     <widget type="line" x1="0" y1="100" x2="600" y2="102" color="#ffffffb0" width="2" />
     <widget type="rectangle" x="0" y="0" width="600" height="204" bg-color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
     <widget type="moving-chart" x="0" y="2" width="600" height="200" line-color="white" line-width="4" key="gradient" window="15" symmetric="true"
-            text-font="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.1f} %"/>
+            text-font-name="DejaVu Sans 20" text-color="white" text-border-color="black" text-border-width="2" text-format="{:.1f} %"/>
 </container> -->
