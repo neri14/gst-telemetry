@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <string>
 #include <variant>
 #include <stdint.h>
@@ -25,12 +26,18 @@ static constexpr field_id_t INVALID_FIELD = UINT32_MAX;
 
 class Track {
 public:
+    using fields_map_t = std::map<field_id_t, Value>;
+    using trackpoint_data_map_t = std::map<time::microseconds_t, std::shared_ptr<fields_map_t>>;
+    using trackpoint_ts_view_t = std::ranges::keys_view<std::ranges::ref_view<const trackpoint_data_map_t>>;
+
     Track(time::microseconds_t offset = 0);
     ~Track() = default;
 
     bool load(const std::string& path);
 
     field_id_t get_field_id(const std::string& field_name) const;
+
+    trackpoint_ts_view_t get_trackpoint_timestamps() const;
 
     //TODO add argument to getters to specify retrieve LAST, NEXT or INTERPOLATED value
     Value get(const std::string& key, time::microseconds_t timestamp = time::INVALID_TIME) const;
@@ -41,6 +48,12 @@ public:
 
     Value get_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
+
+    Value get_lerp_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
+    Value get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
+
+    Value get_pchip_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
+    Value get_pchip_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
 
     Value get_virtual_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_virtual_data(field_id_t field_id, time::microseconds_t timestamp) const;
@@ -73,13 +86,15 @@ private:
     field_id_t register_segment_field(const std::string& key);
     field_id_t register_virtual_field(const std::string& key);
 
+    field_id_t register_field(const std::string& key, field_id_t mask);
+
     time::microseconds_t to_relative_time_domain(time::time_point_t timestamp) const;
 
     std::map<std::string, field_id_t> field_ids_;
     field_id_t next_field_id_ = 0;
 
-    std::map<field_id_t, Value> metadata_;
-    std::map<time::microseconds_t, std::shared_ptr<std::map<field_id_t, Value>>> trackpoints_;
+    fields_map_t metadata_;
+    trackpoint_data_map_t trackpoints_;
     std::map<field_id_t, std::function<Value(time::microseconds_t)>> virtual_data_mapping_;
 
     time::microseconds_t min_timestamp_ = time::INVALID_TIME;
@@ -93,3 +108,79 @@ private:
 } // namespace telemetry
 
 #endif // TRACK_H
+
+
+// NOTES ON SEGMENTS:
+
+// ### SEGMENT DATA ###
+// # put segment summary data (as is in the gpx)
+// # into (...)_meta_(...)
+// # and where applicable create virtual fields
+// # like the ones for point but relative to segment start/end
+// # AND DOCUMENT EVERYTHING IN MARKDOWN TABLE IN REPO
+// # which fields from gpx are visible how etc...
+
+// # e.g.
+// s_climb_next_meta_ascent # next climb total ascent
+// s_climb_dist # current climb distance since climb start
+// s_segment_timer # current strava segment time since start
+
+
+// ### SEGMENT PREFIXES ###
+
+// # prefixes (tbd prev or last?)
+
+// s_TYPE_        # currently active
+// s_TYPE_prev_   # next active
+// s_TYPE_next_   # last active
+
+// # lists
+
+// # all active segments in order of start
+// #(making a list where last finished stays for few seconds before dissapears will be tricky)
+// #(but should be doable)
+
+// s_TYPE_N_         # all currently active segments of a type ordered by start time ascending
+// s_TYPE_prev_N_    # ordered by finish time descending (so last, second to last to finish etc)
+// s_TYPE_next_N_    # ordered by start time aascending
+
+// # where N:=<1, ...)
+// # and s_TYPE_1_ == s_TYPE_
+// # and s_TYPE_prev_1_ == s_TYPE_prev_
+// # and s_TYPE_next_1_ == s_TYPE_next_
+
+
+
+// # plus all segments list
+
+// s_TYPE_lst_N_   # all segments of a type (e.g. for a summary screen)
+
+
+// # examples
+
+// s_climb_next_meta_ascent         # total ascent of next climb
+// s_segment_prev_meta_elapsedtime  # total time of last strava segment
+
+
+
+
+// NOTES ON SEGMENT GRAPHS
+
+// # graphs (for segments, but actually same design could be reused between segments and "moving graphs" just with different start-end points(?)
+
+// graph widget needs to take parameters (naming tbd):
+// start_time = ..
+// end_time = ..
+
+// (a new type of widget parameter?)
+
+// use cases:
+// - segments: keys from which to take start and end timestamp of graph (wont change as long as segment is visible)
+// - elevation graph: whole activity - either no params or keywords "begin" "end" or virtual(?) keys providing begin and end times?
+// - moving graph: either - end_time="time" key, start_time??? or if numeric value provided - treat it as relative to current time and then start_time=-30 end_time=0 ?
+
+
+// also need to take care of how to treat continous graphs?
+// e.g. if the interpolated value is provided use x-step parameter to define distance between points (with some reasonable default), if non-interpolated key used no x-step needed?
+
+// (also need to consider how to treat mix of x-interpolated y-nonointerpolated and other way around)

@@ -1,0 +1,122 @@
+<layout>
+        <circle x="eval(3840*(video_time%15)/15.0)" y="100" radius="10"
+                color="white" border-width="2" border-color="black"/>
+        <circle x="1920" y="200" radius="key(video_time)"
+                color="red" border-width="4" border-color="black"/>
+
+        <circle x="150" y="400" radius="140"
+                color="rgba(1, 0, 0, 0.5)" border-width="5" border-color="black"/>
+        <circle x="450" y="400" radius="140"
+                color="rgb(0, 1, 0)" border-width="5" border-color="black"/>
+        <circle x="750" y="400" radius="140"
+                color="rgb(0, 0, 1)" border-width="5" border-color="black"/>
+
+        <circle x="1050" y="400" radius="140"
+                color="rgb(eval((video_time%5)/5.0), 0, 0)" border-width="5" border-color="black"/>
+        <circle x="1350" y="400" radius="140"
+                color="rgb(0, eval(1-(video_time%5.0)/5.0), 0)" border-width="5" border-color="black"/>
+        <circle x="1650" y="400" radius="140"
+                color="rgb(0, 0, eval(video_time%1.0))" border-width="5" border-color="black"/>
+
+        <circle x="100" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="true"/> <!-- always visible -->
+        <circle x="200" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="false"/> <!-- never visible -->
+        <circle x="300" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="yes"/> <!-- always visible -->
+        <circle x="400" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="no"/> <!-- never visible -->
+        <circle x="500" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="some string"/> <!-- always visible -->
+        <circle x="600" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible=""/> <!-- never visible -->
+        <circle x="700" y="650" radius="40" color="green" border-width="5" border-color="black"
+                visible="1"/> <!-- always visible -->
+        <circle x="800" y="650" radius="40" color="green" border-width="5" border-color="black"
+                visible="0"/> <!-- never visible -->
+        <circle x="900" y="650" radius="40" color="yellow" border-width="5" border-color="black"
+                visible="key(point_timer)"/> <!-- visible if point_timer non-zero -->
+        <circle x="1000" y="650" radius="40" color="yellow" border-width="5" border-color="black"
+                visible="exists(point_timer)"/> <!-- visible if point_timer key exists (1s earlier than above one) -->
+        <circle x="1100" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="not(false)"/> <!-- always visible -->
+        <circle x="1200" y="650" radius="40" color="white" border-width="5" border-color="black"
+                visible="not(true)"/> <!-- never visible -->
+        <circle x="1300" y="650" radius="40" color="red" border-width="5" border-color="black"
+                visible="eval(point_timer%2)"/> <!-- visible on odd seconds -->
+        <circle x="1400" y="650" radius="40" color="blue" border-width="5" border-color="black"
+                visible="not(eval(point_timer%2))"/> <!-- visible on even seconds -->
+
+        <if condition="eval(round(video_time)%2)"><!-- visible every second for 1 second offset by 0.5s -->
+            <circle x="1500" y="650" radius="40" color="pink" border-width="5" border-color="black"/>
+        </if>
+
+        <container x="1700" y="750">
+            <circle x="0" y="0" radius="30" color="orange" border-width="5" border-color="black"/>
+            <circle x="100" y="0" radius="30" color="purple" border-width="5" border-color="black"/>
+            <circle x="200" y="0" radius="30" color="cyan" border-width="5" border-color="black"/>
+        </container>
+
+        <container x="2000" y="750" visible="eval((video_time*10)%10 < 2)"> <!-- visible every second for 0.2s -->
+            <circle x="0" y="0" radius="30" color="orange" border-width="5" border-color="black"/>
+            <circle x="100" y="0" radius="30" color="purple" border-width="5" border-color="black"/>
+            <circle x="200" y="0" radius="30" color="cyan" border-width="5" border-color="black"/>
+        </container>
+
+        <circle x="2500" y="200" radius="10" color="black"/>
+        <text x="2500" y="200" font-name="DejaVu Sans" font-size="32" align="left"
+              color="white" border-width="4" border-color="black"
+              value="left aligned text"/>
+        <text x="2500" y="250" font-name="DejaVu Sans" font-size="32" align="center"
+              color="white" border-width="4" border-color="black"
+              value="centered text"/>
+        <text x="2500" y="300" font-name="DejaVu Sans" font-size="32" align="right"
+              color="white" border-width="4" border-color="black"
+              value="right aligned text"/>
+
+        <text x="2500" y="400" font-name="DejaVu Sans" font-size="64" align="left"
+              color="white" border-width="4" border-color="black"
+              value="eval(point_speed*3.6)" format="discreet: {:.2f} km/h"/>
+        <text x="2500" y="500" font-name="DejaVu Sans" font-size="64" align="left"
+              color="blue" border-width="4" border-color="black"
+              value="eval(lerp_point_speed*3.6)" format="linear: {:.2f} km/h"/>
+        <text x="2500" y="600" font-name="DejaVu Sans" font-size="64" align="left"
+              color="green" border-width="4" border-color="black"
+              value="eval(pchip_point_speed*3.6)" format="pchip: {:.2f} km/h"/>
+
+        <circle x="eval(2500+1000*(point_speed*3.6/30))" y="750"
+                radius="10" color="white" border-width="2" border-color="black"/>
+        <circle x="eval(2500+1000*(lerp_point_speed*3.6/30))" y="780"
+                radius="10" color="blue" border-width="2" border-color="black"/>
+        <circle x="eval(2500+1000*(pchip_point_speed*3.6/30))" y="810"
+                radius="10" color="green" border-width="2" border-color="black"/>
+
+
+        <!-- ToDo image, chart, moving chart, ...-->
+    <!-- <if condition="key_exists(point_speed)">
+        <text x="100" y="200" font-size="48" color="yellow"
+              value="eval(point_speed*3.6)" format="Speed: {:.1f} km/h"/>
+    </if> -->
+
+    <!-- <if condition="key_exists(point_speed)">
+        <image x="100" y="300" width="64" height="64" source="icons/gauge.png"
+               rotation="eval(180*(point_speed/19))"/>
+    </if> -->
+
+    <!-- <if condition="active">
+        <image x="200" y="300" width="64" height="64" source="icons/bike.png"
+                rotation="eval(45*pchip_point_grade/100)"/>
+    </if> -->
+    <!-- if bike in icon points to left, and rotation is CW => 100% is 45 degree uphill -->
+
+    <!-- animated bike 4fps -->
+    <!-- <image x="200" y="300" width="64" height="64" source="icons/bike-1.png"
+                visible="eval((video_time*4)%4 < 1)" />
+    <image x="200" y="300" width="64" height="64" source="icons/bike-2.png"
+                visible="eval((video_time*4)%4 >= 1 && (video_time*4)%4 < 2)" />
+    <image x="200" y="300" width="64" height="64" source="icons/bike-3.png"
+                visible="eval((video_time*4)%4 >= 2 && (video_time*4)%4 < 3)" />
+    <image x="200" y="300" width="64" height="64" source="icons/bike-4.png"
+                visible="eval((video_time*4)%4 >= 3)" /> -->
+
+</layout>

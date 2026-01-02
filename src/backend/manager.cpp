@@ -66,6 +66,8 @@ bool Manager::deinit() {
 }
 
 bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
+    //TODO add tracing later
+
     if (surface == nullptr) {
         log.error("draw: no cairo surface provided");
         return false;

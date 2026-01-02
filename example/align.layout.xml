@@ -1,0 +1,6 @@
+<layout>
+    <text x="1920" y="300" font-name="DejaVu Sans" font-size="64" align="center"
+            color="white" border-width="4" border-color="black"
+            value="key(video_time)" format="{:.6f}" />
+</layout>
+

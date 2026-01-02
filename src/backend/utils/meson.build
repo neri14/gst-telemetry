@@ -4,6 +4,9 @@ cpp_sources += files(
 
 headers += files(
   'time.h',
+  'color.h',
+  'text_align.h',
+  'string_utils.h',
 )
 
 

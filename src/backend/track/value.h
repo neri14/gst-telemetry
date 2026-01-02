@@ -22,7 +22,7 @@ struct Value {
     bool is_valid() const;
     operator bool() const;
 
-    std::string as_string() const;//TODO format argument?
+    std::string as_string(const std::string& format = "{}") const;
     double as_double() const;
     bool as_bool() const;
     time::time_point_t as_time_point() const;
