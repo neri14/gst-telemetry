@@ -13,13 +13,18 @@ namespace track {
 namespace consts {
     const field_id_t max_id = 0x00FFFFFF;
 
-    const field_id_t metadata_id_mask = 0x08000000;
-    const field_id_t trackpoint_id_mask = 0x04000000;
-    const field_id_t segment_id_mask = 0x02000000;
-    const field_id_t virtual_id_mask = 0x01000000;
+    const field_id_t reserved_id_mask = 0x80000000;
+    const field_id_t metadata_id_mask = 0x40000000;
+    const field_id_t trackpoint_id_mask = 0x20000000;
+    const field_id_t segment_id_mask = 0x10000000;
+    const field_id_t virtual_id_mask = 0x08000000;
+    const field_id_t lerp_id_mask = 0x04000000;
+    const field_id_t pchip_id_mask = 0x02000000;
 
     const std::string metadata_prefix_ = "meta_";
     const std::string trackpoint_prefix_ = "point_";
+    const std::string lerp_prefix_ = "lerp_";
+    const std::string pchip_prefix_ = "pchip_";
     const std::string segment_prefix_ = "s_"; //not used yet
 }
 
@@ -83,6 +88,10 @@ Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
         return get_metadata(field_id);
     } else if (field_id & consts::trackpoint_id_mask) {
         return get_trackpoint_data(field_id, timestamp);
+    } else if (field_id & consts::lerp_id_mask) {
+        return get_lerp_trackpoint_data(field_id, timestamp);
+    } else if (field_id & consts::pchip_id_mask) {
+        return get_pchip_trackpoint_data(field_id, timestamp);
     } else if (field_id & consts::segment_id_mask) {
         // TODO segment data retrieval - if possible without additional segment identifier?
         //      there can be multiple segments active at same time
@@ -129,6 +138,56 @@ Value Track::get_trackpoint_data(field_id_t field_id, time::microseconds_t times
             return field_it->second;
         }
     }
+    return Value();
+}
+
+Value Track::get_lerp_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const {
+    field_id_t field_id = get_field_id(key);
+    return get_lerp_trackpoint_data(field_id, timestamp);
+}
+
+Value Track::get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const {
+    auto upper_it = trackpoints_.upper_bound(timestamp);
+    if (upper_it != trackpoints_.begin() && upper_it != trackpoints_.end()) {
+        auto lower_it = std::prev(upper_it);
+
+        auto& lower_data = *(lower_it->second);
+        auto& upper_data = *(upper_it->second);
+
+        auto lower_field_it = lower_data.find(field_id);
+        auto upper_field_it = upper_data.find(field_id);
+
+        if (lower_field_it != lower_data.end() && upper_field_it != upper_data.end()) {
+            Value lower_value = lower_field_it->second;
+            Value upper_value = upper_field_it->second;
+
+            if (lower_value.is_double() && upper_value.is_double()) {
+                double lv = lower_value.as_double();
+                double uv = upper_value.as_double();
+
+                time::microseconds_t t0 = lower_it->first;
+                time::microseconds_t t1 = upper_it->first;
+
+                double factor = static_cast<double>(timestamp - t0) / static_cast<double>(t1 - t0);
+                double interpolated_value = lv + factor * (uv - lv);
+
+                return Value(interpolated_value);
+            } else {
+                log.warning("Lerp interpolation only supported for double values. Field id: {}", field_id);
+            }
+        }
+    }
+    return Value();
+}
+
+Value Track::get_pchip_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const {
+    field_id_t field_id = get_field_id(key);
+    return get_pchip_trackpoint_data(field_id, timestamp);
+}
+
+Value Track::get_pchip_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const {
+    //TODO implement piecewise cubic hermite interpolation retrieval
+    log.warning("PCHIP interpolation retrieval not implemented yet for field id: {}", field_id);
     return Value();
 }
 
@@ -479,60 +538,59 @@ void Track::create_virtual_fields() {
 
 field_id_t Track::register_metadata_field(const std::string& key) {
     std::string metakey = consts::metadata_prefix_ + key;
-    auto id = get_field_id(metakey);
-    if (id != INVALID_FIELD) {
-        return id;
-    }
-
-    id = next_field_id_++;
-    id |= consts::metadata_id_mask;
-    field_ids_[metakey] = id;
-
+    auto id = register_field(metakey, consts::metadata_id_mask);
     log.debug("Registered new metadata field: {} with id {}", metakey, id);
     return id;
 }
 
 field_id_t Track::register_trackpoint_field(const std::string& key) {
     std::string tpkey = consts::trackpoint_prefix_ + key;
-    auto id = get_field_id(tpkey);
-    if (id != INVALID_FIELD) {
-        return id;
-    }
-
-    id = next_field_id_++;
-    id |= consts::trackpoint_id_mask;
-    field_ids_[tpkey] = id;
-
+    auto id = register_field(tpkey, consts::trackpoint_id_mask);
     log.debug("Registered new trackpoint field: {} with id {}", tpkey, id);
+
+    register_lerp_field(tpkey);
+    register_pchip_field(tpkey);
+
+    return id;
+}
+
+field_id_t Track::register_lerp_field(const std::string& key) {
+    std::string lerpkey = consts::lerp_prefix_ + key;
+    auto id = register_field(lerpkey, consts::lerp_id_mask);
+    log.debug("Registered new lerp field: {} with id {}", lerpkey, id);
+    return id;
+}
+
+field_id_t Track::register_pchip_field(const std::string& key) {
+    std::string pchipkey = consts::pchip_prefix_ + key;
+    auto id = register_field(pchipkey, consts::pchip_id_mask);
+    log.debug("Registered new pchip field: {} with id {}", pchipkey, id);
     return id;
 }
 
 field_id_t Track::register_segment_field(const std::string& key) {
     std::string segkey = consts::segment_prefix_ + key;
-    auto id = get_field_id(segkey);
-    if (id != INVALID_FIELD) {
-        return id;
-    }
-
-    id = next_field_id_++;
-    id |= consts::segment_id_mask;
-    field_ids_[segkey] = id;
-
+    auto id = register_field(segkey, consts::segment_id_mask);
     log.debug("Registered new segment field: {} with id {}", segkey, id);
     return id;
 }
 
 field_id_t Track::register_virtual_field(const std::string& key) {
+    auto id = register_field(key, consts::virtual_id_mask);
+    log.debug("Registered new virtual field: {} with id {}", key, id);
+    return id;
+}
+
+field_id_t Track::register_field(const std::string& key, field_id_t mask) {
     auto id = get_field_id(key);
     if (id != INVALID_FIELD) {
         return id;
     }
 
     id = next_field_id_++;
-    id |= consts::virtual_id_mask;
+    id |= mask;
     field_ids_[key] = id;
 
-    log.debug("Registered new virtual field: {} with id {}", key, id);
     return id;
 }
 

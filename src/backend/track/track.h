@@ -49,6 +49,12 @@ public:
     Value get_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
 
+    Value get_lerp_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
+    Value get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
+
+    Value get_pchip_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
+    Value get_pchip_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
+
     Value get_virtual_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_virtual_data(field_id_t field_id, time::microseconds_t timestamp) const;
 
@@ -77,8 +83,12 @@ private:
 
     field_id_t register_metadata_field(const std::string& key);
     field_id_t register_trackpoint_field(const std::string& key);
+    field_id_t register_lerp_field(const std::string& key);
+    field_id_t register_pchip_field(const std::string& key);
     field_id_t register_segment_field(const std::string& key);
     field_id_t register_virtual_field(const std::string& key);
+
+    field_id_t register_field(const std::string& key, field_id_t mask);
 
     time::microseconds_t to_relative_time_domain(time::time_point_t timestamp) const;
 
