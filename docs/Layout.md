@@ -59,6 +59,12 @@ Conditonal widget, draw encapsulated widgets only if condition is met.
 
 
 
+## composite-text
+
+*ToDo: to be described*
+
+
+
 ### timestamp
 
 *ToDo: to be described*

@@ -25,9 +25,14 @@
                    color="white" border-color="black" border-width="2"
                    value="key(timestamp)" format="{:%Y-%m-%d %H:%M:%S}"
                    precision="0" timezone="Europe/Warsaw" />
-        <text x="550" y="10" align="left" font-name="DejaVu Sans" font-size="32"
+
+            <!-- FIXME replace with time_elapsed in format: "H:MM:SS.mmm" -->
+            <!-- and right aligned -->
+        <composite-text x="550" y="10" align="left" font-name="DejaVu Sans" font-size="32"
               color="white" border-width="2" border-color="black"
-              value="eval(time_elapsed)" format="{:.3f} s" /> <!-- TODO replace with compound-text -->
+              format="{:.3f} s / {:.3f} s"
+              value-1="eval(time_elapsed)"
+              value-2="eval(time_remaining)" />
 
         <!-- left column -->
         <container x="230" y="1360">

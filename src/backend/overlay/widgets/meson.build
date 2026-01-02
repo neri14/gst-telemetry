@@ -6,6 +6,7 @@ cpp_sources += files(
   'string_widget.cpp',
   'text_widget.cpp',
   'timestamp_widget.cpp',
+  'composite_text_widget.cpp',
 )
 
 headers += files(
@@ -16,6 +17,7 @@ headers += files(
   'string_widget.h',
   'text_widget.h',
   'timestamp_widget.h',
+  'composite_text_widget.h',
 )
 
 subdir('params')

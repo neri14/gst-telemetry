@@ -9,6 +9,7 @@
 #include "widgets/conditional_widget.h"
 #include "widgets/timestamp_widget.h"
 #include "widgets/text_widget.h"
+#include "widgets/composite_text_widget.h"
 #include "widgets/circle_widget.h"
 
 #include "widgets/params/color_parameter.h"
@@ -121,6 +122,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     } else if (name == "timestamp") {
         widget = parse_widget<TimestampWidget>(node);
         log.debug("Created Timestamp widget");
+    } else if (name == "composite-text") {
+        widget = parse_widget<CompositeTextWidget>(node);
+        log.debug("Created CompositeText widget");
     } else if (name == "circle") {
         widget = parse_widget<CircleWidget>(node);
         log.debug("Created Circle widget");
