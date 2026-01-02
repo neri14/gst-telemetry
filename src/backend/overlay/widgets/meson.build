@@ -5,6 +5,7 @@ cpp_sources += files(
   'circle_widget.cpp',
   'string_widget.cpp',
   'text_widget.cpp',
+  'timestamp_widget.cpp',
 )
 
 headers += files(
@@ -14,6 +15,7 @@ headers += files(
   'circle_widget.h',
   'string_widget.h',
   'text_widget.h',
+  'timestamp_widget.h',
 )
 
 subdir('params')

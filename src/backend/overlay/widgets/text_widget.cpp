@@ -1,7 +1,4 @@
 #include "text_widget.h"
-#include "backend/utils/color.h"
-#include "backend/utils/text_align.h"
-#include <cmath>
 
 extern "C" {
     #include <cairo.h>

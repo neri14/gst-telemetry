@@ -7,6 +7,7 @@
 
 #include "widgets/container_widget.h"
 #include "widgets/conditional_widget.h"
+#include "widgets/timestamp_widget.h"
 #include "widgets/text_widget.h"
 #include "widgets/circle_widget.h"
 
@@ -15,6 +16,7 @@
 #include "widgets/params/numeric_parameter.h"
 #include "widgets/params/string_parameter.h"
 #include "widgets/params/formatted_parameter.h"
+#include "widgets/params/timestamp_parameter.h"
 #include "widgets/params/boolean_parameter.h"
 
 namespace telemetry {
@@ -116,6 +118,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     } else if (name == "text") {
         widget = parse_widget<TextWidget>(node);
         log.debug("Created Text widget");
+    } else if (name == "timestamp") {
+        widget = parse_widget<TimestampWidget>(node);
+        log.debug("Created Timestamp widget");
     } else if (name == "circle") {
         widget = parse_widget<CircleWidget>(node);
         log.debug("Created Circle widget");
@@ -166,6 +171,9 @@ parameter_map_ptr Layout::parse_parameters(
                     break;
                 case ParameterType::Formatted:
                     (*params)[attr_name] = FormattedParameter::create(attr_value, track_);
+                    break;
+                case ParameterType::Timestamp:
+                    (*params)[attr_name] = TimestampParameter::create(attr_value, track_);
                     break;
                 case ParameterType::Boolean:
                     (*params)[attr_name] = BooleanParameter::create(attr_value, track_);

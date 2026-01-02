@@ -1,7 +1,6 @@
 # TODO
 
 ## 0.1 (videographer feature parity)
-- text with datetime handling improvements (second level precision, timezone config)
 - charts, different flavors:
     - from beginning to end
     - from Xs ago till now (for moving charts)

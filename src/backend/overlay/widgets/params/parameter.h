@@ -15,7 +15,8 @@ enum class ParameterType {
     Alignment,
     String,
     Boolean,
-    Formatted
+    Formatted,
+    Timestamp
 };
 
 class Parameter {
@@ -40,9 +41,7 @@ using parameter_map_ptr = std::shared_ptr<parameter_map_t>;
 using parameter_type_map_t = std::map<std::string, ParameterType>;
 
 
-//TODO move those to marmkdown files for documentation on layout definition
-
-    //DONE
+    //TODO move to Layout.md
     // --> class: BooleanParameter
     // for boolean attributes (e.g. visibility, condition):
     //    "false"/"no"/empty string        -> use as boolean false
@@ -59,19 +58,20 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //
     //    "not(...)"                  -> logical NOT of the value inside parentheses (interpreted as above) - single NOT allowed as a top level wrapper
 
-    //DONE
+    //TODO move to Layout.md
     // --> class: StringParameter
     // for string attributes (e.g. font name):
     //    string value         -> use as is
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses
 
-    //DONE
+    //TODO move to Layout.md
     // --> class: AlignmentParameter
     // for string attributes (e.g. font name):
     //    string value         -> use as is - only allowed: left, right, center
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
 
 
+    //TODO move to Layout.md
     // --> class: FormattedParameter
     // for string/numeric attribute - special "value" attribute case (can evaluate to string or numeric internally):
     //    string value         -> use as is (as string)
@@ -85,6 +85,16 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //
     // result is formatted according to format attribute (if not provided - default "{}" is used)
 
+
+    //TODO move to Layout.md
+    // --> class: TimestampParameter
+    // for datetime attribute - special "value" attribute case:
+    //    "key(...)"           -> get value from track at timestamp using key name inside parentheses
+    //                            (can result in any track::Value type - string, double, bool, time_point - only time_point will be handled)
+    //
+    // format attribute interpreted like string attributes (direct string or key(...))
+    //
+    // result is formatted according to format attribute (if not provided - default "{}" is used)
 
 } // namespace overlay
 } // namespace telemetry

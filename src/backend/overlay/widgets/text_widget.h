@@ -4,12 +4,8 @@
 #include "string_widget.h"
 
 #include "backend/utils/logging/logger.h"
-#include "params/numeric_parameter.h"
-#include "params/string_parameter.h"
 #include "params/formatted_parameter.h"
-#include "params/color_parameter.h"
-#include "params/alignment_parameter.h"
-#include "params/boolean_parameter.h"
+#include "params/string_parameter.h"
 
 namespace telemetry {
 namespace overlay {

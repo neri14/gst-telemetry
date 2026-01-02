@@ -4,10 +4,10 @@
               color="white" border-width="4" border-color="black"
               value="key(meta_name)" visible="eval(countdown<7.0)" />
 
-        <text x="130" y="200" align="left" font-name="DejaVu Sans" font-size="32"
-              color="white" border-color="black" border-width="2"
-              value="key(timestamp)" format="{:%Y-%m-%d}"
-              visible="eval(countdown<6.25)" />
+        <timestamp x="130" y="200" align="left" font-name="DejaVu Sans" font-size="32"
+                   color="white" border-color="black" border-width="2"
+                   value="key(timestamp)" format="{:%Y-%m-%d}"
+                   visible="eval(countdown<6.25)" timezone="Europe/Warsaw" />
 
         <text x="130" y="250" font-name="DejaVu Sans" font-size="32" align="left"
                 color="white" border-width="2" border-color="black"
@@ -20,11 +20,14 @@
                 visible="eval(countdown<4.75)" />
     </if>
 
-    <if condition="eval(time_elapsed>=0 and time_remaining>=0)"> <!-- FIXME key active doesnt work properly -->
-        <!-- FIXME - datetime needs special handling - second level precision + timezone -->
-        <text x="10" y="10" align="left" font-name="DejaVu Sans" font-size="32"
-              color="white" border-color="black" border-width="2"
-              value="key(point_time)" format="{:%Y-%m-%d %H:%M:%S}" />
+    <if condition="eval(time_elapsed>=0 and time_remaining>=0)"> <!-- FIXME key "active" doesnt work properly -->
+        <timestamp x="10" y="10" align="left" font-name="DejaVu Sans" font-size="32"
+                   color="white" border-color="black" border-width="2"
+                   value="key(timestamp)" format="{:%Y-%m-%d %H:%M:%S}"
+                   precision="0" timezone="Europe/Warsaw" />
+        <text x="550" y="10" align="left" font-name="DejaVu Sans" font-size="32"
+              color="white" border-width="2" border-color="black"
+              value="eval(time_elapsed)" format="{:.3f} s" /> <!-- TODO replace with compound-text -->
 
         <!-- left column -->
         <container x="230" y="1360">

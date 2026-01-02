@@ -59,6 +59,12 @@ Conditonal widget, draw encapsulated widgets only if condition is met.
 
 
 
+### timestamp
+
+*ToDo: to be described*
+
+
+
 ### circle
 
 Draw a circle with center at x,y.
@@ -105,6 +111,11 @@ coordinates of widgets located under circle are relative to circle center
 
 
 ### Formatted
+
+*ToDo: to be described*
+
+
+### Timestamp
 
 *ToDo: to be described*
 
