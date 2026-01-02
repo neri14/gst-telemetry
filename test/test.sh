@@ -4,6 +4,7 @@ INPUT_FILE=""
 OUTPUT_FILE=""
 TRACK_FILE=""
 LAYOUT_FILE=""
+OFFSET_VALUE="3.5"
 GPU_MODE=false
 
 while [[ $# -gt 0 ]]; do
@@ -14,6 +15,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --layout)
             LAYOUT_FILE="$2"
+            shift 2
+            ;;
+        --offset)
+            OFFSET_VALUE="$2"
             shift 2
             ;;
         --gpu)
@@ -35,7 +40,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--gpu]"
+    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--offset <offset_value>] [--gpu]"
     exit 1
 fi
 
@@ -43,7 +48,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GST_PLUGIN_PATH="$SCRIPT_DIR/../builddir"
 export GST_PLUGIN_PATH
 
-PROPERTIES="offset=1.0"
+PROPERTIES="offset=$OFFSET_VALUE"
 if [ -n "$TRACK_FILE" ]; then
     PROPERTIES="$PROPERTIES track=$TRACK_FILE"
 fi

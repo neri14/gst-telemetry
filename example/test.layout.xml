@@ -76,13 +76,13 @@
 
         <text x="2500" y="400" font-name="DejaVu Sans" font-size="64" align="left"
               color="white" border-width="4" border-color="black"
-              value="eval(point_speed*3.6)" value-format="discreet: {:.2f} km/h"/>
+              value="eval(point_speed*3.6)" format="discreet: {:.2f} km/h"/>
         <text x="2500" y="500" font-name="DejaVu Sans" font-size="64" align="left"
               color="blue" border-width="4" border-color="black"
-              value="eval(lerp_point_speed*3.6)" value-format="linear: {:.2f} km/h"/>
+              value="eval(lerp_point_speed*3.6)" format="linear: {:.2f} km/h"/>
         <text x="2500" y="600" font-name="DejaVu Sans" font-size="64" align="left"
               color="green" border-width="4" border-color="black"
-              value="eval(pchip_point_speed*3.6)" value-format="pchip: {:.2f} km/h"/>
+              value="eval(pchip_point_speed*3.6)" format="pchip: {:.2f} km/h"/>
 
         <circle x="eval(2500+1000*(point_speed*3.6/30))" y="750"
                 radius="10" color="white" border-width="2" border-color="black"/>

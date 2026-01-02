@@ -33,7 +33,7 @@ public:
         {"border-width", ParameterType::Numeric}, // border width
         {"border-color", ParameterType::Color}, // border color
         {"value", ParameterType::Formatted}, // text value to display
-        {"value-format", ParameterType::String}, // string format for value parameter
+        {"format", ParameterType::String}, // string format for value parameter
         {"visible", ParameterType::Boolean}, // visibility condition
     };
 

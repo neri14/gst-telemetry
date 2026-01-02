@@ -47,7 +47,7 @@ std::shared_ptr<TextWidget> TextWidget::create(parameter_map_ptr parameters) {
             widget->border_color_ = std::dynamic_pointer_cast<ColorParameter>(param);
         } else if (name == "value") {
             widget->value_ = std::dynamic_pointer_cast<FormattedParameter>(param);
-        } else if (name == "value-format") {
+        } else if (name == "format") {
             format = std::dynamic_pointer_cast<StringParameter>(param);
         } else if (name == "visible") {
             widget->visible_ = std::dynamic_pointer_cast<BooleanParameter>(param);
@@ -160,7 +160,7 @@ void TextWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 cache_drawn = false;
             }
 
-            draw_text(cache_cr, width, height, margin, text,
+            draw_text(cache_cr, cache_width, cache_height, margin, text,
                       std::format("{} {}", font_name_->get_value(timestamp), font_size),
                       align_->get_value(timestamp),
                       color_->get_value(timestamp),
