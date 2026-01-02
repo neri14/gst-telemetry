@@ -26,8 +26,6 @@
                    value="key(timestamp)" format="{:%Y-%m-%d %H:%M:%S}"
                    precision="0" timezone="Europe/Warsaw" />
 
-            <!-- FIXME replace with time_elapsed in format: "H:MM:SS.mmm" -->
-            <!-- and right aligned -->
         <composite-text x="550" y="10" align="left" font-name="DejaVu Sans" font-size="32"
               color="white" border-width="2" border-color="black"
               format="{:.0f}:{:02.0f}:{:06.3f}"
