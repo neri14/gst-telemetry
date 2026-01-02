@@ -1,8 +1,23 @@
 <layout>
     <if condition="exists(countdown)">
-        <text x="1920" y="700" font-name="DejaVu Sans" font-size="512" align="center"
+        <text x="100" y="100" font-name="DejaVu Sans" font-size="64" align="left"
               color="white" border-width="4" border-color="black"
-              value="eval(ceil(countdown))" visible="eval(countdown<3.0)" />
+              value="key(meta_name)" visible="eval(countdown<7.0)" />
+
+        <text x="130" y="200" align="left" font-name="DejaVu Sans" font-size="32"
+              color="white" border-color="black" border-width="2"
+              value="key(timestamp)" format="{:%Y-%m-%d}"
+              visible="eval(countdown<6.25)" />
+
+        <text x="130" y="250" font-name="DejaVu Sans" font-size="32" align="left"
+                color="white" border-width="2" border-color="black"
+                value="eval(round(meta_distance/100)/10)" format="{:.1f} km"
+                visible="eval(countdown<5.5)" />
+
+        <text x="130" y="300" font-name="DejaVu Sans" font-size="32" align="left"
+                color="white" border-width="2" border-color="black"
+                value="eval(round(meta_ascent))" format="{:.0f} m"
+                visible="eval(countdown<4.75)" />
     </if>
 
     <if condition="eval(time_elapsed>=0 and time_remaining>=0)"> <!-- FIXME key active doesnt work properly -->

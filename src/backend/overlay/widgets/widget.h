@@ -26,11 +26,11 @@ public:
     inline static parameter_type_map_t parameter_types = {};
 
 protected:
-    Widget(std::string name); // for derived classes to set logger name
-
-private:
     mutable utils::logging::Logger log;
 
+    Widget(const std::string& name); // for derived classes to set logger name
+
+private:
     std::vector<std::shared_ptr<Widget>> children_;
     std::shared_ptr<track::Track> track_;
 };

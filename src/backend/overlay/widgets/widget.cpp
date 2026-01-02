@@ -19,7 +19,7 @@ std::shared_ptr<Widget> Widget::create(parameter_map_ptr parameters) {
 Widget::Widget() : log("Widget") {
 }
 
-Widget::Widget(std::string name) : log(name) {
+Widget::Widget(const std::string& name) : log(name) {
 }
 
 void Widget::add_child(std::shared_ptr<Widget> child) {
