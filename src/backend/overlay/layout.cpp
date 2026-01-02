@@ -14,6 +14,7 @@
 #include "widgets/params/alignment_parameter.h"
 #include "widgets/params/numeric_parameter.h"
 #include "widgets/params/string_parameter.h"
+#include "widgets/params/formatted_parameter.h"
 #include "widgets/params/boolean_parameter.h"
 
 namespace telemetry {
@@ -163,12 +164,12 @@ parameter_map_ptr Layout::parse_parameters(
                 case ParameterType::String:
                     (*params)[attr_name] = StringParameter::create(attr_value, track_);
                     break;
+                case ParameterType::Formatted:
+                    (*params)[attr_name] = FormattedParameter::create(attr_value, track_);
+                    break;
                 case ParameterType::Boolean:
                     (*params)[attr_name] = BooleanParameter::create(attr_value, track_);
                     break;
-                // case ParameterType::FormattedValue:
-                //     (*params)[attr_name] = std::make_shared<FormattedValueParameter>(attr_value, track_);
-                //     break;
                 default:
                     log.warning("Unknown parameter type for attribute: {}", attr_name);
                     break;

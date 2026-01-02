@@ -59,20 +59,23 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //
     //    "not(...)"                  -> logical NOT of the value inside parentheses (interpreted as above) - single NOT allowed as a top level wrapper
 
+    //DONE
     // --> class: StringParameter
     // for string attributes (e.g. font name):
     //    string value         -> use as is
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses
 
+    //DONE
     // --> class: AlignmentParameter
     // for string attributes (e.g. font name):
     //    string value         -> use as is - only allowed: left, right, center
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
 
+
     // --> class: FormattedParameter
     // for string/numeric attribute - special "value" attribute case (can evaluate to string or numeric internally):
     //    string value         -> use as is (as string)
-    //    numeric value        -> use as is (as double)
+    //
     //    "key(...)"           -> get value from track at timestamp using key name inside parentheses
     //                            (can result in any track::Value type - string, double, bool, time_point)
     //                            (since it'll be passed to std::vformat - no issue expected)

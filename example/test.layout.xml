@@ -67,24 +67,24 @@
         <text x="2500" y="200" font-name="DejaVu Sans" font-size="32" align="left"
               color="white" border-width="4" border-color="black"
               value="left aligned text"/>
-        <text x="2500" y="300" font-name="DejaVu Sans" font-size="32" align="center"
+        <text x="2500" y="250" font-name="DejaVu Sans" font-size="32" align="center"
               color="white" border-width="4" border-color="black"
               value="centered text"/>
-        <text x="2500" y="400" font-name="DejaVu Sans" font-size="32" align="right"
+        <text x="2500" y="300" font-name="DejaVu Sans" font-size="32" align="right"
               color="white" border-width="4" border-color="black"
               value="right aligned text"/>
 
-        <!-- <text x="2500" y="300" font-name="DejaVu Sans" font-size="64" align="left"
+        <text x="2500" y="400" font-name="DejaVu Sans" font-size="64" align="left"
               color="white" border-width="4" border-color="black"
-              value="eval(point_speed*3.6)" value-format="discreet: {} km/h"/> -->
+              value="eval(point_speed*3.6)" value-format="discreet: {:.2f} km/h"/>
 
-        <!-- <text x="2500" y="400" font-name="DejaVu Sans" font-size="64" align="left"
+        <text x="2500" y="500" font-name="DejaVu Sans" font-size="64" align="left"
               color="white" border-width="4" border-color="black"
-              value="eval(lerp_point_speed*3.6)" value-format="linear: {} km/h"/> -->
+              value="eval(lerp_point_speed*3.6)" value-format="linear: {:.2f} km/h"/>
 
-        <!-- <text x="2500" y="500" font-name="DejaVu Sans" font-size="64" align="left"
+        <!-- <text x="2500" y="600" font-name="DejaVu Sans" font-size="64" align="left"
               color="white" border-width="4" border-color="black"
-              value="eval(pchip_point_speed*3.6)" value-format="pchip: {} km/h"/> -->
+              value="eval(pchip_point_speed*3.6)" value-format="pchip: {:.2f} km/h"/> -->
 
 
         <!-- ToDo text, image, ...-->

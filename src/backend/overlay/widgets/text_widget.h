@@ -6,6 +6,7 @@
 #include "backend/utils/logging/logger.h"
 #include "params/numeric_parameter.h"
 #include "params/string_parameter.h"
+#include "params/formatted_parameter.h"
 #include "params/color_parameter.h"
 #include "params/alignment_parameter.h"
 #include "params/boolean_parameter.h"
@@ -31,7 +32,8 @@ public:
         {"color", ParameterType::Color}, // text color
         {"border-width", ParameterType::Numeric}, // border width
         {"border-color", ParameterType::Color}, // border color
-        {"value", ParameterType::String},//FIXME {"value", ParameterType::Formatted}, // text value to display
+        {"value", ParameterType::Formatted}, // text value to display
+        {"value-format", ParameterType::String}, // string format for value parameter
         {"visible", ParameterType::Boolean}, // visibility condition
     };
 
@@ -54,7 +56,7 @@ private:
     std::shared_ptr<ColorParameter> color_ = nullptr;
     std::shared_ptr<NumericParameter> border_width_ = nullptr;
     std::shared_ptr<ColorParameter> border_color_ = nullptr;
-    std::shared_ptr<StringParameter> value_ = nullptr;//FIXME std::shared_ptr<FormattedParameter> value_ = nullptr;
+    std::shared_ptr<FormattedParameter> value_ = nullptr;
     std::shared_ptr<BooleanParameter> visible_ = nullptr;
 
     cairo_surface_t* cache = nullptr;

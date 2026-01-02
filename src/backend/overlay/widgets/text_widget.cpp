@@ -11,6 +11,7 @@ extern "C" {
 namespace telemetry {
 namespace overlay {
 namespace defaults {
+    const std::string format = "{}";
     const rgb color = color::white;
     const int border_width = 0; // if border not defined - no border
     const rgb border_color = color::black;
@@ -24,6 +25,8 @@ std::shared_ptr<TextWidget> TextWidget::create(parameter_map_ptr parameters) {
     log.info("Creating TextWidget");
 
     auto widget = std::make_shared<TextWidget>();
+
+    std::shared_ptr<StringParameter> format = nullptr;
 
     for (const auto& [name, param] : *parameters) {
         if (name == "x") {
@@ -43,7 +46,9 @@ std::shared_ptr<TextWidget> TextWidget::create(parameter_map_ptr parameters) {
         } else if (name == "border-color") {
             widget->border_color_ = std::dynamic_pointer_cast<ColorParameter>(param);
         } else if (name == "value") {
-            widget->value_ = std::dynamic_pointer_cast<StringParameter>(param);//FIXME std::dynamic_pointer_cast<FormattedParameter>(param);
+            widget->value_ = std::dynamic_pointer_cast<FormattedParameter>(param);
+        } else if (name == "value-format") {
+            format = std::dynamic_pointer_cast<StringParameter>(param);
         } else if (name == "visible") {
             widget->visible_ = std::dynamic_pointer_cast<BooleanParameter>(param);
         } else {
@@ -55,6 +60,12 @@ std::shared_ptr<TextWidget> TextWidget::create(parameter_map_ptr parameters) {
         log.error("Missing required parameters (x, y, value)");
         return nullptr;
     }
+
+    if (!format) {
+        format = std::make_shared<StringParameter>(defaults::format);
+        log.debug("Value format parameter not set, using default value");
+    }
+    widget->value_->set_format_subparameter(format);
 
     if (!widget->font_name_) {
         log.debug("Font name parameter not set, using default value");
@@ -107,7 +118,7 @@ void TextWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         // since we recalculate the params only if widget is visible
         // change to params that impact cache will be detected here
         // if they changed while widget was not visible
-        for (auto& param : std::vector<parameter_ptr_t>{font_name_, font_size_, align_, color_, border_width_, border_color_}) {
+        for (auto& param : std::vector<parameter_ptr_t>{font_name_, font_size_, align_, color_, border_width_, border_color_, value_}) {
             if (param->update(timestamp)) {
                 cache_update_needed = true;
             }

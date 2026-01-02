@@ -1,4 +1,5 @@
 #include "value.h"
+#include <format>
 
 namespace telemetry {
 namespace track {
@@ -27,18 +28,18 @@ Value::operator bool() const {
     return is_valid();
 }
 
-std::string Value::as_string() const {
+std::string Value::as_string(const std::string& format) const {
     if (is_string()) {
-        return std::get<std::string>(*data);
+        return std::vformat(format, std::make_format_args(std::get<std::string>(*data)));
     }
     if (is_double()) {
-        return std::format("{}", std::get<double>(*data));
+        return std::vformat(format, std::make_format_args(std::get<double>(*data)));
     }
     if (is_bool()) {
-        return std::get<bool>(*data) ? "true" : "false";
+        return std::vformat(format, std::make_format_args(std::get<bool>(*data)));
     }
     if (is_time_point()) {
-        return std::format("{}", std::get<time::time_point_t>(*data));
+        return std::vformat(format, std::make_format_args(std::get<time::time_point_t>(*data)));
     }
     return "";
 }

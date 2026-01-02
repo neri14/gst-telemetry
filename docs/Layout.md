@@ -104,6 +104,11 @@ coordinates of widgets located under circle are relative to circle center
 *ToDo: to be described*
 
 
+### Formatted
+
+*ToDo: to be described*
+
+
 ### Color
 
 |    value          |    examples                        |                description                                                              |
