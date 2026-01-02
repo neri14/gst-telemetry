@@ -105,6 +105,7 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 cache_height = size;
                 cache = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cache_width, cache_height);
                 cache_drawn = false;
+                log.info("Allocated new cache surface: {}x{}", cache_width, cache_height);
             }
 
             cairo_t* cache_cr = cairo_create(cache);

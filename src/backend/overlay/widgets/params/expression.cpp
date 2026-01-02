@@ -53,12 +53,20 @@ double Expression::evaluate(time::microseconds_t timestamp) {
 
     bool needs_evaluation = std::isnan(value_); // needs evaluation if never evaluated
 
+    bool invalid = false;
     for (auto& [field_id, var_ref] : variables_) {
         double new_value = track_->get(field_id, timestamp).as_double();
         if (var_ref != new_value) {
             var_ref = new_value;
             needs_evaluation = true;
         }
+        if (std::isnan(var_ref)) {
+            invalid = true;
+        }
+    }
+    if (invalid) {
+        log.warning("One or more variables are NaN at timestamp {}, expression evaluation skipped.", timestamp);
+        return 0.0;
     }
 
     if (needs_evaluation) {

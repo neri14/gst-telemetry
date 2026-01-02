@@ -33,6 +33,20 @@
               value-2="eval(floor((time_elapsed%3600)/60))"
               value-3="eval(time_elapsed%60)" />
 
+        <!-- map & chart -->
+        <container x="2990" y="50">
+            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                   line-color="white" line-width="6"
+                   point-color="red" point-size="14"
+                   x-value="eval((point_lon+180.0)*100.0)"
+                   y-value="eval((18000.0 / (2 * 3.14159265359)) * log(tan(3.14159265359/4 + point_lat * 3.14159265359 / 360.0)))" />
+            <chart x="0" y="850" width="800" height="100"
+                   line-color="white" line-width="4"
+                   point-color="red" point-size="12"
+                   x-value="key(point_dist)"
+                   y-value="key(point_smoothele)" />
+        </container>
+
         <!-- left column -->
         <container x="230" y="1360">
             <container x="0" y="0">
@@ -108,11 +122,6 @@
 
 
 <!-- TODO to be migrated when appropriate widgets are available -->
-<!-- charts -->
-<!-- <container x="2990" y="50">
-    <widget type="map" x="0" y="0" width="800" height="800" line-color="white" line-width="6" point-color="red" point-size="14" />
-    <widget type="chart" x="0" y="850" width="800" height="100" line-color="white" line-width="4" point-color="red" point-size="12" x-key="point.dist" y-key="point.smoothele" />
-</container> -->
 
 <!-- speed moving chart -->
 <!-- <container x="720" y="1910">

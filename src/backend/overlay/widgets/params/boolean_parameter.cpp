@@ -71,7 +71,7 @@ std::shared_ptr<BooleanParameter> BooleanParameter::create(
         if (negate) {
             val = !val;
         }
-        log.debug("Created static numeric parameter with value {}", val);
+        log.debug("Created static boolean parameter ({}) from numeric definition: {}", val, definition);
         return std::make_shared<BooleanParameter>(val);
     } catch (const std::invalid_argument&) {
         //not a numeric value - continue
@@ -82,7 +82,7 @@ std::shared_ptr<BooleanParameter> BooleanParameter::create(
     if (negate) {
         val = !val;
     }
-    log.debug("Created static boolean parameter with value {}", val);
+    log.debug("Created static boolean parameter ({}) from string definition: {}", val, definition);
     return std::make_shared<BooleanParameter>(val);
 
     return nullptr;

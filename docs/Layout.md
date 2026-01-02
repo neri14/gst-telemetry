@@ -97,6 +97,12 @@ coordinates of widgets located under circle are relative to circle center
 
 
 
+### chart
+
+**Note:** redrawing chart line is expensive, for static charts - avoid changing configuration.
+
+*ToDo: to be described*
+
 
 ## Widget Parameter Types
 

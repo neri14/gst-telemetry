@@ -11,6 +11,7 @@
 #include "widgets/text_widget.h"
 #include "widgets/composite_text_widget.h"
 #include "widgets/circle_widget.h"
+#include "widgets/chart_widget.h"
 
 #include "widgets/params/color_parameter.h"
 #include "widgets/params/alignment_parameter.h"
@@ -128,6 +129,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     } else if (name == "circle") {
         widget = parse_widget<CircleWidget>(node);
         log.debug("Created Circle widget");
+    } else if (name == "chart") {
+        widget = parse_widget<ChartWidget>(node);
+        log.debug("Created Chart widget");
     } else {
         log.warning("Unknown widget defined: {}", name);
     }

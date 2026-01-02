@@ -18,7 +18,7 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
         auto expression = std::make_shared<Expression>(expression_str, track);
         if (expression) {
             log.debug("Created expression-based numeric parameter");
-            return std::make_shared<NumericParameter>(expression);
+            return std::make_shared<NumericParameter>(expression, track);
         } else {
             log.warning("Failed to create expression from definition '{}'", def);
             return nullptr;
@@ -42,8 +42,9 @@ std::shared_ptr<NumericParameter> NumericParameter::create(
     }
 }
 
-NumericParameter::NumericParameter(std::shared_ptr<Expression> expression)
+NumericParameter::NumericParameter(std::shared_ptr<Expression> expression, std::shared_ptr<track::Track> track)
         : update_strategy_(UpdateStrategy::Expression),
+          track_(track),  
           expression_(expression) {
 }
 
@@ -87,12 +88,46 @@ bool NumericParameter::update(time::microseconds_t timestamp) {
     }
 }
 
-double NumericParameter::get_value(time::microseconds_t timestamp) const {
-    if (std::isnan(value_)) {
+double NumericParameter::get_value(time::microseconds_t timestamp, bool allow_nan) const {
+    if (std::isnan(value_) && !allow_nan) {
         log.warning("NumericParameter has NaN value at timestamp {}, defaulting to 0.0", timestamp);
         return 0.0;
     }
     return value_;
+}
+
+std::map<time::microseconds_t, double> NumericParameter::get_all_values(time::microseconds_t from,
+                                                                        time::microseconds_t to,
+                                                                        time::microseconds_t step) {
+    std::map<time::microseconds_t, double> values;
+
+    if (step == time::INVALID_TIME) {
+        // get all available timestamps
+        for (auto ts : track_->get_trackpoint_timestamps()) {
+            if ((from != time::INVALID_TIME && ts < from) ||
+                (to != time::INVALID_TIME && ts > to)) {
+                continue;
+            }
+            update(ts);
+            values[ts] = value_;
+        }
+    } else {
+        // get values at specified intervals
+        if (from == time::INVALID_TIME) {
+            from = track_->get_trackpoint_timestamps().front();
+        }
+        if (to == time::INVALID_TIME) {
+            to = track_->get_trackpoint_timestamps().back();
+        }
+
+        for (time::microseconds_t ts = from; ts <= to; ts += step) {
+            update(ts);
+            values[ts] = value_;
+        }
+    }
+
+    value_ = std::numeric_limits<double>::quiet_NaN(); // reset to NaN after values retrieval
+    return values;
 }
 
 } // namespace telemetry
