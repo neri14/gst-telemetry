@@ -87,11 +87,13 @@ Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
     if (field_id & consts::metadata_id_mask) {
         return get_metadata(field_id);
     } else if (field_id & consts::trackpoint_id_mask) {
-        return get_trackpoint_data(field_id, timestamp);
-    } else if (field_id & consts::lerp_id_mask) {
-        return get_lerp_trackpoint_data(field_id, timestamp);
-    } else if (field_id & consts::pchip_id_mask) {
-        return get_pchip_trackpoint_data(field_id, timestamp);
+        if (field_id & consts::lerp_id_mask) {
+            return get_lerp_trackpoint_data(field_id, timestamp);
+        } else if (field_id & consts::pchip_id_mask) {
+            return get_pchip_trackpoint_data(field_id, timestamp);
+        } else {
+            return get_trackpoint_data(field_id, timestamp);
+        }
     } else if (field_id & consts::segment_id_mask) {
         // TODO segment data retrieval - if possible without additional segment identifier?
         //      there can be multiple segments active at same time
@@ -147,6 +149,8 @@ Value Track::get_lerp_trackpoint_data(const std::string& key, time::microseconds
 }
 
 Value Track::get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const {
+    field_id_t data_field_id = field_id ^ consts::lerp_id_mask;
+
     auto upper_it = trackpoints_.upper_bound(timestamp);
     if (upper_it != trackpoints_.begin() && upper_it != trackpoints_.end()) {
         auto lower_it = std::prev(upper_it);
@@ -154,8 +158,8 @@ Value Track::get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t 
         auto& lower_data = *(lower_it->second);
         auto& upper_data = *(upper_it->second);
 
-        auto lower_field_it = lower_data.find(field_id);
-        auto upper_field_it = upper_data.find(field_id);
+        auto lower_field_it = lower_data.find(data_field_id);
+        auto upper_field_it = upper_data.find(data_field_id);
 
         if (lower_field_it != lower_data.end() && upper_field_it != upper_data.end()) {
             Value lower_value = lower_field_it->second;
@@ -173,9 +177,14 @@ Value Track::get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t 
 
                 return Value(interpolated_value);
             } else {
-                log.warning("Lerp interpolation only supported for double values. Field id: {}", field_id);
+                log.warning("Lerp interpolation only supported for double values. Field id: {}", data_field_id);
             }
         }
+        else {
+            log.warning("Field id {} not found in both bounding trackpoints for lerp interpolation", data_field_id);
+        }
+    } else {
+        log.warning("Not enough trackpoints for lerp interpolation at timestamp {}", timestamp);
     }
     return Value();
 }
@@ -548,23 +557,12 @@ field_id_t Track::register_trackpoint_field(const std::string& key) {
     auto id = register_field(tpkey, consts::trackpoint_id_mask);
     log.debug("Registered new trackpoint field: {} with id {}", tpkey, id);
 
-    register_lerp_field(tpkey);
-    register_pchip_field(tpkey);
+    auto lerp_id = id | consts::lerp_id_mask;;
+    field_ids_[consts::lerp_prefix_ + tpkey] = lerp_id;
 
-    return id;
-}
+    auto pchip_id = id | consts::pchip_id_mask;;
+    field_ids_[consts::pchip_prefix_ + tpkey] = pchip_id;
 
-field_id_t Track::register_lerp_field(const std::string& key) {
-    std::string lerpkey = consts::lerp_prefix_ + key;
-    auto id = register_field(lerpkey, consts::lerp_id_mask);
-    log.debug("Registered new lerp field: {} with id {}", lerpkey, id);
-    return id;
-}
-
-field_id_t Track::register_pchip_field(const std::string& key) {
-    std::string pchipkey = consts::pchip_prefix_ + key;
-    auto id = register_field(pchipkey, consts::pchip_id_mask);
-    log.debug("Registered new pchip field: {} with id {}", pchipkey, id);
     return id;
 }
 

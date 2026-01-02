@@ -83,8 +83,6 @@ private:
 
     field_id_t register_metadata_field(const std::string& key);
     field_id_t register_trackpoint_field(const std::string& key);
-    field_id_t register_lerp_field(const std::string& key);
-    field_id_t register_pchip_field(const std::string& key);
     field_id_t register_segment_field(const std::string& key);
     field_id_t register_virtual_field(const std::string& key);
 
