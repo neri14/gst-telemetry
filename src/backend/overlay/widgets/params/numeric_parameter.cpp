@@ -96,34 +96,42 @@ double NumericParameter::get_value(time::microseconds_t timestamp, bool allow_na
     return value_;
 }
 
-std::map<time::microseconds_t, double> NumericParameter::get_all_values(time::microseconds_t from,
-                                                                        time::microseconds_t to,
-                                                                        time::microseconds_t step) {
-    std::map<time::microseconds_t, double> values;
+std::shared_ptr<std::map<time::microseconds_t, double>> NumericParameter::get_all_values(
+            time::microseconds_t step, double min, double max) {
+    std::shared_ptr<std::map<time::microseconds_t, double>> values = std::make_shared<std::map<time::microseconds_t, double>>();
 
     if (step == time::INVALID_TIME) {
         // get all available timestamps
         for (auto ts : track_->get_trackpoint_timestamps()) {
-            if ((from != time::INVALID_TIME && ts < from) ||
-                (to != time::INVALID_TIME && ts > to)) {
-                continue;
-            }
             update(ts);
-            values[ts] = value_;
+            if (value_ >= min && value_ <= max) {
+                (*values)[ts] = value_;
+            }
         }
     } else {
         // get values at specified intervals
-        if (from == time::INVALID_TIME) {
-            from = track_->get_trackpoint_timestamps().front();
-        }
-        if (to == time::INVALID_TIME) {
-            to = track_->get_trackpoint_timestamps().back();
-        }
+        time::microseconds_t from = track_->get_trackpoint_timestamps().front();
+        time::microseconds_t to = track_->get_trackpoint_timestamps().back();
 
         for (time::microseconds_t ts = from; ts <= to; ts += step) {
             update(ts);
-            values[ts] = value_;
+            if (value_ >= min && value_ <= max) {
+                (*values)[ts] = value_;
+            }
         }
+    }
+
+    value_ = std::numeric_limits<double>::quiet_NaN(); // reset to NaN after values retrieval
+    return values;
+}
+
+std::shared_ptr<std::map<time::microseconds_t, double>> NumericParameter::get_all_values(
+            std::set<time::microseconds_t> timestamps) {
+    std::shared_ptr<std::map<time::microseconds_t, double>> values = std::make_shared<std::map<time::microseconds_t, double>>();
+
+    for (auto ts : timestamps) {
+        update(ts);
+        (*values)[ts] = value_;
     }
 
     value_ = std::numeric_limits<double>::quiet_NaN(); // reset to NaN after values retrieval

@@ -25,9 +25,13 @@ public:
     bool update(time::microseconds_t timestamp) override;
     double get_value(time::microseconds_t timestamp, bool allow_nan = false) const;
 
-    std::map<time::microseconds_t, double> get_all_values(time::microseconds_t from = time::INVALID_TIME,
-                                                          time::microseconds_t to = time::INVALID_TIME,
-                                                          time::microseconds_t step = time::INVALID_TIME);
+    std::shared_ptr<std::map<time::microseconds_t, double>> get_all_values(
+                                time::microseconds_t step = time::INVALID_TIME,
+                                double min = -std::numeric_limits<double>::infinity(),
+                                double max = std::numeric_limits<double>::infinity());
+
+    std::shared_ptr<std::map<time::microseconds_t, double>> get_all_values(
+                                    std::set<time::microseconds_t> timestamps);
 
 private:
     mutable utils::logging::Logger log{"NumericParameter"};

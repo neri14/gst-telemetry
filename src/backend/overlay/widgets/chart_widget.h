@@ -32,21 +32,31 @@ public:
         {"point-size", ParameterType::Numeric}, // point size
         {"x-value", ParameterType::Numeric}, // track key for x values
         {"y-value", ParameterType::Numeric}, // track key for y values
+        {"value-time-step", ParameterType::Numeric}, // time step for values
         {"stretch-to-fill", ParameterType::Boolean}, // whether to stretch chart to fill widget size
         {"visible", ParameterType::Boolean}, // visibility condition
+        {"filter-value", ParameterType::Numeric}, // value to filter by
+        {"filter-max", ParameterType::Numeric}, // maximum filter-value accepted
+        {"filter-min", ParameterType::Numeric}, // minimum filter-value accepted
+        {"zoom-to-filter-x", ParameterType::Boolean}, // whether to zoom x to filtered values only
+        {"zoom-to-filter-y", ParameterType::Boolean}, // whether to zoom y to filtered values only
     };
 
 private:
     void redraw_line_cache(double width, double height,
                        rgb line_color, double line_width,
-                       std::map<time::microseconds_t, double> x_values,
-                       std::map<time::microseconds_t, double> y_values);
+                       std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
+                       std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
+                       std::function<bool(time::microseconds_t)> filter = nullptr);
     void redraw_point_cache(double width, double height,
                         rgb point_color, double point_size,
-                        double x_value, double y_value);
+                        double x_value, double y_value,
+                        bool clear_only = false);
 
-    void recalculate_extremes(std::map<time::microseconds_t, double> x_values,
-                              std::map<time::microseconds_t, double> y_values);
+    void recalculate_extremes(std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
+                              std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
+                              std::function<bool(time::microseconds_t)> x_filter = nullptr,
+                              std::function<bool(time::microseconds_t)> y_filter = nullptr);
     std::pair<double, double> translate(double x_value, double y_value, double width, double height) const;
 
     std::shared_ptr<NumericParameter> x_ = nullptr;
@@ -59,8 +69,15 @@ private:
     std::shared_ptr<NumericParameter> point_size_ = nullptr;
     std::shared_ptr<NumericParameter> x_value_ = nullptr;
     std::shared_ptr<NumericParameter> y_value_ = nullptr;
+    std::shared_ptr<NumericParameter> value_time_step_ = nullptr;
     std::shared_ptr<BooleanParameter> stretch_to_fill_ = nullptr;
     std::shared_ptr<BooleanParameter> visible_ = nullptr;
+
+    std::shared_ptr<NumericParameter> filter_value_ = nullptr;
+    std::shared_ptr<NumericParameter> filter_max_ = nullptr;
+    std::shared_ptr<NumericParameter> filter_min_ = nullptr;
+    std::shared_ptr<BooleanParameter> zoom_to_filter_x_ = nullptr;
+    std::shared_ptr<BooleanParameter> zoom_to_filter_y_ = nullptr;
 
     cairo_surface_t* line_cache_ = nullptr;
     bool line_cache_drawn_ = false;

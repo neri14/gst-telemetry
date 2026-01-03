@@ -212,7 +212,7 @@ void StringWidget::draw_text(cairo_t* cr, int width, int height, int margin,
     int w,h;
     pango_layout_get_pixel_size(layout, &w, &h);
     if (w > w_in_margin || h > h_in_margin) {
-        log.warning("StringWidget text size ({}x{}) exceeds cache size less margin ({}x{}), clipping may occur", w, h, w_in_margin, h_in_margin);
+        log.warning("StringWidget text size ({}x{}) exceeds expected size ({}x{}), clipping may occur", w, h, w_in_margin, h_in_margin);
     }
 
     // set layout size to cache size

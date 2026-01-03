@@ -6,6 +6,8 @@ extern "C" {
     #include <cairo.h>
 }
 
+//FIXME major refactoring required to cleanup the code
+
 namespace telemetry {
 namespace overlay {
 namespace defaults {
@@ -40,10 +42,22 @@ std::shared_ptr<ChartWidget> ChartWidget::create(parameter_map_ptr parameters) {
             widget->x_value_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "y-value") {
             widget->y_value_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "value-time-step") {
+            widget->value_time_step_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "stretch-to-fill") {
             widget->stretch_to_fill_ = std::dynamic_pointer_cast<BooleanParameter>(param);
         } else if (name == "visible") {
             widget->visible_ = std::dynamic_pointer_cast<BooleanParameter>(param);
+        } else if (name == "filter-value") {
+            widget->filter_value_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "filter-max") {
+            widget->filter_max_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "filter-min") {
+            widget->filter_min_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "zoom-to-filter-x") {
+            widget->zoom_to_filter_x_ = std::dynamic_pointer_cast<BooleanParameter>(param);
+        } else if (name == "zoom-to-filter-y") {
+            widget->zoom_to_filter_y_ = std::dynamic_pointer_cast<BooleanParameter>(param);
         } else {
             log.warning("Unknown parameter '{}' for ChartWidget", name);
         }
@@ -71,6 +85,15 @@ std::shared_ptr<ChartWidget> ChartWidget::create(parameter_map_ptr parameters) {
         widget->visible_ = std::make_shared<BooleanParameter>(true);
     }
 
+    if (!widget->zoom_to_filter_x_) {
+        log.debug("Zoom-to-filter-x parameter not set, defaulting to false");
+        widget->zoom_to_filter_x_ = std::make_shared<BooleanParameter>(false);
+    }
+    if (!widget->zoom_to_filter_y_) {
+        log.debug("Zoom-to-filter-y parameter not set, defaulting to false");
+        widget->zoom_to_filter_y_ = std::make_shared<BooleanParameter>(false);
+    }
+
     return widget;
 }
 
@@ -80,18 +103,24 @@ ChartWidget::ChartWidget()
 
 void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                         double x_offset, double y_offset) {
+    // calculate visibility
     visible_->update(timestamp);
-    //visibility change does not invalidate cache
 
     if (visible_->get_value(timestamp)) {
+        // if cache is not drawn, mark for redraw
         bool invalidate_line_cache = !line_cache_drawn_;
         bool invalidate_point_cache = !point_cache_drawn_;
 
+        // update parameters that can affect cache validity
         if (width_ && width_->update(timestamp)) {
             invalidate_line_cache = true;
             invalidate_point_cache = true;
         }
         if (height_ && height_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (value_time_step_ && value_time_step_->update(timestamp)) {
             invalidate_line_cache = true;
             invalidate_point_cache = true;
         }
@@ -111,35 +140,108 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         if (point_size_ && point_size_->update(timestamp)) {
             invalidate_point_cache = true;
         }
-        double width = width_->get_value(timestamp);
-        double height = height_->get_value(timestamp);
-        rgb line_color = line_color_->get_value(timestamp);
-        double line_width = line_width_->get_value(timestamp);
-        rgb point_color = point_color_->get_value(timestamp);
-        double point_size = point_size_->get_value(timestamp);
-        stretch_chart_ = stretch_to_fill_->get_value(timestamp);
-
-        margin_ = 2*static_cast<int>(std::ceil(std::max(line_width, point_size)));
-        int new_cache_width = static_cast<int>(std::ceil(width)) + 2*margin_;
-        int new_cache_height = static_cast<int>(std::ceil(height)) + 2*margin_;
-
-        if (new_cache_width != cache_width_ || new_cache_height != cache_height_) {
-            // cache size change requires full redraw
-            cache_width_ = new_cache_width;
-            cache_height_ = new_cache_height;
+        // update filtering parameters
+        if (filter_value_ && filter_value_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (filter_max_ && filter_max_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (filter_min_ && filter_min_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (zoom_to_filter_x_ && zoom_to_filter_x_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (zoom_to_filter_y_ && zoom_to_filter_y_->update(timestamp)) {
             invalidate_line_cache = true;
             invalidate_point_cache = true;
         }
 
+        // read filter values
+        bool filter_active = filter_value_ && filter_max_ && filter_min_;
+        bool filter_zoom_x = filter_active && zoom_to_filter_x_ && zoom_to_filter_x_->get_value(timestamp);
+        bool filter_zoom_y = filter_active && zoom_to_filter_y_ && zoom_to_filter_y_->get_value(timestamp);
+
+        // read values needed for cache size calculation
+        double width = width_->get_value(timestamp);
+        double height = height_->get_value(timestamp);
+        double line_width = line_width_->get_value(timestamp);
+        double point_size = point_size_ ? point_size_->get_value(timestamp) : 0.0;
+        stretch_chart_ = stretch_to_fill_->get_value(timestamp);
+
+        // calculate margin and cache size
+        margin_ = 2*static_cast<int>(std::ceil(std::max(line_width, point_size)));
+        int min_cache_width = static_cast<int>(std::ceil(width)) + 2*margin_;
+        int min_cache_height = static_cast<int>(std::ceil(height)) + 2*margin_;
+
+        if (min_cache_width > cache_width_ || min_cache_height > cache_height_) {
+            // cache size change requires full redraw
+            cache_width_ = min_cache_width;
+            cache_height_ = min_cache_height;
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+
+        time::microseconds_t value_step = time::INVALID_TIME;
+        if (value_time_step_) {
+            double step_val = value_time_step_->get_value(timestamp);
+            if (step_val > 0.0) {
+                value_step = time::s_to_us(step_val);;
+            }
+        }
+
+        std::function<bool(time::microseconds_t)> filter = nullptr;
+
+        double filter_min = filter_min_ ? filter_min_->get_value(timestamp) : 0.0;
+        double filter_max = filter_max_ ? filter_max_->get_value(timestamp) : 0.0;
+        auto filter_values = filter_value_ ? filter_value_->get_all_values(value_step, filter_min, filter_max) : nullptr;
+
+        if (filter_active) {
+            filter = [=](time::microseconds_t ts) {
+                auto filter_val_it = filter_values->find(ts);
+                if (filter_val_it == filter_values->end()) {
+                    return false; // no corresponding filter value
+                }
+                double filter_val = filter_val_it->second;
+                if (std::isnan(filter_val) || filter_val < filter_min || filter_val > filter_max) {
+                    return false; // skip values outside filter range
+                }
+                return true;
+            };
+        }
+
+        // redraw line cache if needed
         if (invalidate_line_cache) {
-            auto x_values = x_value_->get_all_values();
-            auto y_values = y_value_->get_all_values();
-            recalculate_extremes(x_values, y_values);
+            std::shared_ptr<std::map<time::microseconds_t, double>> x_values = nullptr;
+            std::shared_ptr<std::map<time::microseconds_t, double>> y_values = nullptr;
+
+            if (filter_active && filter_values){
+                std::set<time::microseconds_t> timestamps = {};
+                for (const auto& [ts, _] : *filter_values) {
+                    timestamps.insert(ts);
+                }
+                x_values = x_value_->get_all_values(timestamps);
+                y_values = y_value_->get_all_values(timestamps);
+            } else {
+                x_values = x_value_->get_all_values(value_step);
+                y_values = y_value_->get_all_values(value_step);
+            }
+
+            recalculate_extremes(filter_zoom_x ? x_values : x_value_->get_all_values(),
+                                 filter_zoom_y ? y_values : y_value_->get_all_values());
+
             if (invalid_) {
                 log.error("ChartWidget is in invalid state, aborting drawing");
                 return;
             }
-            redraw_line_cache(width, height, line_color, line_width, x_values, y_values);
+
+            redraw_line_cache(width, height,
+                line_color_->get_value(timestamp), line_width, x_values, y_values);
             line_cache_drawn_ = true;
         }
 
@@ -151,29 +253,42 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         if (y_value_ && y_value_->update(timestamp)) {
             invalidate_point_cache = true;
         }
+
         double x_value = x_value_->get_value(timestamp, true);
         double y_value = y_value_->get_value(timestamp, true);
 
+        // redraw point cache if needed
         if (invalidate_point_cache) {
-            redraw_point_cache(width, height, point_color, point_size, x_value, y_value);
+            bool clear_only = point_size <= 0 || (filter_values && filter_values->find(timestamp) == filter_values->end());
+
+            redraw_point_cache(width, height,
+                point_color_ ? point_color_->get_value(timestamp) : color::transparent,
+                point_size, x_value, y_value, clear_only);
             point_cache_drawn_ = true;
         }
 
+        // calculate widget position
         x_->update(timestamp);
         y_->update(timestamp);
 
-        double x = x_offset + x_->get_value(timestamp) - margin_;
-        double y = y_offset + y_->get_value(timestamp) - margin_;
+        double x = x_offset + x_->get_value(timestamp);
+        double y = y_offset + y_->get_value(timestamp);
 
+        double draw_x = x - margin_;
+        double draw_y = y - margin_;
+
+        // draw caches onto surface
         if (line_cache_) {
-            cairo_set_source_surface(cr, line_cache_, x, y);
+            cairo_set_source_surface(cr, line_cache_, draw_x, draw_y);
             cairo_paint(cr);
         }
         if (point_cache_) {
-            cairo_set_source_surface(cr, point_cache_, x, y);
+            cairo_set_source_surface(cr, point_cache_, draw_x, draw_y);
             cairo_paint(cr);
         }
 
+        // draw childern relative to chart top-left
+        Widget::draw(timestamp, cr, x, y);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
@@ -181,8 +296,9 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
 void ChartWidget::redraw_line_cache(double width, double height,
                                     rgb line_color, double line_width,
-                                    std::map<time::microseconds_t, double> x_values,
-                                    std::map<time::microseconds_t, double> y_values) {
+                                    std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
+                                    std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
+                                    std::function<bool(time::microseconds_t)> filter) {
     int surface_width = 0;
     int surface_height = 0;
 
@@ -220,25 +336,33 @@ void ChartWidget::redraw_line_cache(double width, double height,
         cairo_set_line_width(cache_cr, line_width);
         cairo_set_source_rgba(cache_cr, line_color.r, line_color.g, line_color.b, line_color.a);
 
-        for (const auto& [ts, x_val] : x_values) {
-            auto y_it = y_values.find(ts);
-            if (y_it == y_values.end()) {
+        bool last_point_valid = false;
+        for (const auto& [ts, x_val] : *x_values) {
+            auto y_it = y_values->find(ts);
+            if (y_it == y_values->end()) {
+                last_point_valid = false;
                 continue; // no corresponding y value
             }
             double y_val = y_it->second;
             if (std::isnan(x_val) || std::isnan(y_val)) {
+                last_point_valid = false;
                 continue; // skip NaN values
+            }
+            if (filter && !filter(ts)) {
+                last_point_valid = false;
+                continue; // skip values outside filter range
             }
 
             auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
             x_pos += margin_;
             y_pos += margin_;
 
-            if (cairo_has_current_point(cache_cr)) {
+            if (last_point_valid && cairo_has_current_point(cache_cr)) {
                 cairo_line_to(cache_cr, x_pos, y_pos);
             } else {
                 cairo_move_to(cache_cr, x_pos, y_pos);
             }
+            last_point_valid = true;
         }
         cairo_stroke(cache_cr);
     }
@@ -248,14 +372,15 @@ void ChartWidget::redraw_line_cache(double width, double height,
 }
 
 void ChartWidget::redraw_point_cache(double width, double height,
-                                  rgb point_color, double point_size,
-                                  double x_value, double y_value) {
+                                     rgb point_color, double point_size,
+                                     double x_value, double y_value,
+                                     bool clear_only) {
     int surface_width = 0;
     int surface_height = 0;
 
     if (point_cache_) {
         surface_width = cairo_image_surface_get_width(point_cache_);
-        surface_height = cairo_image_surface_get_height(line_cache_);
+        surface_height = cairo_image_surface_get_height(point_cache_);
     }
 
     if (!point_cache_ || surface_width < cache_width_ || surface_height < cache_height_) {
@@ -280,7 +405,7 @@ void ChartWidget::redraw_point_cache(double width, double height,
     }
 
     //draw point
-    if (point_size > 0 && !std::isnan(x_value) && !std::isnan(y_value)) {
+    if (point_size > 0 && !std::isnan(x_value) && !std::isnan(y_value) && !clear_only) {
         cairo_set_line_width(cache_cr, 1.0);
         cairo_set_source_rgba(cache_cr, point_color.r, point_color.g, point_color.b, point_color.a);
         auto [x_pos, y_pos] = translate(x_value, y_value, width, height);
@@ -289,15 +414,17 @@ void ChartWidget::redraw_point_cache(double width, double height,
 
         cairo_arc(cache_cr, x_pos, y_pos, point_size / 2.0, 0, 2 * M_PI);
         cairo_fill(cache_cr);
+        point_cache_drawn_ = true;
     }
 
     cairo_destroy(cache_cr);
-    point_cache_drawn_ = true;
 }
 
-void ChartWidget::recalculate_extremes(std::map<time::microseconds_t, double> x_values,
-                                       std::map<time::microseconds_t, double> y_values) {
-    if (x_values.empty() || y_values.empty()) {
+void ChartWidget::recalculate_extremes(std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
+                                       std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
+                                       std::function<bool(time::microseconds_t)> x_filter,
+                                       std::function<bool(time::microseconds_t)> y_filter) {
+    if (!x_values || x_values->empty() || !y_values || y_values->empty()) {
         log.error("Extremes recalculation failure - no x or y values available");
         invalid_ = true;
         return;
@@ -305,9 +432,12 @@ void ChartWidget::recalculate_extremes(std::map<time::microseconds_t, double> x_
 
     min_x_ = std::numeric_limits<double>::max();
     max_x_ = std::numeric_limits<double>::min();
-    for (const auto& [ts, x_val] : x_values) {
+    for (const auto& [ts, x_val] : *x_values) {
         if (std::isnan(x_val)) {
             continue; // skip NaN values
+        }
+        if (x_filter && !x_filter(ts)) {
+            continue; // skip values outside filter range
         }
 
         if (x_val < min_x_) {
@@ -320,9 +450,12 @@ void ChartWidget::recalculate_extremes(std::map<time::microseconds_t, double> x_
 
     min_y_ = std::numeric_limits<double>::max();
     max_y_ = std::numeric_limits<double>::min();
-    for (const auto& [ts, y_val] : y_values) {
+    for (const auto& [ts, y_val] : *y_values) {
         if (std::isnan(y_val)) {
             continue; // skip NaN values
+        }
+        if (y_filter && !y_filter(ts)) {
+            continue; // skip values outside filter range
         }
 
         if (y_val < min_y_) {
@@ -369,7 +502,7 @@ std::pair<double, double> ChartWidget::translate(double x_value, double y_value,
     }
 
     double x_pos = (x_value - min_x_) * x_scale + x_offset;
-    double y_pos = (height - (y_value - min_y_) * y_scale) + y_offset; // invert y axis
+    double y_pos = height - y_offset - (y_value - min_y_) * y_scale; // invert y axis and apply centering offset
     return {x_pos, y_pos};
 }
 
