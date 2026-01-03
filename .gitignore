@@ -69,6 +69,7 @@ subprojects/.wraplock
 
 # temporary files
 tmp/
+.tmp/
 
 # Compiled Python files
 __pycache__/

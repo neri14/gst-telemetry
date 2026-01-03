@@ -20,6 +20,35 @@
                 visible="eval(countdown<4.75)" />
     </if>
 
+    <if condition="eval(overtime>2.0)">
+        <text x="100" y="100" font-name="DejaVu Sans" font-size="64" align="left"
+              color="white" border-width="4" border-color="black"
+              value="key(meta_name)" />
+
+        <text x="900" y="300" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Distance:" />
+        <text x="900" y="400" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Time:" />
+        <text x="900" y="500" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Ascent:" />
+        <text x="900" y="600" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Max Grade:" />
+        <text x="900" y="700" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Avg Speed:" />
+        <text x="900" y="800" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Max Speed:" />
+
+        <text x="950" y="300" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
+              value="eval(round(meta_distance/100)/10)" format="{:.1f} km" />
+        <composite-text x="950" y="400" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
+              value-1="eval(floor(meta_elapsedtime/3600))"
+              value-2="eval(floor((meta_elapsedtime%3600)/60))"
+              value-3="eval(meta_elapsedtime%60)"
+              format="{:.0f}:{:02.0f}:{:06.3f}" />
+        <text x="950" y="500" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
+              value="eval(round(meta_ascent))" format="{:.0f} m" />
+        <text x="950" y="600" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
+              value="eval(meta_maxgrade)" format="{:.1f} %" />
+        <text x="950" y="700" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
+              value="eval(round(meta_avgspeed*36)/10)" format="{:.1f} km/h" />
+        <text x="950" y="800" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
+              value="eval(round(meta_maxspeed*36)/10)" format="{:.1f} km/h" />
+    </if>
+
     <if condition="eval(time_elapsed>=0 and time_remaining>=0)"> <!-- FIXME key "active" doesnt work properly -->
         <timestamp x="10" y="10" align="left" font-name="DejaVu Sans" font-size="32"
                    color="white" border-color="black" border-width="2"

@@ -58,6 +58,9 @@ fi
 
 UUT="telemetry $PROPERTIES"
 
+export TMPDIR=".tmp"
+mkdir -p $TMPDIR
+
 if [ "$GPU_MODE" = true ]; then
     export GST_GL_WINDOW=surfaceless
     gst-launch-1.0 filesrc location=$INPUT_FILE ! decodebin name=dec \
