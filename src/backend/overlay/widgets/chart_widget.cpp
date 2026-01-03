@@ -351,17 +351,25 @@ std::pair<double, double> ChartWidget::translate(double x_value, double y_value,
     double x_scale = width / x_range;
     double y_scale = height / y_range;
 
-    if (!stretch_chart_) {
-        double scale = std::min(x_scale, y_scale);
-        x_scale = scale;
-        y_scale = scale;
+    double x_offset = 0;
+    double y_offset = 0;
 
-        //FIXME add centering to middle of widget
+    if (!stretch_chart_) {
+        if (x_scale < y_scale) {
+            double used_height = y_range * x_scale;
+            y_offset = (height - used_height) / 2.0;
+
+            y_scale = x_scale;
+        } else if (y_scale < x_scale) {
+            double used_width = x_range * y_scale;
+            x_offset = (width - used_width) / 2.0;
+
+            x_scale = y_scale;
+        }
     }
 
-    double x_pos = (x_value - min_x_) * x_scale;
-    double y_pos = (height - (y_value - min_y_) * y_scale); // invert y axis
-
+    double x_pos = (x_value - min_x_) * x_scale + x_offset;
+    double y_pos = (height - (y_value - min_y_) * y_scale) + y_offset; // invert y axis
     return {x_pos, y_pos};
 }
 
