@@ -21,8 +21,8 @@ public:
                       double x_offset = 0, double y_offset = 0) override;
 
     inline static parameter_type_map_t parameter_types = {
-        {"x", ParameterType::Numeric}, // center x position
-        {"y", ParameterType::Numeric}, // center y position
+        {"x", ParameterType::Numeric}, // top left corner x position
+        {"y", ParameterType::Numeric}, // top left corner y position
         {"width", ParameterType::Numeric}, // rectangle width
         {"height", ParameterType::Numeric}, // rectangle height
         {"color", ParameterType::Color}, // fill color

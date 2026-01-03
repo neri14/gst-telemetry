@@ -103,6 +103,12 @@ coordinates of widgets located under circle are relative to circle center
 
 
 
+### line
+
+*ToDo: to be described*
+
+
+
 ### chart
 
 **Note:** redrawing chart line is expensive, for static charts - avoid changing configuration.

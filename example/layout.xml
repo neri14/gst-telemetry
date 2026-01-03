@@ -82,6 +82,7 @@
         <!-- grade moving chart -->
         <container x="2520" y="1910">
             <rectangle x="0" y="0" width="600" height="204" color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
+            <line x="0" y="102" x2="600" y2="102" line-color="#fffffff0" line-width="2" />
 
             <chart x="0" y="2" width="600" height="200" line-color="white" line-width="4"
                    x-value="key(video_time)" y-value="key(pchip_point_grade)" value-time-step = "0.03"

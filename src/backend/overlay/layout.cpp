@@ -12,6 +12,7 @@
 #include "widgets/composite_text_widget.h"
 #include "widgets/rectangle_widget.h"
 #include "widgets/circle_widget.h"
+#include "widgets/line_widget.h"
 #include "widgets/chart_widget.h"
 
 #include "widgets/params/color_parameter.h"
@@ -133,6 +134,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     } else if (name == "circle") {
         widget = parse_widget<CircleWidget>(node);
         log.debug("Created Circle widget");
+    } else if (name == "line") {
+        widget = parse_widget<LineWidget>(node);
+        log.debug("Created Line widget");
     } else if (name == "chart") {
         widget = parse_widget<ChartWidget>(node);
         log.debug("Created Chart widget");
