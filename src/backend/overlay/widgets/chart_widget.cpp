@@ -356,7 +356,6 @@ std::pair<double, double> ChartWidget::translate(double x_value, double y_value,
         x_scale = scale;
         y_scale = scale;
 
-        //FIXME even with equal scales - still map is stretched
         //FIXME add centering to middle of widget
     }
 
