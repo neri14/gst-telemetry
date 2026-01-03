@@ -46,6 +46,14 @@ std::shared_ptr<ChartWidget> ChartWidget::create(parameter_map_ptr parameters) {
             widget->value_time_step_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "stretch-to-fill") {
             widget->stretch_to_fill_ = std::dynamic_pointer_cast<BooleanParameter>(param);
+        } else if (name == "min-x") {
+            widget->min_x_param_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "max-x") {
+            widget->max_x_param_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "min-y") {
+            widget->min_y_param_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "max-y") {
+            widget->max_y_param_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "visible") {
             widget->visible_ = std::dynamic_pointer_cast<BooleanParameter>(param);
         } else if (name == "filter-value") {
@@ -125,6 +133,22 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             invalidate_point_cache = true;
         }
         if (stretch_to_fill_ && stretch_to_fill_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (min_x_param_ && min_x_param_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (max_x_param_ && max_x_param_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (min_y_param_ && min_y_param_->update(timestamp)) {
+            invalidate_line_cache = true;
+            invalidate_point_cache = true;
+        }
+        if (max_y_param_ && max_y_param_->update(timestamp)) {
             invalidate_line_cache = true;
             invalidate_point_cache = true;
         }
@@ -230,6 +254,24 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             } else {
                 x_values = x_value_->get_all_values(value_step);
                 y_values = y_value_->get_all_values(value_step);
+            }
+
+            lock_x_minmax_ = false;
+            if (min_x_param_ && max_x_param_) {
+                min_x_ = min_x_param_->get_value(timestamp);
+                max_x_ = max_x_param_->get_value(timestamp);
+
+                if (min_x_ < max_x_) {
+                    lock_x_minmax_ = true;
+                }
+            }
+            lock_y_minmax_ = false;
+            if (min_y_param_ && max_y_param_) {
+                min_y_ = min_y_param_->get_value(timestamp);
+                max_y_ = max_y_param_->get_value(timestamp);
+                if (min_y_ < max_y_) {
+                    lock_y_minmax_ = true;
+                }
             }
 
             recalculate_extremes(filter_zoom_x ? x_values : x_value_->get_all_values(),
@@ -424,57 +466,67 @@ void ChartWidget::recalculate_extremes(std::shared_ptr<std::map<time::microsecon
                                        std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
                                        std::function<bool(time::microseconds_t)> x_filter,
                                        std::function<bool(time::microseconds_t)> y_filter) {
+    if (lock_x_minmax_ && lock_y_minmax_) {
+        // both min and max are locked, no need to recalculate
+        invalid_ = false;
+        return;
+    }
+
     if (!x_values || x_values->empty() || !y_values || y_values->empty()) {
         log.error("Extremes recalculation failure - no x or y values available");
         invalid_ = true;
         return;
     }
 
-    min_x_ = std::numeric_limits<double>::max();
-    max_x_ = std::numeric_limits<double>::min();
-    for (const auto& [ts, x_val] : *x_values) {
-        if (std::isnan(x_val)) {
-            continue; // skip NaN values
-        }
-        if (x_filter && !x_filter(ts)) {
-            continue; // skip values outside filter range
-        }
+    if (!lock_x_minmax_) {  
+        min_x_ = std::numeric_limits<double>::max();
+        max_x_ = std::numeric_limits<double>::min();
+        for (const auto& [ts, x_val] : *x_values) {
+            if (std::isnan(x_val)) {
+                continue; // skip NaN values
+            }
+            if (x_filter && !x_filter(ts)) {
+                continue; // skip values outside filter range
+            }
 
-        if (x_val < min_x_) {
-            min_x_ = x_val;
+            if (x_val < min_x_) {
+                min_x_ = x_val;
+            }
+            if (x_val > max_x_) {
+                max_x_ = x_val;
+            }
         }
-        if (x_val > max_x_) {
-            max_x_ = x_val;
+        if (min_x_ >= max_x_) {
+            log.error("Extremes recalculation failure - min_x ({}) >= max_x ({})", min_x_, max_x_);
+            invalid_ = true;
         }
     }
 
-    min_y_ = std::numeric_limits<double>::max();
-    max_y_ = std::numeric_limits<double>::min();
-    for (const auto& [ts, y_val] : *y_values) {
-        if (std::isnan(y_val)) {
-            continue; // skip NaN values
-        }
-        if (y_filter && !y_filter(ts)) {
-            continue; // skip values outside filter range
-        }
+    if (!lock_y_minmax_) {
+        min_y_ = std::numeric_limits<double>::max();
+        max_y_ = std::numeric_limits<double>::min();
+        for (const auto& [ts, y_val] : *y_values) {
+            if (std::isnan(y_val)) {
+                continue; // skip NaN values
+            }
+            if (y_filter && !y_filter(ts)) {
+                continue; // skip values outside filter range
+            }
 
-        if (y_val < min_y_) {
-            min_y_ = y_val;
+            if (y_val < min_y_) {
+                min_y_ = y_val;
+            }
+            if (y_val > max_y_) {
+                max_y_ = y_val;
+            }
         }
-        if (y_val > max_y_) {
-            max_y_ = y_val;
+        if (min_y_ >= max_y_) {
+            log.error("Extremes recalculation failure - min_y ({}) >= max_y ({})", min_y_, max_y_);
+            invalid_ = true;
         }
     }
 
-    if (min_x_ >= max_x_) {
-        log.error("Extremes recalculation failure - min_x ({}) >= max_x ({})", min_x_, max_x_);
-        invalid_ = true;
-    } else if (min_y_ >= max_y_) {
-        log.error("Extremes recalculation failure - min_y ({}) >= max_y ({})", min_y_, max_y_);
-        invalid_ = true;
-    } else {
-        invalid_ = false;
-    }
+    invalid_ = false;
 }
 
 std::pair<double, double> ChartWidget::translate(double x_value, double y_value, double width, double height) const {

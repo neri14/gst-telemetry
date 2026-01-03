@@ -34,6 +34,10 @@ public:
         {"y-value", ParameterType::Numeric}, // track key for y values
         {"value-time-step", ParameterType::Numeric}, // time step for values
         {"stretch-to-fill", ParameterType::Boolean}, // whether to stretch chart to fill widget size
+        {"min-x", ParameterType::Numeric}, // minimum x value (overrides auto-scaling)
+        {"max-x", ParameterType::Numeric}, // maximum x value (overrides auto-scaling)
+        {"min-y", ParameterType::Numeric}, // minimum y value (overrides auto-scaling)
+        {"max-y", ParameterType::Numeric}, // maximum y value (overrides auto-scaling)
         {"visible", ParameterType::Boolean}, // visibility condition
         {"filter-value", ParameterType::Numeric}, // value to filter by
         {"filter-max", ParameterType::Numeric}, // maximum filter-value accepted
@@ -71,6 +75,12 @@ private:
     std::shared_ptr<NumericParameter> y_value_ = nullptr;
     std::shared_ptr<NumericParameter> value_time_step_ = nullptr;
     std::shared_ptr<BooleanParameter> stretch_to_fill_ = nullptr;
+
+    std::shared_ptr<NumericParameter> min_x_param_ = nullptr;
+    std::shared_ptr<NumericParameter> max_x_param_ = nullptr;
+    std::shared_ptr<NumericParameter> min_y_param_ = nullptr;
+    std::shared_ptr<NumericParameter> max_y_param_ = nullptr;
+
     std::shared_ptr<BooleanParameter> visible_ = nullptr;
 
     std::shared_ptr<NumericParameter> filter_value_ = nullptr;
@@ -93,6 +103,10 @@ private:
     double max_x_ = std::numeric_limits<double>::min();
     double min_y_ = std::numeric_limits<double>::max();
     double max_y_ = std::numeric_limits<double>::min();
+
+    bool lock_x_minmax_ = false;
+    bool lock_y_minmax_ = false;
+
     bool stretch_chart_ = false;
 
     bool invalid_ = false;
