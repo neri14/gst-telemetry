@@ -71,6 +71,12 @@ Conditonal widget, draw encapsulated widgets only if condition is met.
 
 
 
+### rectangle
+
+*ToDo: to be described*
+
+
+
 ### circle
 
 Draw a circle with center at x,y.

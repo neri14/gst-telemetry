@@ -27,6 +27,7 @@ struct rgba {
 using rgb = rgba;
 
 namespace color {// TODO more predefined colors
+    const rgb transparent {0.0, 0.0, 0.0, 0.0};
     const rgb black   {0.00, 0.00, 0.00};
     const rgb white   {1.00, 1.00, 1.00};
     const rgb red     {1.00, 0.00, 0.00};
@@ -70,6 +71,7 @@ namespace color {// TODO more predefined colors
     const rgb invalid {-1.0, -1.0, -1.0, -1.0};
 
     const std::map<std::string, rgba> map = {
+        {"transparent", color::transparent},
         {"black"  , color::black},
         {"white"  , color::white},
         {"red"    , color::red},

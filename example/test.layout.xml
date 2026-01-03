@@ -103,6 +103,25 @@
               value-2="eval(time_remaining)" />
 
 
+        <!-- map & chart -->
+        <container x="2990" y="1000">
+            <rectangle x="0" y="0" width="800" height="800" color="rgba(0,0,0,0.5)">
+                <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                        line-color="white" line-width="6"
+                        point-color="red" point-size="14"
+                        x-value="eval(1 + (point_lon / 180))"
+                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
+            </rectangle>
+            <rectangle x="0" y="850" width="800" height="100" color="transparent" border-width="4" border-color="white">
+                <chart x="0" y="0" width="800" height="100"
+                        line-color="white" line-width="4"
+                        point-color="red" point-size="12"
+                        x-value="key(point_dist)"
+                        y-value="key(point_smoothele)" />
+            </rectangle>
+        </container>
+
+
         <!-- ToDo image, chart, moving chart, ...-->
     <!-- <if condition="key_exists(point_speed)">
         <text x="100" y="200" font-size="48" color="yellow"
