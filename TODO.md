@@ -1,10 +1,5 @@
 # TODO
 
-## 0.1 (videographer feature parity)
-- charts, different flavors:
-    - from beginning to end
-    - from Xs ago till now (for moving charts)
-
 ## 1.0 (target minimal)
 - segments handling
 - charts extension to handle case

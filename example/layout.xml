@@ -89,7 +89,6 @@
                    min-x="eval(video_time-15)" max-x="eval(video_time)"
                    min-y="eval(-max(abs(meta_mingrade), abs(meta_maxgrade)))" max-y="eval(max(abs(meta_mingrade), abs(meta_maxgrade)))" />
 
-            <!-- <text x="720" y="eval(187-(200*(pchip_point_grade - meta_mingrade) / (meta_maxgrade - meta_mingrade)))" align="right" -->
             <text x="720" y="eval(187-(200*((pchip_point_grade + max(abs(meta_mingrade), abs(meta_maxgrade))) / (2 * max(abs(meta_mingrade), abs(meta_maxgrade))))))" align="right"
                   font-name="DejaVu Sans" font-size="20" color="white" border-color="black" border-width="2"
                   value="eval(pchip_point_grade)" format="{:.1f} %" />
