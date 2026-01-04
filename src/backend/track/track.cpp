@@ -13,6 +13,8 @@ namespace telemetry {
 namespace track {
 namespace consts {
     namespace mask {
+        const field_id_t flags            = 0xFF000000;
+
         const field_id_t virtual_flag     = 0x80000000;
         const field_id_t metadata_flag    = 0x40000000;
         const field_id_t trackpoint_flag  = 0x20000000;
@@ -42,6 +44,9 @@ namespace consts {
         const field_id_t next   = 0x2;  // next active segments
         const field_id_t all    = 0x3;  // all segments of this type
     }
+
+    const int max_segment_types = 32;
+    const int max_segment_instances = 256;
 } // namespace consts
 
 
@@ -76,6 +81,9 @@ std::string uint_to_hex(uint32_t v, int width = 0, bool prefix = true, bool uppe
        << std::setw(width) << std::setfill('0') << v;
     return ss.str();
 }
+
+    // NOTE no need for segment-point - everything can be calculated or taken from trackpoints and metadata
+    //      only exception being accpower
 
     // TODO move to markdown documentation
     //                          xxxx xxxx  xxxx xxxx  xxxx xxxx  xxxx xxxx
@@ -208,7 +216,7 @@ Value Track::get(const std::string& key, time::microseconds_t timestamp) const {
 
 Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
     if (field_id == INVALID_FIELD) {
-        log.warning("Invalid field id requested");
+        log.debug("Invalid field id requested");
         return Value();
     }
     
@@ -227,7 +235,7 @@ Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
     } else if (field_id & consts::mask::virtual_flag) {
         return get_virtual_data(field_id, timestamp);
     } else {
-        log.warning("Unknown field id: {}", uint_to_hex(field_id));
+        log.warning("Unparsable field id: {}", uint_to_hex(field_id));
         return Value();
     }
 }
@@ -417,33 +425,66 @@ bool Track::parse_gpx(pugi::xml_node node) {
         ok = parse_trk(trk) && ok;
     }
 
-    //TODO recalculate segments? TBD
-
     return ok;
 }
 
 Value Track::get_segment_data(field_id_t field_id, time::microseconds_t timestamp) const {
-    // TODO map virtual field_id to real field_id for:
-    //  - consts::segment_list::active
-    //  - consts::segment_list::prev
-    //  - consts::segment_list::next
-    field_id_t fid = field_id; //TODO do real mapping
+    field_id_t flags = field_id & consts::mask::flags;
+    segment_field_id sfid(field_id);
 
-    if (fid & consts::mask::metadata_flag) {
-        return get_segment_metadata(fid);
+    switch (sfid.list) {
+        case consts::segment_list::active:
+            {
+                std::vector<field_id_t> segments = get_active_segments_ordered(sfid.type, timestamp);
+                if (segments.size() > sfid.segment) {
+                    sfid.segment = segments[sfid.segment];
+                    sfid.list = consts::segment_list::all;
+                } else {
+                    log.debug("Active segment index {} out of range for type {}", sfid.segment, uint_to_hex(sfid.type));
+                    return Value();
+                }
+            }
+            break;
+        case consts::segment_list::prev:
+            {
+                std::vector<field_id_t> segments = get_prev_segments_ordered(sfid.type, timestamp);
+                if (segments.size() > sfid.segment) {
+                    sfid.segment = segments[sfid.segment];
+                    sfid.list = consts::segment_list::all;
+                } else {
+                    log.debug("Prev segment index {} out of range for type {}", sfid.segment, uint_to_hex(sfid.type));
+                    return Value();
+                }
+            }
+            break;
+        case consts::segment_list::next:
+            {
+                std::vector<field_id_t> segments = get_next_segments_ordered(sfid.type, timestamp);
+                if (segments.size() > sfid.segment) {
+                    sfid.segment = segments[sfid.segment];
+                    sfid.list = consts::segment_list::all;
+                } else {
+                    log.debug("Next segment index {} out of range for type {}", sfid.segment, uint_to_hex(sfid.type));
+                    return Value();
+                }
+            }
+            break;
+        case consts::segment_list::all:
+            //no mapping required for "all" list
+            break;
+        default:
+            log.warning("Invalid segment list in field id: {}", uint_to_hex(field_id));
+            return Value();
     }
 
-    // TODO these make sense only if field_id (before mapping) is consts::segment_list::active
-    // else if (fid & consts::mask::lerp_flag) {
-    //     log.warning("Segment lerp data retrieval not implemented yet");
-    //     return Value();
-    // } else if (fid & consts::mask::pchip_flag) {
-    //     log.warning("Segment pchip data retrieval not implemented yet");
-    //     return Value();
-    // } else {
-    //     log.warning("Segment field data retrieval not implemented yet");
-    //     return Value();
-    // }
+    field_id_t real_fid = static_cast<field_id_t>(sfid) | flags;
+
+    if (real_fid & consts::mask::metadata_flag) {
+        return get_segment_metadata(real_fid);
+    }
+
+    log.warning("Segment field data not possible to be retrieved for field {} at {} (mapped to {})",
+                uint_to_hex(field_id), std::format("{}", timestamp), uint_to_hex(real_fid));
     return Value();
 }
 
@@ -495,6 +536,60 @@ bool Track::parse_metadata(pugi::xml_node node) {
     }
 
     return true;
+}
+
+/* segments with start_time <= timestamp <= end_time ordered by start_time ascending */
+std::vector<field_id_t> Track::get_active_segments_ordered(
+                    field_id_t segment_type, time::microseconds_t timestamp) const {
+    std::vector<field_id_t> segments;
+
+    for (auto idx : segments_ordered_by_start_time_.at(segment_type)) {
+        auto times = segments_lut_.at(segment_type).at(idx);
+        time::microseconds_t start_us = to_relative_time_domain(times.first);
+        time::microseconds_t end_us = to_relative_time_domain(times.second);
+
+        if (start_us <= timestamp && timestamp <= end_us) {
+            segments.push_back(idx);
+        }
+    }
+
+    return segments;
+}
+
+/* segments with end_time < timestamp ordered by end_time descending */
+std::vector<field_id_t> Track::get_prev_segments_ordered(
+                    field_id_t segment_type, time::microseconds_t timestamp) const {
+    std::vector<field_id_t> segments;
+
+    for (auto it = segments_ordered_by_end_time_.at(segment_type).rbegin();
+         it != segments_ordered_by_end_time_.at(segment_type).rend(); ++it) {
+        auto idx = *it;
+        auto times = segments_lut_.at(segment_type).at(idx);
+        time::microseconds_t end_us = to_relative_time_domain(times.second);
+
+        if (end_us < timestamp) {
+            segments.push_back(idx);
+        }
+    }
+
+    return segments;
+}
+
+/* segments with start_time > timestamp ordered by start_time ascending */
+std::vector<field_id_t> Track::get_next_segments_ordered(
+                    field_id_t segment_type, time::microseconds_t timestamp) const {
+    std::vector<field_id_t> segments;
+
+    for (auto idx : segments_ordered_by_start_time_.at(segment_type)) {
+        auto times = segments_lut_.at(segment_type).at(idx);
+        time::microseconds_t start_us = to_relative_time_domain(times.first);
+
+        if (start_us > timestamp) {
+            segments.push_back(idx);
+        }
+    }
+
+    return segments;
 }
 
 bool Track::parse_trk(pugi::xml_node node) {
@@ -604,14 +699,8 @@ bool Track::parse_trk_ext_asx(pugi::xml_node node) {
         }
     }
 
-    // segments LUT:
-    //
-    // std::map<field_id_t, std::map<field_id_t, std::pair<time::microseconds_t, time::microseconds_t>>>
-    // segments[segment_type_id][segment_instance] = {start_time, end_time}
-    //
-    // maps to all segments list prefix: "s_TYPE_N_"
-    //     TYPE - segment_type_id
-    //     N    - segment_instance
+    generate_sorted_segment_lists();
+    generate_segment_metadata_field_aliases();
 
     return ok;
 }
@@ -673,12 +762,11 @@ bool Track::parse_trk_ext_asx_segment(pugi::xml_node node) {
     }
 
     // add segment to lookup table
-    if (segments_lut_.find(type) == segments_lut_.end()) {
-        segments_lut_[type] = {};
+    if (segments_lut_.find(type_id) == segments_lut_.end()) {
+        segments_lut_[type_id] = {};
     }
-    field_id_t instance_idx = static_cast<field_id_t>(segments_lut_[type].size());
-    segments_lut_[type].push_back({start_time, end_time});
-
+    field_id_t instance_idx = static_cast<field_id_t>(segments_lut_[type_id].size());
+    segments_lut_[type_id][instance_idx] = {start_time, end_time};
     // add index to metadata
     metadata["index"] = Value(static_cast<double>(instance_idx));
 
@@ -693,11 +781,11 @@ bool Track::parse_trk_ext_asx_segment(pugi::xml_node node) {
 
         // register field id within segment metadata if new
         field_id_t fid = INVALID_FIELD;
-        if (segment_partial_field_ids_.find(partial_name) == segment_partial_field_ids_.end()) {
+        if (segment_metadata_partial_field_ids_.find(partial_name) == segment_metadata_partial_field_ids_.end()) {
             fid = next_segment_metadata_field_id_++;
-            segment_partial_field_ids_[partial_name] = fid;
+            segment_metadata_partial_field_ids_[partial_name] = fid;
         } else {
-            fid = segment_partial_field_ids_[partial_name];
+            fid = segment_metadata_partial_field_ids_[partial_name];
         }
 
         segment_field_id sfid(type_id,                   // segment type
@@ -732,6 +820,60 @@ bool Track::parse_trk_ext_asx_segment(pugi::xml_node node) {
     }
 
     return ok;
+}
+
+void Track::generate_sorted_segment_lists() {
+    for (const auto& [type_id, instances] : segments_lut_) {
+        segments_ordered_by_start_time_[type_id] = {};
+        segments_ordered_by_end_time_[type_id] = {};
+
+        for (const auto& [instance_idx, _] : instances) {
+            segments_ordered_by_start_time_[type_id].push_back(instance_idx);
+            segments_ordered_by_end_time_[type_id].push_back(instance_idx);
+        }
+
+        // sort by start time
+        std::sort(segments_ordered_by_start_time_[type_id].begin(),
+                  segments_ordered_by_start_time_[type_id].end(),
+                  [this, type_id](field_id_t a, field_id_t b) {
+                      const auto& time_pair_a = segments_lut_.at(type_id).at(a);
+                      const auto& time_pair_b = segments_lut_.at(type_id).at(b);
+                      return time_pair_a.first < time_pair_b.first;
+                  });
+        // sort by end time
+        std::sort(segments_ordered_by_end_time_[type_id].begin(),
+                  segments_ordered_by_end_time_[type_id].end(),
+                  [this, type_id](field_id_t a, field_id_t b) {
+                      const auto& time_pair_a = segments_lut_.at(type_id).at(a);
+                      const auto& time_pair_b = segments_lut_.at(type_id).at(b);
+                      return time_pair_a.second < time_pair_b.second;
+                  });
+    }
+}
+
+void Track::generate_segment_metadata_field_aliases() {
+    for (const auto& [type, type_id] : segment_types_) {
+            for (const auto& [instance_idx, _] : segments_lut_[type_id]) {
+                for (const auto& [partial_name, fid] : segment_metadata_partial_field_ids_) {
+                    log.debug("Generating segment metadata field aliases for type: {}, instance: {}, field partial name: {}",
+                              type, uint_to_hex(instance_idx), partial_name);
+
+                    for (auto [list_name, list_id] : {std::make_pair("active", consts::segment_list::active),
+                                                      std::make_pair("prev",   consts::segment_list::prev),
+                                                      std::make_pair("next",   consts::segment_list::next)}) {
+                        
+                        segment_field_id sfid(type_id, list_id, instance_idx, fid);
+                        field_id_t full_field_id = static_cast<field_id_t>(sfid) | consts::mask::segment_flag | consts::mask::metadata_flag;
+
+                        std::string segment_key = consts::prefix::segment + type + "_" + list_name + "_" + std::to_string(instance_idx) + "_"; // s_TYPE_LIST_N_
+                        std::string full_field_name = segment_key + partial_name; // s_TYPE_LIST_N_meta_FIELDNAME
+
+                        log.debug("Registered segment field id alias: {} = {}", full_field_name, uint_to_hex(full_field_id));
+                        field_ids_[full_field_name] = full_field_id;
+                    }
+            }
+        }
+    }
 }
 
 bool Track::parse_trkseg(pugi::xml_node node) {
@@ -923,13 +1065,6 @@ field_id_t Track::register_trackpoint_field(const std::string& key) {
     auto pchip_id = id | consts::mask::pchip_flag;;
     field_ids_[consts::prefix::pchip + tpkey] = pchip_id;
 
-    return id;
-}
-
-field_id_t Track::register_segment_field(const std::string& key) {
-    std::string segkey = consts::prefix::segment + key;
-    auto id = register_field(segkey, consts::mask::segment_flag);
-    log.debug("Registered new segment field: {} with id {}", segkey, uint_to_hex(id));
     return id;
 }
 

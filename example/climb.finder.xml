@@ -1,0 +1,47 @@
+<layout>
+    <if condition="eval(time_elapsed>=0 and time_remaining>=0)">
+        <timestamp x="10" y="10" align="left" font-name="DejaVu Sans" font-size="32"
+                   color="white" border-color="black" border-width="2"
+                   value="key(timestamp)" format="{:%Y-%m-%d %H:%M:%S}"
+                   precision="0" timezone="Europe/Warsaw" />
+
+        <composite-text x="550" y="10" align="left" font-name="DejaVu Sans" font-size="32"
+              color="white" border-width="2" border-color="black"
+              format="{:.0f}:{:02.0f}:{:06.3f}"
+              value-1="eval(floor(time_elapsed/3600))"
+              value-2="eval(floor((time_elapsed%3600)/60))"
+              value-3="eval(time_elapsed%60)" />
+
+        <if condition="exists(point_climb)">
+            <text x="1920" y="1000" align="left" font-name="DejaVu Sans" font-size="64"
+                  color="white" border-color="black" border-width="2"
+                  value="key(point_climb)" format="Active {:.0f}" />
+        </if>
+        <if condition="not(exists(point_climb))">
+            <text x="1920" y="1000" align="left" font-name="DejaVu Sans" font-size="64"
+                  color="white" border-color="black" border-width="2"
+                  value="No climb"/>
+        </if>
+
+        <if condition="exists(s_climb_next_0_meta_startdist)">
+            <text x="1920" y="1100" align="left" font-name="DejaVu Sans" font-size="64"
+                  color="white" border-color="black" border-width="2"
+                  value="eval(s_climb_next_0_meta_startdist - point_dist)" format="Next climb in {:.0f} m" />
+        </if>
+
+        <!-- map & chart -->
+        <container x="2990" y="50">
+            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                   line-color="white" line-width="6"
+                   point-color="red" point-size="14"
+                   x-value="eval(1 + (point_lon / 180))"
+                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
+            <chart x="0" y="850" width="800" height="100"
+                   line-color="white" line-width="4"
+                   point-color="red" point-size="12"
+                   x-value="key(point_dist)"
+                   y-value="key(point_smoothele)" />
+        </container>
+
+    </if>
+</layout>

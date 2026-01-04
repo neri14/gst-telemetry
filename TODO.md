@@ -2,8 +2,8 @@
 
 ## 1.0 (target minimal)
 - segments handling
-- charts extension to handle case
-  - from X timestamp to Y timestamp (for segments)
+
+- maybe: segment cumulative fields
 
 ## 2.0 (further improvements)
 - sideloading additional metadata/data from file

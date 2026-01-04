@@ -57,7 +57,7 @@ public:
 private:
     mutable utils::logging::Logger log{"track"};
 
-    using segments_lut_t = std::map<std::string, std::vector<std::pair<time::time_point_t, time::time_point_t>>>;
+    using segments_lut_t = std::map<field_id_t, std::map<field_id_t, std::pair<time::time_point_t, time::time_point_t>>>;
     /* segments[segment type id][instance index] = {start time, end time} */
 
     bool parse_gpx(pugi::xml_node node);
@@ -72,6 +72,8 @@ private:
     bool parse_trk_ext_asx(pugi::xml_node node);
 
     bool parse_trk_ext_asx_segment(pugi::xml_node node);
+    void generate_sorted_segment_lists();
+    void generate_segment_metadata_field_aliases();
 
     bool parse_trkseg(pugi::xml_node node);
     bool parse_trkpt(pugi::xml_node node);
@@ -82,9 +84,12 @@ private:
         const std::string& key, const Value& value);
     void create_virtual_fields();
 
+    std::vector<field_id_t> get_active_segments_ordered(field_id_t segment_type, time::microseconds_t timestamp) const;
+    std::vector<field_id_t> get_prev_segments_ordered(field_id_t segment_type, time::microseconds_t timestamp) const;
+    std::vector<field_id_t> get_next_segments_ordered(field_id_t segment_type, time::microseconds_t timestamp) const;
+
     field_id_t register_metadata_field(const std::string& key);
     field_id_t register_trackpoint_field(const std::string& key);
-    field_id_t register_segment_field(const std::string& key);
     field_id_t register_virtual_field(const std::string& key);
 
     field_id_t register_field(const std::string& key, field_id_t mask);
@@ -100,10 +105,11 @@ private:
 
     std::map<std::string, field_id_t> segment_types_;
     segments_lut_t segments_lut_;
+    std::map<field_id_t, std::vector<field_id_t>> segments_ordered_by_start_time_;
+    std::map<field_id_t, std::vector<field_id_t>> segments_ordered_by_end_time_;
 
-    std::map<std::string, field_id_t> segment_partial_field_ids_;
+    std::map<std::string, field_id_t> segment_metadata_partial_field_ids_;
     field_id_t next_segment_metadata_field_id_ = 0;
-    field_id_t next_segment_point_field_id_ = 0;
 
     time::microseconds_t min_timestamp_ = time::INVALID_TIME;
     time::microseconds_t max_timestamp_ = 0;
