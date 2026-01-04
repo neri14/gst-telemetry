@@ -144,8 +144,13 @@ bool BooleanParameter::update(time::microseconds_t timestamp) {
             return false;
         case UpdateStrategy::TrackKeyExistance:
             if (track_) {
-                track::Value v = track_->get(field_id, timestamp);
-                bool new_value = v.is_valid();
+                bool new_value = value_;
+                if (field_id == track::INVALID_FIELD) {
+                    new_value = false;
+                } else {
+                    track::Value v = track_->get(field_id, timestamp);
+                    new_value = v.is_valid();
+                }
 
                 if (negate_) {
                     new_value = !new_value;

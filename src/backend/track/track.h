@@ -28,6 +28,7 @@ class Track {
 public:
     using fields_map_t = std::map<field_id_t, Value>;
     using trackpoint_data_map_t = std::map<time::microseconds_t, std::shared_ptr<fields_map_t>>;
+    using segments_metadata_map_t = std::map<field_id_t, std::shared_ptr<fields_map_t>>;
     using trackpoint_ts_view_t = std::ranges::keys_view<std::ranges::ref_view<const trackpoint_data_map_t>>;
 
     Track(time::microseconds_t offset = 0);
@@ -39,27 +40,25 @@ public:
 
     trackpoint_ts_view_t get_trackpoint_timestamps() const;
 
-    //TODO add argument to getters to specify retrieve LAST, NEXT or INTERPOLATED value
     Value get(const std::string& key, time::microseconds_t timestamp = time::INVALID_TIME) const;
     Value get(field_id_t field_id, time::microseconds_t timestamp = time::INVALID_TIME) const;
 
-    Value get_metadata(const std::string& key) const;
     Value get_metadata(field_id_t field_id) const;
-
-    Value get_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
+    
     Value get_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
-
-    Value get_lerp_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_lerp_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
-
-    Value get_pchip_trackpoint_data(const std::string& key, time::microseconds_t timestamp) const;
     Value get_pchip_trackpoint_data(field_id_t field_id, time::microseconds_t timestamp) const;
-
-    Value get_virtual_data(const std::string& key, time::microseconds_t timestamp) const;
+    
     Value get_virtual_data(field_id_t field_id, time::microseconds_t timestamp) const;
+    
+    Value get_segment_data(field_id_t field_id, time::microseconds_t timestamp) const;
+    Value get_segment_metadata(field_id_t field_id) const;
 
 private:
     mutable utils::logging::Logger log{"track"};
+
+    using segments_lut_t = std::map<std::string, std::vector<std::pair<time::time_point_t, time::time_point_t>>>;
+    /* segments[segment type id][instance index] = {start time, end time} */
 
     bool parse_gpx(pugi::xml_node node);
     bool parse_metadata(pugi::xml_node node);
@@ -71,6 +70,8 @@ private:
     bool parse_trk_ext(pugi::xml_node node);
     bool parse_trk_ext_atx(pugi::xml_node node);
     bool parse_trk_ext_asx(pugi::xml_node node);
+
+    bool parse_trk_ext_asx_segment(pugi::xml_node node);
 
     bool parse_trkseg(pugi::xml_node node);
     bool parse_trkpt(pugi::xml_node node);
@@ -96,6 +97,13 @@ private:
     fields_map_t metadata_;
     trackpoint_data_map_t trackpoints_;
     std::map<field_id_t, std::function<Value(time::microseconds_t)>> virtual_data_mapping_;
+
+    std::map<std::string, field_id_t> segment_types_;
+    segments_lut_t segments_lut_;
+
+    std::map<std::string, field_id_t> segment_partial_field_ids_;
+    field_id_t next_segment_metadata_field_id_ = 0;
+    field_id_t next_segment_point_field_id_ = 0;
 
     time::microseconds_t min_timestamp_ = time::INVALID_TIME;
     time::microseconds_t max_timestamp_ = 0;

@@ -60,6 +60,8 @@ std::shared_ptr<TimestampWidget> TimestampWidget::create(parameter_map_ptr param
 
     parameters->erase("value");
     parameters->erase("format");
+    parameters->erase("precision");
+    parameters->erase("timezone");
     StringWidget::load_params(widget, parameters);
 
     return widget;
