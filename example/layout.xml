@@ -32,6 +32,9 @@
         <text x="900" y="700" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Avg Speed:" />
         <text x="900" y="800" font-name="DejaVu Sans" font-size="64" align="right" color="white" border-width="4" border-color="black" value="Max Speed:" />
 
+        <!-- TODO: add max power / avg power / normalized power -->
+        <!-- TODO: add climb list? -->
+
         <text x="950" y="300" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
               value="eval(round(meta_distance/100)/10)" format="{:.1f} km" />
         <composite-text x="950" y="400" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
@@ -100,10 +103,10 @@
             <chart x="0" y="2" width="600" height="200" line-color="white" line-width="4"
                    x-value="key(video_time)" y-value="key(pchip_point_power)" value-time-step = "0.03"
                    filter-value="key(video_time)" filter-min="eval(video_time-15)" filter-max="key(video_time)"
-                   min-x="eval(video_time-15)" max-x="eval(video_time)"
-                   min-y="0" max-y="1200" />
+                   zoom-to-filter-y="false"
+                   min-x="eval(video_time-15)" max-x="eval(video_time)"/>
 
-            <text x="697" y="eval(187-200*pchip_point_power/1200)" align="right"
+            <text x="697" y="eval(187-200*pchip_point_power/meta_maxpower)" align="right"
                   font-name="DejaVu Sans" font-size="20" color="white" border-color="black" border-width="2"
                   value="eval(pchip_point_power)" format="{:.0f} W"  />
         </container>

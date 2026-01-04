@@ -6,6 +6,7 @@
   - from X timestamp to Y timestamp (for segments)
 
 ## 2.0 (further improvements)
+- sideloading additional metadata/data from file
 - images (load image, display at x,y, plus rotation and rotation pivot point - so e.g. gauge needle can be made, plus scale)
 - rectangles, plus rectangle fill based on value (and direction of fill?)
 - circle fill based on value (and direction of fill?)
