@@ -28,6 +28,11 @@
                   color="white" border-color="black" border-width="2"
                   value="eval(s_climb_next_0_meta_startdist - point_dist)" format="Next climb in {:.0f} m" />
         </if>
+        <if condition="exists(s_climb_active_0_meta_enddist)">
+            <text x="1920" y="1200" align="left" font-name="DejaVu Sans" font-size="64"
+                  color="white" border-color="black" border-width="2"
+                  value="eval(s_climb_active_0_meta_enddist - point_dist)" format="Current climb to go {:.0f} m" />
+        </if>
 
         <!-- map & chart -->
         <container x="2990" y="50">
