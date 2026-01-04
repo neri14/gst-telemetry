@@ -113,6 +113,8 @@ coordinates of widgets located under circle are relative to circle center
 
 **Note:** redrawing chart line is expensive, for static charts - avoid changing configuration.
 
+**Note:** limitation: filters are meant for producing chart only - if point and filter are both configured - point will not be filtered out
+
 *ToDo: to be described*
 
 

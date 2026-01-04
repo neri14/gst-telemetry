@@ -186,11 +186,6 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             invalidate_point_cache = true;
         }
 
-        // read filter values
-        bool filter_active = filter_value_ && filter_max_ && filter_min_;
-        bool filter_zoom_x = filter_active && zoom_to_filter_x_ && zoom_to_filter_x_->get_value(timestamp);
-        bool filter_zoom_y = filter_active && zoom_to_filter_y_ && zoom_to_filter_y_->get_value(timestamp);
-
         // read values needed for cache size calculation
         double width = width_->get_value(timestamp);
         double height = height_->get_value(timestamp);
@@ -219,41 +214,34 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             }
         }
 
-        std::function<bool(time::microseconds_t)> filter = nullptr;
-
-        double filter_min = filter_min_ ? filter_min_->get_value(timestamp) : 0.0;
-        double filter_max = filter_max_ ? filter_max_->get_value(timestamp) : 0.0;
-        auto filter_values = filter_value_ ? filter_value_->get_all_values(value_step, filter_min, filter_max) : nullptr;
-
-        if (filter_active) {
-            filter = [=](time::microseconds_t ts) {
-                auto filter_val_it = filter_values->find(ts);
-                if (filter_val_it == filter_values->end()) {
-                    return false; // no corresponding filter value
-                }
-                double filter_val = filter_val_it->second;
-                if (std::isnan(filter_val) || filter_val < filter_min || filter_val > filter_max) {
-                    return false; // skip values outside filter range
-                }
-                return true;
-            };
-        }
-
         // redraw line cache if needed
         if (invalidate_line_cache) {
-            std::shared_ptr<std::map<time::microseconds_t, double>> x_values = nullptr;
-            std::shared_ptr<std::map<time::microseconds_t, double>> y_values = nullptr;
+            // read filter values
+            bool filter_active = !!filter_value_;
+            bool filter_zoom_x = filter_active && zoom_to_filter_x_ && zoom_to_filter_x_->get_value(timestamp);
+            bool filter_zoom_y = filter_active && zoom_to_filter_y_ && zoom_to_filter_y_->get_value(timestamp);
+
+            double filter_min = filter_min_ ? filter_min_->get_value(timestamp) : std::numeric_limits<double>::min();
+            double filter_max = filter_max_ ? filter_max_->get_value(timestamp) : std::numeric_limits<double>::max();
+            auto filter_values = filter_value_ ? filter_value_->get_values(value_step, filter_min, filter_max) : nullptr;
+
+            std::shared_ptr<NumericParameter::sections_t> x_values = nullptr;
+            std::shared_ptr<NumericParameter::sections_t> y_values = nullptr;
 
             if (filter_active && filter_values){
-                std::set<time::microseconds_t> timestamps = {};
-                for (const auto& [ts, _] : *filter_values) {
-                    timestamps.insert(ts);
+                std::vector<std::vector<time::microseconds_t>> timestamps = {};
+                for (const auto& section : *filter_values) {
+                    std::vector<time::microseconds_t> ts_section = {};
+                    for (const auto& [ts, _] : section) {
+                        ts_section.push_back(ts);
+                    }
+                    timestamps.push_back(ts_section);
                 }
-                x_values = x_value_->get_all_values(timestamps);
-                y_values = y_value_->get_all_values(timestamps);
+                x_values = x_value_->get_values(timestamps);
+                y_values = y_value_->get_values(timestamps);
             } else {
-                x_values = x_value_->get_all_values(value_step);
-                y_values = y_value_->get_all_values(value_step);
+                x_values = x_value_->get_values(value_step);
+                y_values = y_value_->get_values(value_step);
             }
 
             lock_x_minmax_ = false;
@@ -274,8 +262,8 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 }
             }
 
-            recalculate_extremes(filter_zoom_x ? x_values : x_value_->get_all_values(),
-                                 filter_zoom_y ? y_values : y_value_->get_all_values());
+            recalculate_extremes(filter_zoom_x ? x_values : x_value_->get_values(),
+                                 filter_zoom_y ? y_values : y_value_->get_values());
 
             if (invalid_) {
                 log.error("ChartWidget is in invalid state, aborting drawing");
@@ -301,11 +289,9 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
         // redraw point cache if needed
         if (invalidate_point_cache) {
-            bool clear_only = point_size <= 0 || (filter_values && filter_values->find(timestamp) == filter_values->end());
-
             redraw_point_cache(width, height,
                 point_color_ ? point_color_->get_value(timestamp) : color::transparent,
-                point_size, x_value, y_value, clear_only);
+                point_size, x_value, y_value);
             point_cache_drawn_ = true;
         }
 
@@ -338,9 +324,8 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
 void ChartWidget::redraw_line_cache(double width, double height,
                                     rgb line_color, double line_width,
-                                    std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
-                                    std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
-                                    std::function<bool(time::microseconds_t)> filter) {
+                                    std::shared_ptr<NumericParameter::sections_t> x_values,
+                                    std::shared_ptr<NumericParameter::sections_t> y_values) {
     int surface_width = 0;
     int surface_height = 0;
 
@@ -378,35 +363,40 @@ void ChartWidget::redraw_line_cache(double width, double height,
         cairo_set_line_width(cache_cr, line_width);
         cairo_set_source_rgba(cache_cr, line_color.r, line_color.g, line_color.b, line_color.a);
 
-        bool last_point_valid = false;
-        for (const auto& [ts, x_val] : *x_values) {
-            auto y_it = y_values->find(ts);
-            if (y_it == y_values->end()) {
-                last_point_valid = false;
-                continue; // no corresponding y value
+        auto find_y_value = [&](time::microseconds_t ts) -> double {
+            for (const auto& section : *y_values) {
+                auto it = section.find(ts);
+                if (it != section.end()) {
+                    return it->second;
+                }
             }
-            double y_val = y_it->second;
-            if (std::isnan(x_val) || std::isnan(y_val)) {
-                last_point_valid = false;
-                continue; // skip NaN values
-            }
-            if (filter && !filter(ts)) {
-                last_point_valid = false;
-                continue; // skip values outside filter range
-            }
+            return std::numeric_limits<double>::quiet_NaN();
+        };
 
-            auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
-            x_pos += margin_;
-            y_pos += margin_;
+        for (const auto& section : *x_values) {
+            bool last_point_valid = false;
+            for (const auto& [ts, x_val] : section) {
+                double y_val = find_y_value(ts);
 
-            if (last_point_valid && cairo_has_current_point(cache_cr)) {
-                cairo_line_to(cache_cr, x_pos, y_pos);
-            } else {
-                cairo_move_to(cache_cr, x_pos, y_pos);
+                if (std::isnan(x_val) || std::isnan(y_val)) {
+                    cairo_stroke(cache_cr); // finish current section
+                    last_point_valid = false;
+                    continue; // skip NaN values
+                }
+
+                auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
+                x_pos += margin_;
+                y_pos += margin_;
+
+                if (last_point_valid && cairo_has_current_point(cache_cr)) {
+                    cairo_line_to(cache_cr, x_pos, y_pos);
+                } else {
+                    cairo_move_to(cache_cr, x_pos, y_pos);
+                }
+                last_point_valid = true;
             }
-            last_point_valid = true;
+            cairo_stroke(cache_cr); // finish section
         }
-        cairo_stroke(cache_cr);
     }
 
     cairo_destroy(cache_cr);
@@ -415,8 +405,7 @@ void ChartWidget::redraw_line_cache(double width, double height,
 
 void ChartWidget::redraw_point_cache(double width, double height,
                                      rgb point_color, double point_size,
-                                     double x_value, double y_value,
-                                     bool clear_only) {
+                                     double x_value, double y_value) {
     int surface_width = 0;
     int surface_height = 0;
 
@@ -447,7 +436,7 @@ void ChartWidget::redraw_point_cache(double width, double height,
     }
 
     //draw point
-    if (point_size > 0 && !std::isnan(x_value) && !std::isnan(y_value) && !clear_only) {
+    if (point_size > 0 && !std::isnan(x_value) && !std::isnan(y_value)) {
         cairo_set_line_width(cache_cr, 1.0);
         cairo_set_source_rgba(cache_cr, point_color.r, point_color.g, point_color.b, point_color.a);
         auto [x_pos, y_pos] = translate(x_value, y_value, width, height);
@@ -462,13 +451,11 @@ void ChartWidget::redraw_point_cache(double width, double height,
     cairo_destroy(cache_cr);
 }
 
-void ChartWidget::recalculate_extremes(std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
-                                       std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
-                                       std::function<bool(time::microseconds_t)> x_filter,
-                                       std::function<bool(time::microseconds_t)> y_filter) {
+void ChartWidget::recalculate_extremes(std::shared_ptr<NumericParameter::sections_t> x_values,
+                                       std::shared_ptr<NumericParameter::sections_t> y_values) {
+    invalid_ = false;// reset invalid state
     if (lock_x_minmax_ && lock_y_minmax_) {
         // both min and max are locked, no need to recalculate
-        invalid_ = false;
         return;
     }
 
@@ -481,19 +468,17 @@ void ChartWidget::recalculate_extremes(std::shared_ptr<std::map<time::microsecon
     if (!lock_x_minmax_) {  
         min_x_ = std::numeric_limits<double>::max();
         max_x_ = std::numeric_limits<double>::min();
-        for (const auto& [ts, x_val] : *x_values) {
-            if (std::isnan(x_val)) {
-                continue; // skip NaN values
-            }
-            if (x_filter && !x_filter(ts)) {
-                continue; // skip values outside filter range
-            }
-
-            if (x_val < min_x_) {
-                min_x_ = x_val;
-            }
-            if (x_val > max_x_) {
-                max_x_ = x_val;
+        for (const auto& section: *x_values) {
+            for (const auto& [ts, x_val] : section) {
+                if (std::isnan(x_val)) {
+                    continue; // skip NaN values
+                }
+                if (x_val < min_x_) {
+                    min_x_ = x_val;
+                }
+                if (x_val > max_x_) {
+                    max_x_ = x_val;
+                }
             }
         }
         if (min_x_ >= max_x_) {
@@ -505,19 +490,18 @@ void ChartWidget::recalculate_extremes(std::shared_ptr<std::map<time::microsecon
     if (!lock_y_minmax_) {
         min_y_ = std::numeric_limits<double>::max();
         max_y_ = std::numeric_limits<double>::min();
-        for (const auto& [ts, y_val] : *y_values) {
-            if (std::isnan(y_val)) {
-                continue; // skip NaN values
-            }
-            if (y_filter && !y_filter(ts)) {
-                continue; // skip values outside filter range
-            }
+        for (const auto& section: *y_values) {
+            for (const auto& [ts, y_val] : section) {
+                if (std::isnan(y_val)) {
+                    continue; // skip NaN values
+                }
 
-            if (y_val < min_y_) {
-                min_y_ = y_val;
-            }
-            if (y_val > max_y_) {
-                max_y_ = y_val;
+                if (y_val < min_y_) {
+                    min_y_ = y_val;
+                }
+                if (y_val > max_y_) {
+                    max_y_ = y_val;
+                }
             }
         }
         if (min_y_ >= max_y_) {
@@ -525,8 +509,6 @@ void ChartWidget::recalculate_extremes(std::shared_ptr<std::map<time::microsecon
             invalid_ = true;
         }
     }
-
-    invalid_ = false;
 }
 
 std::pair<double, double> ChartWidget::translate(double x_value, double y_value, double width, double height) const {

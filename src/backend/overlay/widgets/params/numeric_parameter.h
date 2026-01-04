@@ -13,6 +13,9 @@ namespace overlay {
 
 class NumericParameter : public Parameter {
 public:
+    using value_map_t = std::map<time::microseconds_t, double>;
+    using sections_t = std::vector<value_map_t>;
+
     static std::shared_ptr<NumericParameter> create(
         const std::string& definition, std::shared_ptr<track::Track> track);
     
@@ -25,13 +28,14 @@ public:
     bool update(time::microseconds_t timestamp) override;
     double get_value(time::microseconds_t timestamp, bool allow_nan = false) const;
 
-    std::shared_ptr<std::map<time::microseconds_t, double>> get_all_values(
-                                time::microseconds_t step = time::INVALID_TIME,
-                                double min = -std::numeric_limits<double>::infinity(),
-                                double max = std::numeric_limits<double>::infinity());
+    std::shared_ptr<sections_t> get_values(
+                time::microseconds_t step = time::INVALID_TIME,
+                double min_value = std::numeric_limits<double>::min(),
+                double max_value = std::numeric_limits<double>::max());
 
-    std::shared_ptr<std::map<time::microseconds_t, double>> get_all_values(
-                                    std::set<time::microseconds_t> timestamps);
+    std::shared_ptr<sections_t> get_values(std::vector<std::vector<time::microseconds_t>> timestamp_sections);
+    
+    std::shared_ptr<value_map_t> get_all_values();
 
 private:
     mutable utils::logging::Logger log{"NumericParameter"};

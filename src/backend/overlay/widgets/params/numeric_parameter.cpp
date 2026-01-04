@@ -96,16 +96,23 @@ double NumericParameter::get_value(time::microseconds_t timestamp, bool allow_na
     return value_;
 }
 
-std::shared_ptr<std::map<time::microseconds_t, double>> NumericParameter::get_all_values(
-            time::microseconds_t step, double min, double max) {
-    std::shared_ptr<std::map<time::microseconds_t, double>> values = std::make_shared<std::map<time::microseconds_t, double>>();
+std::shared_ptr<NumericParameter::sections_t> NumericParameter::get_values(
+            time::microseconds_t step, double min_value, double max_value) {
+    std::shared_ptr<sections_t> sections = std::make_shared<sections_t>();
 
+    value_map_t* values = nullptr;
     if (step == time::INVALID_TIME) {
-        // get all available timestamps
+        // get filtered sections at available timestamps
         for (auto ts : track_->get_trackpoint_timestamps()) {
             update(ts);
-            if (value_ >= min && value_ <= max) {
+            if (value_ >= min_value && value_ <= max_value) {
+                if (!values) {
+                    sections->emplace_back();
+                    values = &sections->back();
+                }
                 (*values)[ts] = value_;
+            } else {
+                values = nullptr; // break section
             }
         }
     } else {
@@ -115,25 +122,47 @@ std::shared_ptr<std::map<time::microseconds_t, double>> NumericParameter::get_al
 
         for (time::microseconds_t ts = from; ts <= to; ts += step) {
             update(ts);
-            if (value_ >= min && value_ <= max) {
+            if (value_ >= min_value && value_ <= max_value) {
+                if (!values) {
+                    sections->emplace_back();
+                    values = &sections->back();
+                }
                 (*values)[ts] = value_;
+            } else {
+                values = nullptr; // break section
             }
+        }
+    }
+    value_ = std::numeric_limits<double>::quiet_NaN(); // reset to NaN after values retrieval
+    return sections;
+}
+
+
+std::shared_ptr<NumericParameter::sections_t> NumericParameter::get_values(
+            std::vector<std::vector<time::microseconds_t>> timestamp_sections) {
+    std::shared_ptr<sections_t> sections = std::make_shared<sections_t>();
+
+    for (auto tsec : timestamp_sections) {
+        sections->emplace_back();
+        value_map_t* values = &sections->back();
+
+        for (auto ts : tsec) {
+            update(ts);
+            (*values)[ts] = value_;
         }
     }
 
     value_ = std::numeric_limits<double>::quiet_NaN(); // reset to NaN after values retrieval
-    return values;
+    return sections;
 }
 
-std::shared_ptr<std::map<time::microseconds_t, double>> NumericParameter::get_all_values(
-            std::set<time::microseconds_t> timestamps) {
-    std::shared_ptr<std::map<time::microseconds_t, double>> values = std::make_shared<std::map<time::microseconds_t, double>>();
+std::shared_ptr<NumericParameter::value_map_t> NumericParameter::get_all_values() {
+    std::shared_ptr<value_map_t> values = std::make_shared<std::map<time::microseconds_t, double>>();
 
-    for (auto ts : timestamps) {
+    for (auto ts : track_->get_trackpoint_timestamps()) {
         update(ts);
         (*values)[ts] = value_;
     }
-
     value_ = std::numeric_limits<double>::quiet_NaN(); // reset to NaN after values retrieval
     return values;
 }

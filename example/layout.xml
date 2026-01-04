@@ -1,6 +1,5 @@
 <layout>
-    <!-- FIXME temporarily disabled intro for testing -->
-    <!-- <if condition="exists(countdown)">
+    <if condition="exists(countdown)">
         <text x="100" y="100" font-name="DejaVu Sans" font-size="64" align="left"
               color="white" border-width="4" border-color="black"
               value="key(meta_name)" visible="eval(countdown<7.0)" />
@@ -19,11 +18,9 @@
                 color="white" border-width="2" border-color="black"
                 value="eval(round(meta_ascent))" format="{:.0f} m"
                 visible="eval(countdown<4.75)" />
-    </if> -->
-
-    <!-- FIXME temporarily showing summary page before activity for testing -->
+    </if>
     
-    <if condition="eval(countdown>2.0)"><!-- <if condition="eval(overtime>2.0)"> -->
+    <if condition="eval(overtime>2.0)">
         <rectangle x="50" y="50" width="3740" height="2060" color="rgba(0,0,0,0.5)"/>
 
         <text x="100" y="100" font-name="DejaVu Sans" font-size="64" align="left"
@@ -68,7 +65,7 @@
             </container>
         </container>
 
-        <!--climbs-->
+        <!--
         <container x="200" y="1050" visible="exists(s_climb_0_meta_index)">
             <text x="20" y="0" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
                 value="ClimbPro Climbs" />
@@ -268,24 +265,48 @@
                     value-3="eval(s_climb_12_meta_elapsedtime%60)" />
             </container>
         </container>
+        -->
 
-        <!-- map & chart -->
-        <container x="2460" y="100">
-            <container x="0" y="0">
-                <chart x="0" y="0" width="1280" height="1280" stretch-to-fill="false"
-                    line-color="white" line-width="6"
-                    x-value="eval(1 + (point_lon / 180))"
-                    y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"/>
-                    <!-- filter-value="eval(point_dist/meta_distance)" filter-min=""/> -->
-<!-- filter-value="key(video_time)" filter-min="eval(video_time-15)" filter-max="key(video_time)"
-                   zoom-to-filter-y="false" -->
-            </container>
-            <container x="-600" y="1400">
-                <chart x="0" y="0" width="1680" height="400"
-                    line-color="white" line-width="6"
-                    x-value="key(point_dist)"
-                    y-value="key(point_smoothele)" />
-            </container>
+        <!-- map -->
+        <container x="1920" y="200">
+            <if condition="eval(overtime>=3.0 and overtime<=5.0)"> <!-- animated map from 3.0s to 5.0s overtime -->
+                <container x="0" y="0">
+                    <chart x="0" y="0" width="1770" height="1810" stretch-to-fill="false"
+                        line-color="white" line-width="8"
+                        x-value="eval(1 + (point_lon / 180))"
+                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
+                        filter-value="eval(point_dist/meta_distance)" filter-min="-999" filter-max="eval((overtime/2)-1.5)" />
+                </container>
+            </if>
+            <if condition="eval(overtime>5.0)"> <!-- static map from 5.0s overtime  -->
+                <container x="0" y="0">
+                    <chart x="0" y="0" width="1770" height="1810" stretch-to-fill="false"
+                        line-color="white" line-width="8"
+                        x-value="eval(1 + (point_lon / 180))"
+                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"/>
+                </container>
+            </if>
+        </container>
+
+        <!-- chart -->
+        <container x="150" y="1510">
+            <if condition="eval(overtime>=5.0)"> <!-- animated chart from 5.0s overtime -->
+                <container x="-0" y="0">
+                    <chart x="0" y="0" width="1770" height="400"
+                        line-color="white" line-width="8"
+                        x-value="key(point_dist)"
+                        y-value="key(point_smoothele)"
+                        filter-value="eval(point_dist/meta_distance)" filter-min="-999" filter-max="eval((overtime/2)-2.5)" />
+                </container>
+            </if>
+            <if condition="eval(overtime>7.0 and overtime<=8.5)"> <!-- static chart from 7.0s to 8.5s overtime  -->
+                <container x="-0" y="0">
+                    <chart x="0" y="0" width="1770" height="400"
+                        line-color="white" line-width="8"
+                        x-value="key(point_dist)"
+                        y-value="key(point_smoothele)"/>
+                </container>
+            </if>
         </container>
     </if>
 

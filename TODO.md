@@ -14,3 +14,4 @@
 ## 3.0 (future ideas)
 - extended animation support
     - fadein / fadeout
+- conditional chart colors (because composing colors from different widgets is slow)

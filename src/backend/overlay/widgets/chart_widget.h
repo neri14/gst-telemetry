@@ -49,18 +49,14 @@ public:
 private:
     void redraw_line_cache(double width, double height,
                        rgb line_color, double line_width,
-                       std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
-                       std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
-                       std::function<bool(time::microseconds_t)> filter = nullptr);
-    void redraw_point_cache(double width, double height,
+                       std::shared_ptr<NumericParameter::sections_t> x_values,
+                       std::shared_ptr<NumericParameter::sections_t> y_values);
+    void redraw_point_cache(double width, double height, 
                         rgb point_color, double point_size,
-                        double x_value, double y_value,
-                        bool clear_only = false);
+                        double x_value, double y_value);
 
-    void recalculate_extremes(std::shared_ptr<std::map<time::microseconds_t, double>> x_values,
-                              std::shared_ptr<std::map<time::microseconds_t, double>> y_values,
-                              std::function<bool(time::microseconds_t)> x_filter = nullptr,
-                              std::function<bool(time::microseconds_t)> y_filter = nullptr);
+    void recalculate_extremes(std::shared_ptr<NumericParameter::sections_t> x_values,
+                              std::shared_ptr<NumericParameter::sections_t> y_values);
     std::pair<double, double> translate(double x_value, double y_value, double width, double height) const;
 
     std::shared_ptr<NumericParameter> x_ = nullptr;
