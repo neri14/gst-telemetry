@@ -37,16 +37,28 @@ namespace consts {
         const std::string lerp = "lerp_";
         const std::string pchip = "pchip_";
         const std::string segment = "s_";
-    } // namespace prefix
+    }
+
     namespace segment_list {
         const field_id_t active = 0x0;  // currently active segments
         const field_id_t prev   = 0x1;  // previously active segments
         const field_id_t next   = 0x2;  // next active segments
         const field_id_t all    = 0x3;  // all segments of this type
     }
+    namespace field {
+        namespace segment {
+            namespace virt {
+                namespace id {
+                    field_id_t count = 0x0;
+                }
+                namespace name {
+                    std::string count = "count";
+                }
+            }
+        }
+    }
 
-    const int max_segment_types = 32;
-    const int max_segment_instances = 256;
+    const field_id_t invalid_segment_idx = 0xFF;
 } // namespace consts
 
 
@@ -220,9 +232,11 @@ Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
         return Value();
     }
     
-    if (field_id & consts::mask::segment_flag) {
+    if (field_id & consts::mask::virtual_flag) { // virtual first to cover also segment virtuals
+        return get_virtual_data(field_id, timestamp);
+    } else if (field_id & consts::mask::segment_flag) { // segments second to cover also segment metadata
         return get_segment_data(field_id, timestamp);
-    } else if (field_id & consts::mask::trackpoint_flag) {
+    } else if (field_id & consts::mask::trackpoint_flag) { // then trackpoint in different flavors
         if (field_id & consts::mask::lerp_flag) {
             return get_lerp_trackpoint_data(field_id, timestamp);
         } else if (field_id & consts::mask::pchip_flag) {
@@ -230,10 +244,8 @@ Value Track::get(field_id_t field_id, time::microseconds_t timestamp) const {
         } else {
             return get_trackpoint_data(field_id, timestamp);
         }
-    } else if (field_id & consts::mask::metadata_flag) {
+    } else if (field_id & consts::mask::metadata_flag) { // metadata at the end
         return get_metadata(field_id);
-    } else if (field_id & consts::mask::virtual_flag) {
-        return get_virtual_data(field_id, timestamp);
     } else {
         log.warning("Unparsable field id: {}", uint_to_hex(field_id));
         return Value();
@@ -701,6 +713,7 @@ bool Track::parse_trk_ext_asx(pugi::xml_node node) {
 
     generate_sorted_segment_lists();
     generate_segment_metadata_field_aliases();
+    generate_segment_virtual_metadata_fields();
 
     return ok;
 }
@@ -872,6 +885,68 @@ void Track::generate_segment_metadata_field_aliases() {
                         field_ids_[full_field_name] = full_field_id;
                     }
             }
+        }
+    }
+}
+
+
+
+void Track::generate_segment_virtual_metadata_fields() {
+    field_id_t flags = consts::mask::virtual_flag | consts::mask::segment_flag | consts::mask::metadata_flag;
+    auto make_fid = [flags](field_id_t type_id, field_id_t list_id, field_id_t field_id) -> field_id_t {
+        segment_field_id sfid(type_id, list_id, consts::invalid_segment_idx, field_id);
+        return static_cast<field_id_t>(sfid) | flags;
+    };
+
+    // - s_TYPE_count - total number of segments
+    // - s_TYPE_LIST_count - total number of segments in list (so e.g. number of climbs to go)
+    auto make_fname = [](const std::string& type, const std::string& list_name, const std::string& field_name) -> std::string {
+        if (list_name.empty()) {
+            return consts::prefix::segment + type + "_" + field_name;
+        }
+        return consts::prefix::segment + type + "_" + list_name + "_" + field_name;
+    };
+
+    auto count_all = [this](field_id_t type_id, time::microseconds_t) -> Value {
+        auto it = segments_lut_.find(type_id);
+        if (it != segments_lut_.end()) {
+            return Value(static_cast<double>(it->second.size()));
+        }
+        return Value(0.0);
+    };
+
+    auto count_active = [this](field_id_t type_id, time::microseconds_t timestamp) -> Value {
+        auto segments = get_active_segments_ordered(type_id, timestamp);
+        return Value(static_cast<double>(segments.size()));
+    };
+
+    auto count_prev = [this](field_id_t type_id, time::microseconds_t timestamp) -> Value {
+        auto segments = get_prev_segments_ordered(type_id, timestamp);
+        return Value(static_cast<double>(segments.size()));
+    };
+
+    auto count_next = [this](field_id_t type_id, time::microseconds_t timestamp) -> Value {
+        auto segments = get_next_segments_ordered(type_id, timestamp);
+        return Value(static_cast<double>(segments.size()));
+    };
+
+    auto lists = std::vector<std::tuple<std::string, field_id_t, std::function<Value(field_id_t, time::microseconds_t)>>>{
+        {"",       consts::segment_list::all, count_all},
+        {"active", consts::segment_list::active, count_active},
+        {"prev",   consts::segment_list::prev, count_prev},
+        {"next",   consts::segment_list::next, count_next},
+    };
+
+    for (const auto& [type, type_id] : segment_types_) {
+        for (const auto& [list_name, list_id, count_func] : lists) {
+            std::string fname = make_fname(type, list_name, consts::field::segment::virt::name::count);
+            field_id_t fid = make_fid(type_id, list_id, consts::field::segment::virt::id::count);
+
+            virtual_data_mapping_[fid] = [this, type_id, count_func](time::microseconds_t timestamp) -> Value {
+                return count_func(type_id, timestamp);
+            };
+            field_ids_[fname] = fid;
+            log.info("Registered segment virtual metadata field: {} = {}", fname, uint_to_hex(fid));
         }
     }
 }

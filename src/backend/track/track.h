@@ -74,6 +74,7 @@ private:
     bool parse_trk_ext_asx_segment(pugi::xml_node node);
     void generate_sorted_segment_lists();
     void generate_segment_metadata_field_aliases();
+    void generate_segment_virtual_metadata_fields();
 
     bool parse_trkseg(pugi::xml_node node);
     bool parse_trkpt(pugi::xml_node node);
