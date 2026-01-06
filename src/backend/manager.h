@@ -15,7 +15,7 @@ public:
     Manager();
     ~Manager();
 
-    bool init(float offset, const char* track_path, const char* layout_path);
+    bool init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path);
     bool deinit();
 
     bool draw(time::microseconds_t timestamp, cairo_surface_t* surface);

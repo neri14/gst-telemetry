@@ -42,6 +42,7 @@ enum
   PROP_0,
   PROP_OFFSET,
   PROP_TRACK,
+  PROP_CUSTOM_DATA,
   PROP_LAYOUT,
 };
 
@@ -105,6 +106,11 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
         "Path to GPS track file (GPX format)",
         NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_CUSTOM_DATA,
+      g_param_spec_string ("custom-data", "Custom Data",
+        "Path to custom data file (XML format)",
+        NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_LAYOUT,
       g_param_spec_string ("layout", "Layout",
         "Path to overlay layout XML file",
@@ -118,6 +124,7 @@ gst_telemetry_init (GstTelemetry *telemetry)
   telemetry->initial_timestamp = GST_CLOCK_TIME_NONE;
   telemetry->layout = NULL;
   telemetry->track = NULL;
+  telemetry->custom_data = NULL;
   telemetry->gl_mode = FALSE;
 
   telemetry->manager = manager_new ();
@@ -141,6 +148,12 @@ gst_telemetry_set_property (GObject * object, guint property_id,
       GST_OBJECT_LOCK (telemetry);
       g_free(telemetry->track);
       telemetry->track = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_CUSTOM_DATA:
+      GST_OBJECT_LOCK (telemetry);
+      g_free(telemetry->custom_data);
+      telemetry->custom_data = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (telemetry);
       break;
     case PROP_LAYOUT:
@@ -172,6 +185,11 @@ gst_telemetry_get_property (GObject * object, guint property_id,
     case PROP_TRACK:
       GST_OBJECT_LOCK (telemetry);
       g_value_set_string (value, telemetry->track);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_CUSTOM_DATA:
+      GST_OBJECT_LOCK (telemetry);
+      g_value_set_string (value, telemetry->custom_data);
       GST_OBJECT_UNLOCK (telemetry);
       break;
     case PROP_LAYOUT:
@@ -223,7 +241,7 @@ gst_telemetry_start (GstBaseTransform * trans)
   int ret = 0;
 
   GST_OBJECT_LOCK (telemetry);
-  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->layout);
+  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->custom_data, telemetry->layout);
   GST_OBJECT_UNLOCK (telemetry);
 
   if (ret != 0) {

@@ -1,5 +1,8 @@
 # TODO
 
+## 1.0
+- images (load image, display at x,y, plus rotation and rotation pivot point - so e.g. gauge needle can be made, plus scale)
+
 ## 1.0 for release
 - full documentation
   - widgets
@@ -9,14 +12,14 @@
 
 
 ## 2.0 (further improvements)
-- images (load image, display at x,y, plus rotation and rotation pivot point - so e.g. gauge needle can be made, plus scale)
 
-- rectangle fill based on value (and direction of fill?)
-- circle fill based on value (and direction of fill?)
+- circle fill based on value (start angle end angle?)
+- rotation of different types of widgets
 
-- sideloading additional metadata/data from file
-  key-value? e.g. for "event name", "official race time" etc
-
+- TBD how to handle events (like jumps) that are available in single track point
+  - add latching data to widget?
+  - or add special field types?
+  - or...?
 
 ## 3.0 (future ideas)
 - extended animation support

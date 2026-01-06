@@ -16,7 +16,7 @@ Manager::~Manager() {
     log.info("Manager destroyed");
 };
 
-bool Manager::init(float offset, const char* track_path, const char* layout_path) {
+bool Manager::init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path) {
     // Initialization code using the offset
     log.info("Manager initialization started");
 
@@ -47,6 +47,15 @@ bool Manager::init(float offset, const char* track_path, const char* layout_path
         return false;
     }
     log.info("Track loaded successfully");
+
+    if (custom_data_path != nullptr) {
+        ok = track_->load_custom_data(custom_data_path);
+        if (!ok) {
+            log.error("Failed to load custom data from path: {}", custom_data_path);
+            return false;
+        }
+        log.info("Custom data loaded successfully");
+    }
 
     layout_ = std::make_shared<overlay::Layout>(track_);
     ok = layout_->load(layout_path);

@@ -18,7 +18,7 @@ Expression::Expression(const std::string& expression_str,
     for (const auto& var_name : variable_list) {
         track::field_id_t field_id = track_->get_field_id(var_name);
         if (field_id == track::INVALID_FIELD) {
-            log.error("Variable '{}' not found in track fields.", var_name);
+            log.warning("Variable '{}' not found in track fields.", var_name);
             valid_expr_ = false;
             return;
         }

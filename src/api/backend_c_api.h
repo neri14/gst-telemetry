@@ -12,7 +12,7 @@ typedef struct ManagerHandle ManagerHandle;
 
 ManagerHandle* manager_new(void);
 void manager_free(ManagerHandle* handle);
-int manager_init(ManagerHandle* handle, float offset, char* track, char* layout);
+int manager_init(ManagerHandle* handle, float offset, char* track, char* custom_data, char* layout);
 int manager_deinit(ManagerHandle* handle);
 
 int draw(ManagerHandle* handle, int64_t timestamp, cairo_surface_t* surface);

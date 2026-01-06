@@ -35,6 +35,7 @@ public:
     ~Track() = default;
 
     bool load(const std::string& path);
+    bool load_custom_data(const std::string& path);
 
     field_id_t get_field_id(const std::string& field_name) const;
 
@@ -80,6 +81,7 @@ private:
     bool parse_trkpt(pugi::xml_node node);
 
     bool store_metadata(const std::string& key, const Value& value);
+    bool store_custom_data(const std::string& key, const Value& value);
     bool store_trackpoint_data(
         time::microseconds_t timestamp,
         const std::string& key, const Value& value);
@@ -90,6 +92,7 @@ private:
     std::vector<field_id_t> get_next_segments_ordered(field_id_t segment_type, time::microseconds_t timestamp) const;
 
     field_id_t register_metadata_field(const std::string& key);
+    field_id_t register_custom_data_field(const std::string& key);
     field_id_t register_trackpoint_field(const std::string& key);
     field_id_t register_virtual_field(const std::string& key);
 

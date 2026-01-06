@@ -4,6 +4,7 @@ INPUT_FILE=""
 OUTPUT_FILE=""
 TRACK_FILE=""
 LAYOUT_FILE=""
+CUSTOM_DATA_FILE=""
 OFFSET_VALUE="3.5"
 GPU_MODE=false
 
@@ -15,6 +16,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --layout)
             LAYOUT_FILE="$2"
+            shift 2
+            ;;
+        --custom-data)
+            CUSTOM_DATA_FILE="$2"
             shift 2
             ;;
         --offset)
@@ -40,7 +45,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--offset <offset_value>] [--gpu]"
+    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--custom-data <file>] [--offset <offset_value>] [--gpu]"
     exit 1
 fi
 
@@ -54,6 +59,9 @@ if [ -n "$TRACK_FILE" ]; then
 fi
 if [ -n "$LAYOUT_FILE" ]; then
     PROPERTIES="$PROPERTIES layout=$LAYOUT_FILE"
+fi
+if [ -n "$CUSTOM_DATA_FILE" ]; then
+    PROPERTIES="$PROPERTIES custom-data=$CUSTOM_DATA_FILE"
 fi
 
 UUT="telemetry $PROPERTIES"

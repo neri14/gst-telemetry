@@ -33,6 +33,7 @@ namespace consts {
     }
     namespace prefix {
         const std::string metadata = "meta_";
+        const std::string custom = "custom_";
         const std::string trackpoint = "point_";
         const std::string lerp = "lerp_";
         const std::string pchip = "pchip_";
@@ -205,6 +206,69 @@ bool Track::load(const std::string& path) {
     }
 
     bool ok = parse_gpx(root);
+
+    return ok;
+}
+
+bool Track::load_custom_data(const std::string& path) {
+    log.info("Loading custom data from path: {}", path);
+
+    pugi::xml_document doc;
+    pugi::xml_parse_result result = doc.load_file(path.c_str());
+
+    if (!result) {
+        log.error("Failed to load custom data file: {}. Error description: {}", path, result.description());
+        return false;
+    }
+
+    if (doc.children().empty()) {
+        log.error("Empty custom data file: {}", path);
+        return false;
+    }
+
+    if (std::distance(doc.children().begin(), doc.children().end()) > 1) {
+        log.error("More than one root node in custom data file");
+        return false;
+    }
+
+    pugi::xml_node root = doc.child("custom");
+    if (!root) {
+        log.error("No <custom> root node found in custom data file");
+        return false;
+    }
+
+
+    bool ok = true;
+    for (auto data : root.children("data")) {
+        std::string key = data.attribute("key").as_string();
+        std::string type = data.attribute("type").as_string();
+
+        Value v = Value();
+
+        if (key.empty()) {
+            log.error("Custom data entry with empty key found");
+            ok = false;
+            continue;
+        }
+        if (type == "string" || type.empty()) {
+            v = Value(data.text().as_string());
+        } else if (type == "numeric") {
+            v = Value(data.text().as_double());
+        } else if (type == "boolean") {
+            v = Value(data.text().as_bool());
+        } else {
+            log.error("Custom data entry for key '{}' has unsupported type '{}'", key, type);
+            ok = false;
+            continue;
+        }
+
+        if (store_custom_data(key, v)) {
+            log.info("Loaded custom data: {} = {}", key, v.as_string());
+        } else {
+            log.error("Failed to store custom data: {} = {}", key, v.as_string());
+            ok = false;
+        }
+    }
 
     return ok;
 }
@@ -1043,6 +1107,12 @@ bool Track::store_metadata(const std::string& key, const Value& value) {
     return true;
 }
 
+bool Track::store_custom_data(const std::string& key, const Value& value) {
+    field_id_t field_id = register_custom_data_field(key);
+    metadata_[field_id] = value;
+    return true;
+}
+
 bool Track::store_trackpoint_data(time::microseconds_t timestamp,
                                   const std::string& key, const Value& value) {
     std::shared_ptr<std::map<field_id_t, Value>> tp_data;
@@ -1126,6 +1196,13 @@ field_id_t Track::register_metadata_field(const std::string& key) {
     std::string metakey = consts::prefix::metadata + key;
     auto id = register_field(metakey, consts::mask::metadata_flag);
     log.debug("Registered new metadata field: {} with id {}", metakey, uint_to_hex(id));
+    return id;
+}
+
+field_id_t Track::register_custom_data_field(const std::string& key) {
+    std::string customkey = consts::prefix::custom + key;
+    auto id = register_field(customkey, consts::mask::metadata_flag);
+    log.debug("Registered new custom field: {} with id {}", customkey, uint_to_hex(id));
     return id;
 }
 
