@@ -243,19 +243,23 @@ bool Track::load_custom_data(const std::string& path) {
         std::string key = data.attribute("key").as_string();
         std::string type = data.attribute("type").as_string();
 
-        Value v = Value();
-
         if (key.empty()) {
             log.error("Custom data entry with empty key found");
             ok = false;
             continue;
         }
+
+        Value v = Value();
+
         if (type == "string" || type.empty()) {
-            v = Value(data.text().as_string());
+            std::string val = data.text().as_string();
+            v = Value(val);
         } else if (type == "numeric") {
-            v = Value(data.text().as_double());
+            double val = data.text().as_double();
+            v = Value(val);
         } else if (type == "boolean") {
-            v = Value(data.text().as_bool());
+            bool val = data.text().as_bool();
+            v = Value(val);
         } else {
             log.error("Custom data entry for key '{}' has unsupported type '{}'", key, type);
             ok = false;
