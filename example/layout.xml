@@ -70,7 +70,7 @@
                             value-1="eval(floor(custom_racetime/3600))"
                             value-2="eval(floor((custom_racetime%3600)/60))"
                             value-3="eval(custom_racetime%60)"
-                            format="{:.0f}:{:02.0f}:{:06.3f}" />
+                            format="{:.0f}:{:02.0f}:{:02.0f}" />
                     </if>
                 </if>
                 <if condition="not(exists(custom_racetime_str))">
@@ -83,7 +83,7 @@
                     value-1="eval(floor(meta_elapsedtime/3600))"
                     value-2="eval(floor((meta_elapsedtime%3600)/60))"
                     value-3="eval(meta_elapsedtime%60)"
-                    format="{:.0f}:{:02.0f}:{:06.3f}" />
+                    format="{:.0f}:{:02.0f}:{:02.0f}" />
                 <text x="0" y="300" font-name="DejaVu Sans" font-size="48" align="left" color="white" border-width="4" border-color="black"
                     value="eval(meta_maxgrade)" format="{:.1f} %" />
                 <text x="0" y="375" font-name="DejaVu Sans" font-size="48" align="left" color="white" border-width="4" border-color="black"
