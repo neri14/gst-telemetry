@@ -26,10 +26,18 @@ void Widget::add_child(std::shared_ptr<Widget> child) {
     children_.push_back(child);
 }
 
-void Widget::draw(time::microseconds_t timestamp, cairo_t* cr, double x_offset, double y_offset) {
+void Widget::draw(time::microseconds_t timestamp, double x_offset, double y_offset, draw_cb_t draw_cb) {
     for (auto& child : children_) {
-        child->draw(timestamp, cr, x_offset, y_offset);
+        child->draw(timestamp, x_offset, y_offset, draw_cb);
     }
+}
+
+unsigned int Widget::surface_count() const {
+    unsigned int count = 0;
+    for (const auto& child : children_) {
+        count += child->surface_count();
+    }
+    return count;
 }
 
 } // namespace overlay

@@ -13,12 +13,14 @@
 namespace telemetry {
 namespace overlay {
 
+using surface_list_t = std::vector<std::tuple<int, int, cairo_surface_t*>>;
+
 class Layout {
 public:
     Layout(std::shared_ptr<track::Track> track);
-    ~Layout() = default;
+    ~Layout();
 
-    void draw(time::microseconds_t timestamp, cairo_t* cr);
+    void draw(time::microseconds_t timestamp, surface_list_t& surface_list);
 
     bool load(const std::string& path);
 
@@ -39,6 +41,10 @@ private:
 
     std::shared_ptr<track::Track> track_;
     std::shared_ptr<Widget> root_;
+
+    unsigned int surface_count_ = 0;
+    unsigned long total_drawing_time_ms_ = 0;
+    unsigned int drawing_count_ = 0;
 };
 
 } // namespace overlay

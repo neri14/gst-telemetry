@@ -12,6 +12,8 @@
 namespace telemetry {
 namespace overlay {
 
+using draw_cb_t = std::function<void(int, int, cairo_surface_t*)>;
+
 class Widget {
 public:
     static std::shared_ptr<Widget> create(parameter_map_ptr parameters);
@@ -20,8 +22,8 @@ public:
 
     void add_child(std::shared_ptr<Widget> child);
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
-                      double x_offset = 0, double y_offset = 0);
+    virtual void draw(time::microseconds_t timestamp, double x_offset, double y_offset, draw_cb_t draw_cb);
+    virtual unsigned int surface_count() const;
 
     inline static parameter_type_map_t parameter_types = {};
 

@@ -109,8 +109,8 @@ ChartWidget::ChartWidget()
         : Widget("ChartWidget") {
 }
 
-void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void ChartWidget::draw(time::microseconds_t timestamp,
+                       double x_offset, double y_offset, draw_cb_t draw_cb) {
     // calculate visibility
     visible_->update(timestamp);
 
@@ -307,19 +307,21 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
         // draw caches onto surface
         if (line_cache_) {
-            cairo_set_source_surface(cr, line_cache_, draw_x, draw_y);
-            cairo_paint(cr);
+            draw_cb(static_cast<int>(std::round(draw_x)), static_cast<int>(std::round(draw_y)), line_cache_);
         }
         if (point_cache_) {
-            cairo_set_source_surface(cr, point_cache_, draw_x, draw_y);
-            cairo_paint(cr);
+            draw_cb(static_cast<int>(std::round(draw_x)), static_cast<int>(std::round(draw_y)), point_cache_);
         }
 
         // draw childern relative to chart top-left
-        Widget::draw(timestamp, cr, x, y);
+        Widget::draw(timestamp, x, y, draw_cb);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
+}
+
+unsigned int ChartWidget::surface_count() const {
+    return Widget::surface_count() + 2;
 }
 
 void ChartWidget::redraw_line_cache(double width, double height,

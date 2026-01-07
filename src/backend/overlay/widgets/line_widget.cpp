@@ -64,8 +64,8 @@ LineWidget::LineWidget()
         : Widget("LineWidget") {
 }
 
-void LineWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void LineWidget::draw(time::microseconds_t timestamp,
+                      double x_offset, double y_offset, draw_cb_t draw_cb) {
     visible_->update(timestamp);
 
     if (visible_->get_value(timestamp)) {
@@ -120,16 +120,19 @@ void LineWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             cache_drawn = true;
         }
 
-        cairo_set_source_surface(cr, cache, origin_x_ + x_offset, origin_y_ + y_offset);
-        cairo_paint(cr);
+        draw_cb(origin_x_ + x_offset, origin_y_ + y_offset, cache);
 
         // draw childern relative to first point
         double x = x_offset + x_->get_value(timestamp);
         double y = y_offset + y_->get_value(timestamp);
-        Widget::draw(timestamp, cr, x, y);
+        Widget::draw(timestamp, x, y, draw_cb);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
+}
+
+unsigned int LineWidget::surface_count() const {
+    return Widget::surface_count() + 1;
 }
 
 } // namespace overlay

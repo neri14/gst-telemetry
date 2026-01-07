@@ -47,29 +47,34 @@ Layout::Layout(std::shared_ptr<track::Track> track)
     : track_(track) {
 }
 
-void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
-    if (cr == nullptr) {
-        log.error("draw: no cairo canvas provided");
-        return;
-    }
+Layout::~Layout() {
+    log.info("Total drawing time over {} frames: {} ms",
+             drawing_count_, total_drawing_time_ms_);
+    log.info("Average drawing time: {:.3f} ms",
+             drawing_count_ > 0 ? static_cast<double>(total_drawing_time_ms_) / drawing_count_ : 0.0);
+}
+
+void Layout::draw(time::microseconds_t timestamp, surface_list_t& surface_list) {
     if (root_ == nullptr) {
         log.warning("draw: no root widget defined");
         return;
     }
-    //TODO future optimization idea (probably first tracing needs to be ported to verify gains):
-    //  - traverse widget tree and collect "redrawing tasks" that would return e.g. function, x, y, z-index
-    //  - sort tasks by z-index (from back to front, tbd for equal z-index)
-    //  - draw in parallel onto internal caches (passing to worker threads in order)
-    //  - on separate thread compose image in sorted order as soon as each surface is ready
 
     log.debug("Drawing layout");
 
+    surface_list.reserve(surface_count_);
+
     auto t1 = std::chrono::high_resolution_clock::now();
-    root_->draw(timestamp, cr);
+    root_->draw(timestamp, 0, 0, [&surface_list](int x, int y, cairo_surface_t* surface) {
+        surface_list.emplace_back(x, y, surface);
+    });
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed = t2 - t1;
     log.debug("Layout drawing time: {} ms", elapsed.count());
+
+    total_drawing_time_ms_ += static_cast<unsigned long>(elapsed.count());
+    drawing_count_++;
 }
 
 bool Layout::load(const std::string& path) {
@@ -100,7 +105,7 @@ bool Layout::load(const std::string& path) {
     }
 
     root_ = parse_node(node);
-
+    surface_count_ = root_->surface_count();
     return root_ != nullptr;
 }
 

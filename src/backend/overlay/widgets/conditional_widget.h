@@ -15,8 +15,9 @@ public:
     ConditionalWidget();
     ~ConditionalWidget() override = default;
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
-                      double x_offset = 0, double y_offset = 0) override;
+    virtual void draw(time::microseconds_t timestamp,
+        double x_offset, double y_offset, draw_cb_t draw_cb) override;
+    virtual unsigned int surface_count() const override;
 
     inline static parameter_type_map_t parameter_types = {
         {"condition", ParameterType::Boolean}, // condition

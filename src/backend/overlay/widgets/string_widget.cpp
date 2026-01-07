@@ -89,8 +89,8 @@ StringWidget::StringWidget(const std::string& name)
         : Widget(name) {
 }
 
-void StringWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void StringWidget::draw(time::microseconds_t timestamp,
+                        double x_offset, double y_offset, draw_cb_t draw_cb) {
     visible_->update(timestamp);
     //visibility change does not invalidate cache
 
@@ -179,14 +179,19 @@ void StringWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 break;
         }
 
-        cairo_set_source_surface(cr, cache, draw_x, draw_y);
-        cairo_paint(cr);
+        draw_cb(static_cast<int>(std::round(draw_x)),
+                static_cast<int>(std::round(draw_y)),
+                cache);
 
         // draw childern relative to text anchor point (only if text visible)
-        Widget::draw(timestamp, cr, x, y);
+        Widget::draw(timestamp, x, y, draw_cb);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
+}
+
+unsigned int StringWidget::surface_count() const {
+    return Widget::surface_count() + 1;
 }
 
 void StringWidget::draw_text(cairo_t* cr, int width, int height, int margin,

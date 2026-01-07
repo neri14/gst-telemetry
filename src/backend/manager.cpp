@@ -65,6 +65,7 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
     }
     log.info("Layout loaded successfully");
 
+    log.info("Manager initialized successfully");
     return true;
 }
 
@@ -74,22 +75,13 @@ bool Manager::deinit() {
     return true;
 }
 
-bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
+std::shared_ptr<surface_list_t> Manager::draw(time::microseconds_t timestamp) {
     //TODO add tracing later
-
-    if (surface == nullptr) {
-        log.error("draw: no cairo surface provided");
-        return false;
-    }
-
     log.debug("Drawing overlay at time {} us", timestamp);
 
-    cairo_t *cr = cairo_create(surface);
+    auto surface_list = std::make_shared<surface_list_t>();
+    layout_->draw(timestamp, *surface_list);
 
-    layout_->draw(timestamp, cr);
-
-    cairo_surface_flush(surface);
-    cairo_destroy(cr);
 
     // /** TEST CAIRO DRAWING **/
     // cairo_t *cr = cairo_create(surface);
@@ -103,7 +95,7 @@ bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
     // cairo_fill(cr);
     // // Draw text
     // cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-    // cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    // cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_surface_countNORMAL, CAIRO_FONT_WEIGHT_BOLD);
     // cairo_set_font_size(cr, 24);
     // cairo_move_to(cr, 10, 150);
 
@@ -117,7 +109,7 @@ bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
     // cairo_destroy(cr);
     // /** TEST CAIRO DRAWING **/
 
-    return true;
+    return surface_list;
 }
 
 } // namespace telemetry

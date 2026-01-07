@@ -31,15 +31,19 @@ ConditionalWidget::ConditionalWidget()
         : Widget("ConditionalWidget") {
 }
 
-void ConditionalWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void ConditionalWidget::draw(time::microseconds_t timestamp,
+                             double x_offset, double y_offset, draw_cb_t draw_cb) {
     condition_->update(timestamp);
 
     if (condition_->get_value(timestamp)) {
-        Widget::draw(timestamp, cr, x_offset, y_offset);
+        Widget::draw(timestamp, x_offset, y_offset, draw_cb);
     } else {
         log.debug("Condition is false, skipping drawing");
     }
+}
+
+unsigned int ConditionalWidget::surface_count() const {
+    return Widget::surface_count();
 }
 
 } // namespace overlay

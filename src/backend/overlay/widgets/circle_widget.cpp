@@ -69,8 +69,8 @@ CircleWidget::CircleWidget()
         : Widget("CircleWidget") {
 }
 
-void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void CircleWidget::draw(time::microseconds_t timestamp,
+                        double x_offset, double y_offset, draw_cb_t draw_cb) {
     visible_->update(timestamp);
     //visibility change does not invalidate cache
 
@@ -146,15 +146,20 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         double x = x_offset + x_->get_value(timestamp);
         double y = y_offset + y_->get_value(timestamp);
 
-        cairo_set_source_surface(cr, cache, x - cache_width / 2.0, y - cache_height / 2.0);
-        cairo_paint(cr);
+        draw_cb(static_cast<int>(std::round(x - cache_width / 2.0)),
+                static_cast<int>(std::round(y - cache_height / 2.0)),
+                cache);
 
         // draw childern relative to circle center
         // (only if circle is visible)
-        Widget::draw(timestamp, cr, x, y);
+        Widget::draw(timestamp, x, y, draw_cb);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
+}
+
+unsigned int CircleWidget::surface_count() const {
+    return Widget::surface_count() + 1;
 }
 
 } // namespace overlay

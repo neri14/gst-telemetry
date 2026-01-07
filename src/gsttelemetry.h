@@ -5,6 +5,7 @@
 #include <gst/video/gstvideofilter.h>
 
 #include "api/backend_c_api.h"
+#include "buffer_pool.h"
 
 G_BEGIN_DECLS
 
@@ -28,6 +29,8 @@ struct _GstTelemetry
   char *track;
   char *custom_data;
   char *layout;
+
+  BufferPoolManager *buffers;
 
   gboolean gl_mode;
 };

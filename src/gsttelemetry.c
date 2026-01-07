@@ -128,6 +128,8 @@ gst_telemetry_init (GstTelemetry *telemetry)
   telemetry->gl_mode = FALSE;
 
   telemetry->manager = manager_new ();
+
+  telemetry->buffers = buffer_pool_manager_create();
 }
 
 void
@@ -224,6 +226,9 @@ gst_telemetry_finalize (GObject * object)
 
   /* clean up object here */
   manager_free (telemetry->manager);
+  telemetry->manager = NULL;
+  buffer_pool_manager_destroy(telemetry->buffers);
+  telemetry->buffers = NULL;
 
   G_OBJECT_CLASS (gst_telemetry_parent_class)->finalize (object);
 }
@@ -375,14 +380,9 @@ static GstFlowReturn
 gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 {
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
+  GST_OBJECT_LOCK (telemetry);
+  
   GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
-
-  gint width = filter->out_info.width;
-  gint height = filter->out_info.height;
-
-  // Create Cairo surface for drawing
-  cairo_surface_t *surface = cairo_image_surface_create(
-    CAIRO_FORMAT_ARGB32, width, height);
 
   // Calculate timestamp relative to initial frame
   gint64 timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
@@ -391,34 +391,47 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   }
   timestamp -= telemetry->initial_timestamp;
 
-  // Call manager to draw telemetry onto Cairo surface
-  GST_DEBUG_OBJECT (telemetry, "drawing telemetry for timestamp: %ld us", timestamp);
-  draw(telemetry->manager, timestamp, surface);
+  // Call manager to draw telemetry
+  Canvas* canvases = NULL;
+  int out_count = 0;
+  int ret = manager_draw(telemetry->manager, timestamp, &canvases, &out_count);
 
-  // Flush Cairo surface to ensure all drawing operations are complete
-  cairo_surface_flush(surface);
+  if (ret != 0 || canvases == NULL) {
+    GST_ERROR_OBJECT (telemetry, "Failed to draw telemetry overlay");
+    GST_OBJECT_UNLOCK (telemetry);
+    return GST_FLOW_ERROR;
+  }
 
-  // Get Cairo surface data and stride
-  guint8 *cairo_data = cairo_image_surface_get_data(surface);
-  gint cairo_stride = cairo_image_surface_get_stride(surface);
+  GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(NULL);
 
-  // Create GstBuffer from Cairo surface data
-  GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * height, NULL);
-  gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * height);
+  for (int i=0; i<out_count; i++) {
+    // get buffer from pool to fit data from canvas
+    GstBuffer *buffer = buffer_pool_manager_acquire_buffer(telemetry->buffers, canvases[i].data_size);
 
-  // Add video meta
-  gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
-                            GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, width, height);
+    // fill buffer with canvas data
+    gst_buffer_fill(buffer, 0, canvases[i].data, canvases[i].data_size);
 
-  // Create overlay rectangle
-  GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(
-      overlay_buffer,
-      0, 0,  // x, y position on video
-      width, height,  // render width, height
-      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+    // add buffer vide meta
+    gst_buffer_add_video_meta(buffer, GST_VIDEO_FRAME_FLAG_NONE,
+                              GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
+                              canvases[i].width, canvases[i].height);
 
-  // Create composition
-  GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(rect);
+    // create overlay rectangle
+    GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(
+          buffer,
+          canvases[i].x, canvases[i].y,
+          canvases[i].width, canvases[i].height,
+          GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+
+    // add rectangle to composition
+    gst_video_overlay_composition_add_rectangle(comp, rect);
+
+    // unref rectangle (composition holds its own reference)
+    gst_video_overlay_rectangle_unref(rect);
+  }
+
+  // free canvases
+  manager_free_canvases(canvases);
 
   if (telemetry->gl_mode) {
     // In GL mode, attach as metadata
@@ -434,6 +447,8 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   //    combination of GPU processing and GST_GL_WINDOW=surfaceless sometimes causes
   //    reference to composition to be lost too early resulting in gloverlaycompositor
   //    to draw old overlay resulting in overlay being choppy (freezing for few seconds)
+  //
+  // TODO move to beginning of function and unref previous comp there? (tbd)
   static GstVideoOverlayComposition *old_comp = NULL;
   if (old_comp) {
       gst_video_overlay_composition_unref(old_comp);
@@ -444,9 +459,11 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
 
   // Cleanup
   gst_video_overlay_composition_unref(comp);
-  gst_video_overlay_rectangle_unref(rect);
-  gst_buffer_unref(overlay_buffer);
-  cairo_surface_destroy(surface);
 
+  GST_INFO_OBJECT(telemetry, "Buffers in use %ld of %ld total",
+                   buffer_pool_manager_count_in_use(telemetry->buffers),
+                   buffer_pool_manager_count(telemetry->buffers));
+
+  GST_OBJECT_UNLOCK (telemetry);
   return GST_FLOW_OK;
 }
