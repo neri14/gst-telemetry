@@ -1,1 +1,1 @@
-TRACE_CAT(CAT_GST_TELEMETRY, "gst-telemetry")
+TRACE_CAT(CAT_GST_TELEMETRY, "gst_telemetry")

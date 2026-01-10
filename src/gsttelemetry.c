@@ -234,9 +234,9 @@ static gboolean
 gst_telemetry_start (GstBaseTransform * trans)
 {
   GstTelemetry *telemetry = GST_TELEMETRY (trans);
-
   GST_DEBUG_OBJECT (telemetry, "start");
   TRACE_INIT();
+  TRACE_EVENT_BEGIN(CAT_GST_TELEMETRY, EV_GST_START);
 
   gst_base_transform_set_passthrough (trans, FALSE);
   gst_base_transform_set_in_place (trans, TRUE);
@@ -247,6 +247,7 @@ gst_telemetry_start (GstBaseTransform * trans)
   ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->custom_data, telemetry->layout);
   GST_OBJECT_UNLOCK (telemetry);
 
+  TRACE_EVENT_END(CAT_GST_TELEMETRY, EV_GST_START);
   if (ret != 0) {
     GST_ERROR_OBJECT (telemetry, "Failed to initialize telemetry manager");
     return FALSE;
@@ -257,6 +258,7 @@ gst_telemetry_start (GstBaseTransform * trans)
 static gboolean
 gst_telemetry_stop (GstBaseTransform * trans)
 {
+  TRACE_EVENT_BEGIN(CAT_GST_TELEMETRY, EV_GST_STOP);
   GstTelemetry *telemetry = GST_TELEMETRY (trans);
 
   GST_DEBUG_OBJECT (telemetry, "stop");
@@ -267,6 +269,7 @@ gst_telemetry_stop (GstBaseTransform * trans)
   ret = manager_deinit (telemetry->manager);
   GST_OBJECT_UNLOCK (telemetry);
 
+  TRACE_EVENT_END(CAT_GST_TELEMETRY, EV_GST_STOP);
   TRACE_DEINIT();
 
   if (ret != 0) {

@@ -34,6 +34,12 @@ const char *trace_catorgy_names[TRACE_CAT_COUNT] = {
 #undef TRACE_CAT
 };
 
+const char *trace_event_names[TRACE_EVENT_NAME_COUNT] = {
+#define TRACE_EVENT_NAME(id, name) name,
+#include "trace_event_names.h"
+#undef TRACE_EVENT_NAME
+};
+
 void trace_init() {
     trace_buffer_size = TRACE_SIZE / sizeof(Event);
     trace_buffer = (Event *)malloc(trace_buffer_size * sizeof(Event));
@@ -62,8 +68,9 @@ void trace_deinit() {
 
         for (uint32_t i = 0; i < atomic_load(&trace_count); i++) {
             Event *e = &trace_buffer[i];
-            fprintf(file, "{\"name\": \"%s\", \"ph\": \"%c\", \"ts\": %lu, \"pid\": %d, \"tid\": %d}",
-                    trace_catorgy_names[e->category],
+            fprintf(file, "{\"cat\": \"%s\", \"name\": \"%s\", \"ph\": \"%c\", \"ts\": %lu, \"pid\": %d, \"tid\": %d}",
+                    trace_catorgy_names[e->category],    
+                    trace_event_names[e->event],
                     e->type == EVT_BEGIN ? 'B' : (e->type == EVT_END ? 'E' : 'i'),
                     e->timestamp,
                     pid,
