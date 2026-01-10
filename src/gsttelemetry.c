@@ -46,6 +46,7 @@ enum
   PROP_TRACK,
   PROP_CUSTOM_DATA,
   PROP_LAYOUT,
+  PROP_WORKERS,
 };
 
 /* pad templates */
@@ -117,6 +118,11 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
       g_param_spec_string ("layout", "Layout",
         "Path to overlay layout XML file",
         NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_WORKERS,
+      g_param_spec_int ("workers", "Workers",
+        "Number of worker threads for rendering (0 = auto)",
+        0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -127,6 +133,7 @@ gst_telemetry_init (GstTelemetry *telemetry)
   telemetry->layout = NULL;
   telemetry->track = NULL;
   telemetry->custom_data = NULL;
+  telemetry->workers = 0;
   telemetry->gl_mode = FALSE;
 
   telemetry->manager = manager_new ();
@@ -165,6 +172,11 @@ gst_telemetry_set_property (GObject * object, guint property_id,
       telemetry->layout = g_value_dup_string (value);
       GST_OBJECT_UNLOCK (telemetry);
       break;
+    case PROP_WORKERS:
+      GST_OBJECT_LOCK (telemetry);
+      telemetry->workers = g_value_get_int (value);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -198,6 +210,11 @@ gst_telemetry_get_property (GObject * object, guint property_id,
     case PROP_LAYOUT:
       GST_OBJECT_LOCK (telemetry);
       g_value_set_string (value, telemetry->layout);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_WORKERS:
+      GST_OBJECT_LOCK (telemetry);
+      g_value_set_int (value, telemetry->workers);
       GST_OBJECT_UNLOCK (telemetry);
       break;
     default:
@@ -246,7 +263,8 @@ gst_telemetry_start (GstBaseTransform * trans)
   int ret = 0;
 
   GST_OBJECT_LOCK (telemetry);
-  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->custom_data, telemetry->layout);
+  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track,
+                      telemetry->custom_data, telemetry->layout, telemetry->workers);
 
   if (ret != 0) {
     TRACE_EVENT_END(EV_GST_START);

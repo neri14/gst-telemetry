@@ -9,7 +9,7 @@
 
 namespace telemetry {
 namespace consts {
-    constexpr int workers = 8;//TODO make configurable
+    constexpr int default_worker_count = 4;
 }
 
 struct SurfaceWrapper {
@@ -53,7 +53,7 @@ Manager::~Manager() {
     log.info("Manager destroyed");
 };
 
-bool Manager::init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path) {
+bool Manager::init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path, int worker_count) {
     TRACE_EVENT_BEGIN(EV_MANAGER_INIT);
 
     // Initialization code using the offset
@@ -110,8 +110,17 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
 
     surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, layout_->get_width(), layout_->get_height());
 
-    log.info("Starting {} worker threads for drawing", consts::workers);
-    for (int i = 0; i < consts::workers; ++i) {
+    if (worker_count <= 0) {
+        log.info("Worker count not configured or incorrect, using auto configuration");
+        worker_count = std::thread::hardware_concurrency() / 2;
+        if (worker_count <= 0) {
+            log.info("Failed to detect hardware concurrency, using default worker count");
+            worker_count = consts::default_worker_count;
+        }
+    }
+
+    log.info("Starting {} worker threads for drawing", worker_count);
+    for (int i = 0; i < worker_count; ++i) {
         workers.emplace_back([this, i]() {
             std::function<void()> task;
             log.info("Worker-{} started", i);

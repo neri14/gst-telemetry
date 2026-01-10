@@ -30,6 +30,7 @@ struct _GstTelemetry
   char *track;
   char *custom_data;
   char *layout;
+  int workers;
 
   gboolean gl_mode;
 };

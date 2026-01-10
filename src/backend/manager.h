@@ -19,7 +19,9 @@ public:
     Manager();
     ~Manager();
 
-    bool init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path);
+    bool init(float offset, const char* track_path,
+        const char* custom_data_path, const char* layout_path,
+        int worker_count);
     bool deinit();
 
     uint64_t get_overlay_raw_size() const;
