@@ -281,7 +281,9 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
     double filter_max = filter_max_ ? filter_max_->get_value(timestamp) : std::numeric_limits<double>::max();
     auto filter_values = filter_value_ ? filter_value_->get_values(value_step, filter_min, filter_max) : nullptr;
 
-    if (filter_active && compare(last_filter_values_, filter_values)) {
+    if (filter_active && (value_step != time::INVALID_TIME || compare(last_filter_values_, filter_values))) {
+        //if value_step is not invalid - there is almost 100% chance that filter values have changed
+        //  as they are calculated in intervals from timestamp that is in video time domain (typical use case is for often changing graphs)
         invalidate_line_cache = true;
         invalidate_point_cache = true;
         last_filter_values_ = filter_values;
