@@ -1,0 +1,1 @@
+TRACE_EVENT_NAME(EV_GST_TRANSFORM_FRAME, "gst_telemetry_transform_frame_ip")

@@ -14,6 +14,16 @@ configinc = include_directories('.')
 
 common_args = ['-DHAVE_CONFIG_H']
 
+if get_option('enable_tracing')
+  common_args += ['-DENABLE_TRACING=1']
+  trace_size = get_option('trace_size')
+  if trace_size >= 1048576 # 1 MB
+    common_args += ['-DTRACE_SIZE=' + trace_size.to_string()]
+  elif trace_size != 0
+    error(format('trace_size must be at least 1 MB (1048576 bytes), got @0@', trace_size))
+  endif
+endif
+
 gst_req = '>= 1.0.0'
 
 # Check for the required version of GStreamer core (and gst-plugins-base)

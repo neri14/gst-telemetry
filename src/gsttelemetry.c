@@ -12,9 +12,11 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include "gsttelemetry.h"
-
 #include <cairo.h>
+
+#include "gsttelemetry.h"
+#include "trace/trace.h"
+
 
 GST_DEBUG_CATEGORY_STATIC (gst_telemetry_debug_category);
 #define GST_CAT_DEFAULT gst_telemetry_debug_category
@@ -234,6 +236,7 @@ gst_telemetry_start (GstBaseTransform * trans)
   GstTelemetry *telemetry = GST_TELEMETRY (trans);
 
   GST_DEBUG_OBJECT (telemetry, "start");
+  TRACE_INIT();
 
   gst_base_transform_set_passthrough (trans, FALSE);
   gst_base_transform_set_in_place (trans, TRUE);
@@ -263,6 +266,8 @@ gst_telemetry_stop (GstBaseTransform * trans)
   GST_OBJECT_LOCK (telemetry);
   ret = manager_deinit (telemetry->manager);
   GST_OBJECT_UNLOCK (telemetry);
+
+  TRACE_DEINIT();
 
   if (ret != 0) {
     GST_ERROR_OBJECT (telemetry, "Failed to deinitialize telemetry manager");
@@ -374,6 +379,8 @@ gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
 static GstFlowReturn
 gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 {
+  TRACE_EVENT_BEGIN(CAT_GST_TELEMETRY, EV_GST_TRANSFORM_FRAME);
+
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
   GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
 
@@ -448,5 +455,6 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   gst_buffer_unref(overlay_buffer);
   cairo_surface_destroy(surface);
 
+  TRACE_EVENT_END(CAT_GST_TELEMETRY, EV_GST_TRANSFORM_FRAME);
   return GST_FLOW_OK;
 }
