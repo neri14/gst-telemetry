@@ -43,9 +43,10 @@ int RootWidget::get_height(time::microseconds_t timestamp) {
     return static_cast<int>(std::round(height_->get_value(timestamp)));
 }
 
-void RootWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
-    Widget::draw(timestamp, cr, x_offset, y_offset);
+void RootWidget::draw(time::microseconds_t timestamp,
+                      schedule_drawing_cb_t schedule_drawing_cb,
+                      double x_offset, double y_offset) {
+    Widget::draw(timestamp, schedule_drawing_cb, x_offset, y_offset);
 }
 
 } // namespace overlay

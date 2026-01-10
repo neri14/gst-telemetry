@@ -26,9 +26,11 @@ void Widget::add_child(std::shared_ptr<Widget> child) {
     children_.push_back(child);
 }
 
-void Widget::draw(time::microseconds_t timestamp, cairo_t* cr, double x_offset, double y_offset) {
+void Widget::draw(time::microseconds_t timestamp,
+                  schedule_drawing_cb_t schedule_drawing_cb,
+                  double x_offset, double y_offset) {
     for (auto& child : children_) {
-        child->draw(timestamp, cr, x_offset, y_offset);
+        child->draw(timestamp, schedule_drawing_cb, x_offset, y_offset);
     }
 }
 

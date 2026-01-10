@@ -1,10 +1,14 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
+#include <thread>
+#include <queue>
+#include <functional>
 #include <cairo.h>
 #include <stdint.h>
 #include "backend/utils/logging/logger.h"
 #include "backend/utils/time.h"
+#include "backend/utils/blocking_queue.h"
 #include "backend/track/track.h"
 #include "backend/overlay/layout.h"
 
@@ -28,6 +32,9 @@ private:
     std::shared_ptr<overlay::Layout> layout_;
 
     cairo_surface_t *surface_ = nullptr;
+
+    BlockingQueue<std::function<void()>> draw_queue_;
+    std::vector<std::jthread> workers;
 };
 
 } // namespace telemetry

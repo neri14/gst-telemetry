@@ -10,6 +10,7 @@ TRACE_EVENT_NAME(EV_MANAGER_INIT, "manager::init")
 TRACE_EVENT_NAME(EV_MANAGER_DEINIT, "manager::deinit")
 TRACE_EVENT_NAME(EV_MANAGER_DRAW, "manager::draw")
 TRACE_EVENT_NAME(EV_MANAGER_CLEAR_SURFACE, "manager::draw clear surface")
+TRACE_EVENT_NAME(EV_MANAGER_DRAW_CACHE, "manager::draw draw cache")
 
 TRACE_EVENT_NAME(EV_TRACK_LOAD, "track::load")
 TRACE_EVENT_NAME(EV_TRACK_LOAD_CUSTOM_DATA, "track::load_custom_data")

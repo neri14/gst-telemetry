@@ -16,7 +16,8 @@ public:
     ContainerWidget();
     ~ContainerWidget() override = default;
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
+    virtual void draw(time::microseconds_t timestamp,
+                      schedule_drawing_cb_t schedule_drawing_cb,
                       double x_offset = 0, double y_offset = 0) override;
 
     inline static parameter_type_map_t parameter_types = {

@@ -8,9 +8,12 @@
 #include "backend/track/track.h"
 #include "backend/utils/logging/logger.h"
 #include "params/parameter.h"
+#include "backend/surface.h"
 
 namespace telemetry {
 namespace overlay {
+
+using schedule_drawing_cb_t = std::function<void(std::function<void(Surface&)>)>;
 
 class Widget {
 public:
@@ -20,7 +23,8 @@ public:
 
     void add_child(std::shared_ptr<Widget> child);
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
+    virtual void draw(time::microseconds_t timestamp,
+                      schedule_drawing_cb_t schedule_drawing_cb,
                       double x_offset = 0, double y_offset = 0);
 
     inline static parameter_type_map_t parameter_types = {

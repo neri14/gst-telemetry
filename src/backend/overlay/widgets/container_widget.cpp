@@ -40,8 +40,9 @@ ContainerWidget::ContainerWidget()
         : Widget("ContainerWidget") {
 }
 
-void ContainerWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void ContainerWidget::draw(time::microseconds_t timestamp,
+                           schedule_drawing_cb_t schedule_drawing_cb,
+                           double x_offset, double y_offset) {
     visible_->update(timestamp);
 
     if (visible_->get_value(timestamp)) {
@@ -51,7 +52,7 @@ void ContainerWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         double x = x_offset + x_->get_value(timestamp);
         double y = y_offset + y_->get_value(timestamp);
 
-        Widget::draw(timestamp, cr, x, y);
+        Widget::draw(timestamp, schedule_drawing_cb, x, y);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }

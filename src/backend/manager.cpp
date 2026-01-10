@@ -5,7 +5,43 @@
 #include "backend/utils/time.h"
 #include "trace/trace.h"
 
+#include "surface.h"
+
 namespace telemetry {
+namespace consts {
+    constexpr int workers = 8;//TODO make configurable
+}
+
+struct SurfaceWrapper {
+    Surface surface;
+
+    SurfaceWrapper() = default;
+    ~SurfaceWrapper() = default;
+
+    void notify_ready() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        ready_ = true;
+        cv_.notify_all();
+    }
+
+    void await_ready() {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (ready_) {
+            return;
+        }
+        cv_.wait(lock, [this]() { return ready_; });
+    }
+
+private:
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    bool ready_ = false;
+
+    SurfaceWrapper(const SurfaceWrapper&) = delete;
+    SurfaceWrapper& operator=(const SurfaceWrapper&) = delete;
+    SurfaceWrapper(SurfaceWrapper&&) = delete;
+    SurfaceWrapper& operator=(SurfaceWrapper&&) = delete;
+};
 
 Manager::Manager() {
     // Constructor implementation (if needed)
@@ -74,15 +110,39 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
 
     surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, layout_->get_width(), layout_->get_height());
 
+    log.info("Starting {} worker threads for drawing", consts::workers);
+    for (int i = 0; i < consts::workers; ++i) {
+        workers.emplace_back([this, i]() {
+            std::function<void()> task;
+            log.info("Worker-{} started", i);
+            while (draw_queue_.pop(task)) {
+                log.debug("Worker-{} thread executing drawing task", i);
+                task();
+            }
+            log.info("Worker-{} exitting", i);
+        });
+    }
+
     TRACE_EVENT_END(EV_MANAGER_INIT);
     return true;
 }
 
 bool Manager::deinit() {
     TRACE_EVENT_BEGIN(EV_MANAGER_DEINIT);
-    
+
     cairo_surface_destroy(surface_);
     surface_ = nullptr;
+
+    log.info("Stopping worker threads");
+    draw_queue_.close();
+
+    for(auto& worker : workers) {
+        if(worker.joinable()) {
+            worker.join();
+        }
+    }
+    workers.clear();
+    log.info("All worker threads stopped");
 
     log.info("Manager deinitialized");
     TRACE_EVENT_END(EV_MANAGER_DEINIT);
@@ -106,6 +166,20 @@ cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
         return nullptr;
     }
 
+    std::deque<std::shared_ptr<SurfaceWrapper>> results;
+
+    auto schedule_drawing = [this, &results](std::function<void(Surface&)> draw_func) {
+        auto wrapper = std::make_shared<SurfaceWrapper>();
+        results.push_back(wrapper);
+        draw_queue_.push([draw_func, wrapper]() {
+            draw_func(wrapper->surface);
+            wrapper->notify_ready();
+        });
+    };
+
+    log.debug("Drawing overlay at time {} us", timestamp);
+    layout_->draw(timestamp, schedule_drawing);
+
     cairo_t *cr = cairo_create(surface_);
 
     TRACE_EVENT_BEGIN(EV_MANAGER_CLEAR_SURFACE);
@@ -115,8 +189,16 @@ cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
     cairo_restore(cr);
     TRACE_EVENT_END(EV_MANAGER_CLEAR_SURFACE);
 
-    log.debug("Drawing overlay at time {} us", timestamp);
-    layout_->draw(timestamp, cr);
+    for (auto& result : results) {
+        result->await_ready();
+
+        Surface& surface = result->surface;
+
+        TRACE_EVENT_BEGIN(EV_MANAGER_DRAW_CACHE);
+        cairo_set_source_surface(cr, surface.surface, surface.x, surface.y);
+        cairo_paint(cr);
+        TRACE_EVENT_END(EV_MANAGER_DRAW_CACHE);
+    }
 
     cairo_surface_flush(surface_);
     cairo_destroy(cr);

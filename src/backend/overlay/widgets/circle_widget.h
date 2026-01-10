@@ -17,7 +17,8 @@ public:
     CircleWidget();
     ~CircleWidget() override = default;
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
+    virtual void draw(time::microseconds_t timestamp,
+                      schedule_drawing_cb_t schedule_drawing_cb,
                       double x_offset = 0, double y_offset = 0) override;
 
     inline static parameter_type_map_t parameter_types = {
@@ -32,6 +33,8 @@ public:
 
 private:
     mutable utils::logging::Logger log{"CircleWidget"};
+
+    void draw_impl(Surface& surface, time::microseconds_t timestamp, double x, double y);
 
     std::shared_ptr<NumericParameter> x_ = nullptr;
     std::shared_ptr<NumericParameter> y_ = nullptr;

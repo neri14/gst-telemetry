@@ -18,7 +18,7 @@ public:
     Layout(std::shared_ptr<track::Track> track);
     ~Layout() = default;
 
-    void draw(time::microseconds_t timestamp, cairo_t* cr);
+    void draw(time::microseconds_t timestamp, schedule_drawing_cb_t schedule_drawing_cb);
 
     bool load(const std::string& path);
 

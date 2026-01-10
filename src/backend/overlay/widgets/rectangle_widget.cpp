@@ -72,98 +72,103 @@ RectangleWidget::RectangleWidget()
         : Widget("RectangleWidget") {
 }
 
-void RectangleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void RectangleWidget::draw(time::microseconds_t timestamp,
+                           schedule_drawing_cb_t schedule_drawing_cb,
+                           double x_offset, double y_offset) {
     visible_->update(timestamp);
 
     if (visible_->get_value(timestamp)) {
-        TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_DRAW);
-
-        for (auto& param : {x_, y_}) {
-            param->update(timestamp);
-        }
-
-        bool cache_update_needed = !cache_drawn;
-        for (auto& param : std::vector<parameter_ptr_t>{width_, height_, color_, border_width_, border_color_}) {
-            if (param->update(timestamp)) {
-                cache_update_needed = true;
-            }
-        }
-
-        if (cache_update_needed) {
-            TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_UPDATE_CACHE);
-
-            double width = width_->get_value(timestamp);
-            double height = height_->get_value(timestamp);
-            double border_width = border_width_->get_value(timestamp);
-
-            margin_ = 2*static_cast<int>(std::ceil(border_width));
-
-            int surface_width = static_cast<int>(std::ceil(width + 2 * margin_));
-            int surface_height = static_cast<int>(std::ceil(height + 2 * margin_));
-
-            if (!cache || surface_width > cache_width || surface_height > cache_height) {
-                // bigger widget size require allocating bigger cache
-                if (cache) {
-                    cairo_surface_destroy(cache);
-                    cache = nullptr;
-                }
-                cache_width = surface_width;
-                cache_height = surface_height;
-                cache = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cache_width, cache_height);
-                cache_drawn = false;
-                log.info("Allocated new cache surface: {}x{}", cache_width, cache_height);
-            }
-
-            cairo_t* cache_cr = cairo_create(cache);
-
-            if (cache_drawn) {
-                // clear cache
-                cairo_save(cache_cr);
-                cairo_set_operator(cache_cr, CAIRO_OPERATOR_CLEAR);
-                cairo_paint(cache_cr);
-                cairo_restore(cache_cr);
-                cache_drawn = false;
-            }
-
-            rgb color = color_->get_value(timestamp);
-            rgb border_color = border_color_->get_value(timestamp);
-
-            cairo_rectangle(cache_cr, margin_, margin_, width, height);
-
-            cairo_set_source_rgba(cache_cr, color.r, color.g, color.b, color.a);
-            cairo_fill_preserve(cache_cr);
-
-            if (border_width > 0) {
-                cairo_set_line_width(cache_cr, border_width);
-                cairo_set_source_rgba(cache_cr, border_color.r, border_color.g, border_color.b, border_color.a);
-                cairo_stroke(cache_cr);
-            }//border width 0 means no border (silently ignore negative border)
-
-            cairo_surface_flush(cache);
-            cache_drawn = true;
-
-            cairo_destroy(cache_cr);
-
-            TRACE_EVENT_END(EV_RECTANGLE_WIDGET_UPDATE_CACHE);
-        }
+        x_->update(timestamp);
+        y_->update(timestamp);
 
         double x = x_offset + x_->get_value(timestamp);
         double y = y_offset + y_->get_value(timestamp);
 
-        TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_DRAW_CACHE);
-        cairo_set_source_surface(cr, cache, x - margin_, y - margin_);
-        cairo_paint(cr);
-        TRACE_EVENT_END(EV_RECTANGLE_WIDGET_DRAW_CACHE);
+        schedule_drawing_cb([this, timestamp, x, y](Surface& surface) {
+            this->draw_impl(surface, timestamp, x, y);
+        });
 
-        TRACE_EVENT_END(EV_RECTANGLE_WIDGET_DRAW);
-
-        // draw childern relative to circle center
-        // (only if circle is visible)
-        Widget::draw(timestamp, cr, x, y);
+        // draw childern relative to top left corner of rectangle
+        // (only if rectangle is visible)
+        Widget::draw(timestamp, schedule_drawing_cb, x, y);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
+}
+
+void RectangleWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, double x, double y) {
+    TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_DRAW);
+
+    bool cache_update_needed = !cache_drawn;
+    for (auto& param : std::vector<parameter_ptr_t>{width_, height_, color_, border_width_, border_color_}) {
+        if (param->update(timestamp)) {
+            cache_update_needed = true;
+        }
+    }
+
+    if (cache_update_needed) {
+        TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_UPDATE_CACHE);
+
+        double width = width_->get_value(timestamp);
+        double height = height_->get_value(timestamp);
+        double border_width = border_width_->get_value(timestamp);
+
+        margin_ = 2*static_cast<int>(std::ceil(border_width));
+
+        int surface_width = static_cast<int>(std::ceil(width + 2 * margin_));
+        int surface_height = static_cast<int>(std::ceil(height + 2 * margin_));
+
+        if (!cache || surface_width > cache_width || surface_height > cache_height) {
+            // bigger widget size require allocating bigger cache
+            if (cache) {
+                cairo_surface_destroy(cache);
+                cache = nullptr;
+            }
+            cache_width = surface_width;
+            cache_height = surface_height;
+            cache = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cache_width, cache_height);
+            cache_drawn = false;
+            log.info("Allocated new cache surface: {}x{}", cache_width, cache_height);
+        }
+
+        cairo_t* cache_cr = cairo_create(cache);
+
+        if (cache_drawn) {
+            // clear cache
+            cairo_save(cache_cr);
+            cairo_set_operator(cache_cr, CAIRO_OPERATOR_CLEAR);
+            cairo_paint(cache_cr);
+            cairo_restore(cache_cr);
+            cache_drawn = false;
+        }
+
+        rgb color = color_->get_value(timestamp);
+        rgb border_color = border_color_->get_value(timestamp);
+
+        cairo_rectangle(cache_cr, margin_, margin_, width, height);
+
+        cairo_set_source_rgba(cache_cr, color.r, color.g, color.b, color.a);
+        cairo_fill_preserve(cache_cr);
+
+        if (border_width > 0) {
+            cairo_set_line_width(cache_cr, border_width);
+            cairo_set_source_rgba(cache_cr, border_color.r, border_color.g, border_color.b, border_color.a);
+            cairo_stroke(cache_cr);
+        }//border width 0 means no border (silently ignore negative border)
+
+        cairo_surface_flush(cache);
+        cache_drawn = true;
+
+        cairo_destroy(cache_cr);
+
+        TRACE_EVENT_END(EV_RECTANGLE_WIDGET_UPDATE_CACHE);
+    }
+
+    surface.x = x - margin_;
+    surface.y = y - margin_;
+    surface.surface = cache;
+
+    TRACE_EVENT_END(EV_RECTANGLE_WIDGET_DRAW);
 }
 
 } // namespace overlay

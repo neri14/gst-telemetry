@@ -7,6 +7,7 @@ headers += files(
   'color.h',
   'text_align.h',
   'string_utils.h',
+  'blocking_queue.h',
 )
 
 

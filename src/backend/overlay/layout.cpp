@@ -50,14 +50,9 @@ Layout::Layout(std::shared_ptr<track::Track> track)
     : track_(track) {
 }
 
-void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
+void Layout::draw(time::microseconds_t timestamp, schedule_drawing_cb_t schedule_drawing_cb) {
     TRACE_EVENT_BEGIN(EV_LAYOUT_DRAW);
 
-    if (cr == nullptr) {
-        log.error("draw: no cairo canvas provided");
-        TRACE_EVENT_END(EV_LAYOUT_DRAW);
-        return;
-    }
     if (root_ == nullptr) {
         log.warning("draw: no root widget defined");
         TRACE_EVENT_END(EV_LAYOUT_DRAW);
@@ -72,7 +67,7 @@ void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
     log.debug("Drawing layout");
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    root_->draw(timestamp, cr);
+    root_->draw(timestamp, schedule_drawing_cb);
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed = t2 - t1;
