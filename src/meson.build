@@ -4,6 +4,7 @@ lib_args = common_args + []
 c_sources = [
   'gsttelemetryplugin.c',
   'gsttelemetry.c',
+  'buffer_pool.c',
 ]
 
 # C++ sources for telemetry backend
@@ -13,6 +14,7 @@ cpp_sources = [
 # Headers (for reference, not compiled directly)
 headers = [
   'gsttelemetry.h',
+  'buffer_pool.h',
 ]
 
 # Include backend subdirectory

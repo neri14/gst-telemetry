@@ -1,4 +1,4 @@
-<layout>
+<layout width="3840" height="2160">
     <if condition="exists(countdown)">
         <if condition="exists(custom_event)">
             <text x="100" y="100" font-name="DejaVu Sans" font-size="64" align="left"
@@ -99,6 +99,47 @@
             </container>
         </container>
 
+        <!-- map -->
+        <container x="1920" y="200">
+            <if condition="eval(overtime>=3.0 and overtime<=5.0)"> <!-- animated map from 3.0s to 5.0s overtime -->
+                <container x="0" y="0">
+                    <chart x="0" y="0" width="1770" height="1810" stretch-to-fill="false"
+                        line-color="white" line-width="8"
+                        x-value="eval(1 + (point_lon / 180))"
+                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
+                        filter-value="eval(point_dist/meta_distance)" filter-min="-999" filter-max="eval((overtime/2)-1.5)" />
+                </container>
+            </if>
+            <if condition="eval(overtime>5.0)"> <!-- static map from 5.0s overtime  -->
+                <container x="0" y="0">
+                    <chart x="0" y="0" width="1770" height="1810" stretch-to-fill="false"
+                        line-color="white" line-width="8"
+                        x-value="eval(1 + (point_lon / 180))"
+                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"/>
+                </container>
+            </if>
+        </container>
+
+        <!-- chart -->
+        <container x="150" y="1510">
+            <if condition="eval(overtime>=5.0 and overtime<=7.0)"> <!-- animated chart from 5.0s tot 7.0s overtime -->
+                <container x="-0" y="0">
+                    <chart x="0" y="0" width="1770" height="400"
+                        line-color="white" line-width="8"
+                        x-value="key(point_dist)"
+                        y-value="key(point_smoothele)"
+                        filter-value="eval(point_dist/meta_distance)" filter-min="-999" filter-max="eval((overtime/2)-2.5)" />
+                </container>
+            </if>
+            <if condition="eval(overtime>7.0)"> <!-- static chart from 7.0s overtime  -->
+                <container x="-0" y="0">
+                    <chart x="0" y="0" width="1770" height="400"
+                        line-color="white" line-width="8"
+                        x-value="key(point_dist)"
+                        y-value="key(point_smoothele)"/>
+                </container>
+            </if>
+        </container>
         <!--
         <container x="200" y="1050" visible="exists(s_climb_0_meta_index)">
             <text x="20" y="0" font-name="DejaVu Sans" font-size="64" align="left" color="white" border-width="4" border-color="black"
@@ -300,48 +341,6 @@
             </container>
         </container>
         -->
-
-        <!-- map -->
-        <container x="1920" y="200">
-            <if condition="eval(overtime>=3.0 and overtime<=5.0)"> <!-- animated map from 3.0s to 5.0s overtime -->
-                <container x="0" y="0">
-                    <chart x="0" y="0" width="1770" height="1810" stretch-to-fill="false"
-                        line-color="white" line-width="8"
-                        x-value="eval(1 + (point_lon / 180))"
-                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
-                        filter-value="eval(point_dist/meta_distance)" filter-min="-999" filter-max="eval((overtime/2)-1.5)" />
-                </container>
-            </if>
-            <if condition="eval(overtime>5.0)"> <!-- static map from 5.0s overtime  -->
-                <container x="0" y="0">
-                    <chart x="0" y="0" width="1770" height="1810" stretch-to-fill="false"
-                        line-color="white" line-width="8"
-                        x-value="eval(1 + (point_lon / 180))"
-                        y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"/>
-                </container>
-            </if>
-        </container>
-
-        <!-- chart -->
-        <container x="150" y="1510">
-            <if condition="eval(overtime>=5.0)"> <!-- animated chart from 5.0s overtime -->
-                <container x="-0" y="0">
-                    <chart x="0" y="0" width="1770" height="400"
-                        line-color="white" line-width="8"
-                        x-value="key(point_dist)"
-                        y-value="key(point_smoothele)"
-                        filter-value="eval(point_dist/meta_distance)" filter-min="-999" filter-max="eval((overtime/2)-2.5)" />
-                </container>
-            </if>
-            <if condition="eval(overtime>7.0 and overtime<=8.5)"> <!-- static chart from 7.0s to 8.5s overtime  -->
-                <container x="-0" y="0">
-                    <chart x="0" y="0" width="1770" height="400"
-                        line-color="white" line-width="8"
-                        x-value="key(point_dist)"
-                        y-value="key(point_smoothele)"/>
-                </container>
-            </if>
-        </container>
     </if>
 
     <if condition="eval(time_elapsed>=0 and time_remaining>=0)"> <!-- FIXME key "active" doesnt work properly -->
@@ -365,129 +364,6 @@
                 value-2="eval(floor((time_elapsed%3600)/60))"
                 value-3="eval(time_elapsed%60)" />
         </rectangle>
-
-        <!-- map & chart line only only -->
-        <container x="2990" y="50">
-            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
-                   line-color="black" line-width="10"
-                   x-value="eval(1 + (point_lon / 180))"
-                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
-            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
-                   line-color="white" line-width="6"
-                   x-value="eval(1 + (point_lon / 180))"
-                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
-            <chart x="0" y="850" width="800" height="100"
-                   line-color="black" line-width="10"
-                   x-value="key(point_dist)"
-                   y-value="key(point_smoothele)" />
-            <chart x="0" y="850" width="800" height="100"
-                   line-color="white" line-width="6"
-                   x-value="key(point_dist)"
-                   y-value="key(point_smoothele)" />
-        </container>
-
-        <!-- upcoming climb map & chart highlight -->
-        <if condition="exists(s_climb_next_0_meta_index)">
-            <container x="2990" y="50" visible="eval((s_climb_next_0_meta_startdist - point_dist) <= 200)">
-                <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
-                    line-color="#ffee00ff" line-width="6"
-                    x-value="eval(1 + (point_lon / 180))"
-                    y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
-                    filter-value="key(point_dist)"
-                    filter-min="key(s_climb_next_0_meta_startdist)"
-                    filter-max="key(s_climb_next_0_meta_enddist)" />
-                <chart x="0" y="850" width="800" height="100"
-                    line-color="#ffee00ff" line-width="6"
-                    x-value="key(point_dist)"
-                    y-value="key(point_smoothele)"
-                    filter-value="key(point_dist)"
-                    filter-min="key(s_climb_next_0_meta_startdist)"
-                    filter-max="key(s_climb_next_0_meta_enddist)" />
-            </container>
-        </if>
-
-        <!-- active climb map & chart highlight -->
-        <if condition="exists(s_climb_active_0_meta_index)">
-            <container x="2990" y="50">
-                <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
-                    line-color="#ff7b00ff" line-width="6"
-                    x-value="eval(1 + (point_lon / 180))"
-                    y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
-                    filter-value="key(point_dist)"
-                    filter-min="key(s_climb_active_0_meta_startdist)"
-                    filter-max="key(s_climb_active_0_meta_enddist)" />
-                <chart x="0" y="850" width="800" height="100"
-                    line-color="#ff7b00ff" line-width="6"
-                    x-value="key(point_dist)"
-                    y-value="key(point_smoothele)"
-                    filter-value="key(point_dist)"
-                    filter-min="key(s_climb_active_0_meta_startdist)"
-                    filter-max="key(s_climb_active_0_meta_enddist)" />
-            </container>
-        </if>
-
-        <!-- map & chart point only -->
-        <container x="2990" y="50">
-            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
-                   line-color="transparent" line-width="6"
-                   point-color="red" point-size="16"
-                   x-value="eval(1 + (point_lon / 180))"
-                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
-            <chart x="0" y="850" width="800" height="100"
-                   line-color="transparent" line-width="6"
-                   point-color="red" point-size="16"
-                   x-value="key(point_dist)"
-                   y-value="key(point_smoothele)" />
-        </container>
-
-
-        <!-- moving charts -->
-
-        <!-- speed moving chart -->
-        <container x="720" y="1810">
-            <rectangle x="0" y="0" width="900" height="304" color="rgba(0,0,0,0.5)" border-color="white" border-width="4" />
-
-            <chart x="0" y="2" width="900" height="300" line-color="white" line-width="4"
-                   x-value="key(video_time)" y-value="key(pchip_point_speed)" value-time-step = "0.03"
-                   filter-value="key(video_time)" filter-min="eval(video_time-30)" filter-max="key(video_time)"
-                   zoom-to-filter-y="false"
-                   min-x="eval(video_time-30)" max-x="eval(video_time)" />
-
-            <text x="1110" y="eval(282-300*pchip_point_speed/meta_maxspeed)" align="right"
-                  font-name="DejaVu Sans" font-size="28" color="white" border-color="black" border-width="3"
-                  value="eval(pchip_point_speed*3.6)" format="{:.1f} KM/H" />
-        </container>
-
-        <!-- power moving chart -->
-        <container x="2220" y="1810">
-            <rectangle x="0" y="0" width="900" height="304" color="rgba(0,0,0,0.5)" border-color="white" border-width="4" />
-
-            <chart x="0" y="2" width="900" height="300" line-color="white" line-width="4"
-                   x-value="key(video_time)" y-value="key(pchip_point_power)" value-time-step = "0.03"
-                   filter-value="key(video_time)" filter-min="eval(video_time-30)" filter-max="key(video_time)"
-                   zoom-to-filter-y="false"
-                   min-x="eval(video_time-30)" max-x="eval(video_time)"/>
-
-            <text x="1040" y="eval(282-300*pchip_point_power/meta_maxpower)" align="right"
-                  font-name="DejaVu Sans" font-size="28" color="white" border-color="black" border-width="3"
-                  value="eval(pchip_point_power)" format="{:.0f} W"  />
-        </container>
-
-        <!-- grade moving chart -->
-        <!-- <container x="2520" y="1910">
-            <rectangle x="0" y="0" width="600" height="204" color="#8c8c8c30" border-color="#fffffff0" border-width="2" />
-            <line x="0" y="102" x2="600" y2="102" line-color="#fffffff0" line-width="2" />
-
-            <chart x="0" y="2" width="600" height="200" line-color="white" line-width="4"
-                   x-value="key(video_time)" y-value="key(pchip_point_grade)" value-time-step = "0.03"
-                   filter-value="key(video_time)" filter-min="eval(video_time-15)" filter-max="key(video_time)"
-                   min-x="eval(video_time-15)" max-x="eval(video_time)"
-                   min-y="eval(-max(abs(meta_mingrade), abs(meta_maxgrade)))" max-y="eval(max(abs(meta_mingrade), abs(meta_maxgrade)))" />
-
-            <text x="720" y="eval(187-(200*((pchip_point_grade + max(abs(meta_mingrade), abs(meta_maxgrade))) / (2 * max(abs(meta_mingrade), abs(meta_maxgrade))))))" align="right"
-                  font-name="DejaVu Sans" font-size="20" color="white" border-color="black" border-width="2"
-                  value="eval(pchip_point_grade)" format="{:.1f} %" />
-        </container> -->
 
         <!-- left column -->
         <rectangle x="50" y="1170" width="250" height="940" color="rgba(0,0,0,0.5)" >
@@ -786,6 +662,118 @@
                 </if>
             </if>
         </container>
+
+
+        <!-- full activity map & elevation chart -->
+        <!-- map & chart line only only -->
+        <container x="2990" y="50">
+            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                   line-color="black" line-width="10"
+                   x-value="eval(1 + (point_lon / 180))"
+                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
+            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                   line-color="white" line-width="6"
+                   x-value="eval(1 + (point_lon / 180))"
+                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
+            <chart x="0" y="850" width="800" height="100"
+                   line-color="black" line-width="10"
+                   x-value="key(point_dist)"
+                   y-value="key(point_smoothele)" />
+            <chart x="0" y="850" width="800" height="100"
+                   line-color="white" line-width="6"
+                   x-value="key(point_dist)"
+                   y-value="key(point_smoothele)" />
+        </container>
+
+        <!-- upcoming climb map & chart highlight -->
+        <if condition="exists(s_climb_next_0_meta_index)">
+            <container x="2990" y="50" visible="eval((s_climb_next_0_meta_startdist - point_dist) <= 200)">
+                <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                    line-color="#ffee00ff" line-width="6"
+                    x-value="eval(1 + (point_lon / 180))"
+                    y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
+                    filter-value="key(point_dist)"
+                    filter-min="key(s_climb_next_0_meta_startdist)"
+                    filter-max="key(s_climb_next_0_meta_enddist)" />
+                <chart x="0" y="850" width="800" height="100"
+                    line-color="#ffee00ff" line-width="6"
+                    x-value="key(point_dist)"
+                    y-value="key(point_smoothele)"
+                    filter-value="key(point_dist)"
+                    filter-min="key(s_climb_next_0_meta_startdist)"
+                    filter-max="key(s_climb_next_0_meta_enddist)" />
+            </container>
+        </if>
+
+        <!-- active climb map & chart highlight -->
+        <if condition="exists(s_climb_active_0_meta_index)">
+            <container x="2990" y="50">
+                <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                    line-color="#ff7b00ff" line-width="6"
+                    x-value="eval(1 + (point_lon / 180))"
+                    y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)"
+                    filter-value="key(point_dist)"
+                    filter-min="key(s_climb_active_0_meta_startdist)"
+                    filter-max="key(s_climb_active_0_meta_enddist)" />
+                <chart x="0" y="850" width="800" height="100"
+                    line-color="#ff7b00ff" line-width="6"
+                    x-value="key(point_dist)"
+                    y-value="key(point_smoothele)"
+                    filter-value="key(point_dist)"
+                    filter-min="key(s_climb_active_0_meta_startdist)"
+                    filter-max="key(s_climb_active_0_meta_enddist)" />
+            </container>
+        </if>
+
+        <!-- map & chart point only -->
+        <container x="2990" y="50">
+            <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
+                   line-color="transparent" line-width="6"
+                   point-color="red" point-size="16"
+                   x-value="eval(1 + (point_lon / 180))"
+                   y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
+            <chart x="0" y="850" width="800" height="100"
+                   line-color="transparent" line-width="6"
+                   point-color="red" point-size="16"
+                   x-value="key(point_dist)"
+                   y-value="key(point_smoothele)" />
+        </container>
+
+
+        <!-- moving charts -->
+
+        <!-- speed moving chart -->
+        <container x="720" y="1810">
+            <rectangle x="0" y="0" width="900" height="304" color="rgba(0,0,0,0.5)" border-color="white" border-width="4" />
+
+            <chart x="0" y="2" width="900" height="300" line-color="white" line-width="4"
+                   x-value="key(video_time)" y-value="key(pchip_point_speed)" value-time-step = "0.03"
+                   filter-value="key(video_time)" filter-min="eval(video_time-30)" filter-max="key(video_time)"
+                   zoom-to-filter-y="false"
+                   min-x="eval(video_time-30)" max-x="eval(video_time)" />
+
+            <text x="1110" y="eval(282-300*pchip_point_speed/meta_maxspeed)" align="right"
+                  font-name="DejaVu Sans" font-size="28" color="white" border-color="black" border-width="3"
+                  value="eval(pchip_point_speed*3.6)" format="{:.1f} KM/H" />
+        </container>
+
+        <!-- power moving chart -->
+        <container x="2220" y="1810">
+            <rectangle x="0" y="0" width="900" height="304" color="rgba(0,0,0,0.5)" border-color="white" border-width="4" />
+
+            <chart x="0" y="2" width="900" height="300" line-color="white" line-width="4"
+                   x-value="key(video_time)" y-value="key(pchip_point_power)" value-time-step = "0.03"
+                   filter-value="key(video_time)" filter-min="eval(video_time-30)" filter-max="key(video_time)"
+                   zoom-to-filter-y="false"
+                   min-x="eval(video_time-30)" max-x="eval(video_time)"/>
+
+            <text x="1040" y="eval(282-300*pchip_point_power/meta_maxpower)" align="right"
+                  font-name="DejaVu Sans" font-size="28" color="white" border-color="black" border-width="3"
+                  value="eval(pchip_point_power)" format="{:.0f} W"  />
+        </container>
+
+
+
         <!-- TODO histograms in summary? -->
     </if>
 </layout>

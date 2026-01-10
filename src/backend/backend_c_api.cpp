@@ -11,8 +11,8 @@ void manager_free(ManagerHandle* handle) {
     delete reinterpret_cast<telemetry::Manager*>(handle);
 }
 
-int manager_init(ManagerHandle* handle, float offset, char* track, char* custom_data, char* layout) {
-    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->init(offset, track, custom_data, layout);
+int manager_init(ManagerHandle* handle, float offset, char* track, char* custom_data, char* layout, int worker_count) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->init(offset, track, custom_data, layout, worker_count);
     return ok ? 0 : -1;
 }
 
@@ -21,8 +21,18 @@ int manager_deinit(ManagerHandle* handle) {
     return ok ? 0 : -1;
 }
 
-int draw(ManagerHandle* handle, int64_t timestamp, cairo_surface_t* surface) {
-    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->draw(timestamp, surface);
+int manager_get_overlay_dimensions(ManagerHandle* handle, size_t* width, size_t* height, size_t* stride) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->get_overlay_dimensions(width, height, stride);
+    return ok ? 0 : -1;
+}
+
+int manager_get_overlay_format(ManagerHandle* handle, cairo_format_t* format) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->get_overlay_format(format);
+    return ok ? 0 : -1;
+}
+
+int manager_draw(ManagerHandle* handle, int64_t timestamp, cairo_surface_t* surface) {
+    bool ok =reinterpret_cast<telemetry::Manager*>(handle)->draw(timestamp, surface);
     return ok ? 0 : -1;
 }
 

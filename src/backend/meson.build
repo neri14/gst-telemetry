@@ -5,6 +5,7 @@ cpp_sources += files(
 
 headers += files(
   'manager.h',
+  'surface.h',
 )
 
 subdir('overlay')

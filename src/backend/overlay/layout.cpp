@@ -7,6 +7,7 @@
 #include "backend/utils/text_align.h"
 #include "backend/utils/color.h"
 
+#include "widgets/root_widget.h"
 #include "widgets/container_widget.h"
 #include "widgets/conditional_widget.h"
 #include "widgets/timestamp_widget.h"
@@ -49,14 +50,9 @@ Layout::Layout(std::shared_ptr<track::Track> track)
     : track_(track) {
 }
 
-void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
+void Layout::draw(time::microseconds_t timestamp, schedule_drawing_cb_t schedule_drawing_cb) {
     TRACE_EVENT_BEGIN(EV_LAYOUT_DRAW);
 
-    if (cr == nullptr) {
-        log.error("draw: no cairo canvas provided");
-        TRACE_EVENT_END(EV_LAYOUT_DRAW);
-        return;
-    }
     if (root_ == nullptr) {
         log.warning("draw: no root widget defined");
         TRACE_EVENT_END(EV_LAYOUT_DRAW);
@@ -71,7 +67,7 @@ void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
     log.debug("Drawing layout");
 
     auto t1 = std::chrono::high_resolution_clock::now();
-    root_->draw(timestamp, cr);
+    root_->draw(timestamp, schedule_drawing_cb);
     auto t2 = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed = t2 - t1;
@@ -119,6 +115,14 @@ bool Layout::load(const std::string& path) {
     return root_ != nullptr;
 }
 
+int Layout::get_width() const {
+    return root_ ? static_pointer_cast<RootWidget>(root_)->get_width(0) : 0;
+}
+
+int Layout::get_height() const {
+    return root_ ? static_pointer_cast<RootWidget>(root_)->get_height(0) : 0;
+}
+
 std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     log.debug("Parsing layout node: {}", node.name());
 
@@ -126,8 +130,8 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     std::shared_ptr<Widget> widget = nullptr;
 
     if (name == "layout") {
-        widget = parse_widget<Widget>(node);
-        log.debug("Created base widget");
+        widget = parse_widget<RootWidget>(node);
+        log.debug("Created Root widget");
     } else if (name == "container") {
         widget = parse_widget<ContainerWidget>(node);
         log.debug("Created Container widget");

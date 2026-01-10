@@ -31,12 +31,13 @@ ConditionalWidget::ConditionalWidget()
         : Widget("ConditionalWidget") {
 }
 
-void ConditionalWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
-                        double x_offset, double y_offset) {
+void ConditionalWidget::draw(time::microseconds_t timestamp,
+                             schedule_drawing_cb_t schedule_drawing_cb,
+                             double x_offset, double y_offset) {
     condition_->update(timestamp);
 
     if (condition_->get_value(timestamp)) {
-        Widget::draw(timestamp, cr, x_offset, y_offset);
+        Widget::draw(timestamp, schedule_drawing_cb, x_offset, y_offset);
     } else {
         log.debug("Condition is false, skipping drawing");
     }

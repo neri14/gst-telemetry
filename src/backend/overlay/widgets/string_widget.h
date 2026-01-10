@@ -20,7 +20,8 @@ public:
     StringWidget(const std::string& name);
     ~StringWidget() override = default;
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
+    virtual void draw(time::microseconds_t timestamp,
+                      schedule_drawing_cb_t schedule_drawing_cb,
                       double x_offset = 0, double y_offset = 0) override;
 
     inline static parameter_type_map_t parameter_types = {
@@ -38,6 +39,8 @@ public:
 private:
     virtual bool update_value(time::microseconds_t timestamp) = 0;
     virtual std::string get_value(time::microseconds_t timestamp) const = 0;
+
+    void draw_impl(Surface& surface, time::microseconds_t timestamp, double x, double y);
 
     void draw_text(cairo_t* cr, int width, int height, int margin,
                    const std::string& text,

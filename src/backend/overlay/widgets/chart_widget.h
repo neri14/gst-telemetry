@@ -18,7 +18,8 @@ public:
     ChartWidget();
     ~ChartWidget() override = default;
 
-    virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
+    virtual void draw(time::microseconds_t timestamp,
+                      schedule_drawing_cb_t schedule_drawing_cb,
                       double x_offset = 0, double y_offset = 0) override;
 
     inline static parameter_type_map_t parameter_types = {
@@ -47,6 +48,8 @@ public:
     };
 
 private:
+    void draw_impl(Surface& surface, time::microseconds_t timestamp, double x, double y);
+
     void redraw_line_cache(double width, double height,
                        rgb line_color, double line_width,
                        std::shared_ptr<NumericParameter::sections_t> x_values,
@@ -91,6 +94,9 @@ private:
     cairo_surface_t* point_cache_ = nullptr;
     bool point_cache_drawn_ = false;
 
+    cairo_surface_t* combined_cache_ = nullptr;
+    bool combined_cache_drawn_ = false;
+
     int margin_ = 0;
     int cache_width_ = 0;
     int cache_height_ = 0;
@@ -104,6 +110,8 @@ private:
     bool lock_y_minmax_ = false;
 
     bool stretch_chart_ = false;
+
+    std::shared_ptr<NumericParameter::sections_t> last_filter_values_ = nullptr;
 
     bool invalid_ = false;
 };

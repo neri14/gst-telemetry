@@ -1,5 +1,6 @@
 cpp_sources += files(
   'widget.cpp',
+  'root_widget.cpp',
   'container_widget.cpp',
   'conditional_widget.cpp',
   'rectangle_widget.cpp',
@@ -14,6 +15,7 @@ cpp_sources += files(
 
 headers += files(
   'widget.h',
+  'root_widget.h',
   'container_widget.h',
   'conditional_widget.h',
   'rectangle_widget.h',

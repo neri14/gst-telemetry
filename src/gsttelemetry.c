@@ -46,6 +46,7 @@ enum
   PROP_TRACK,
   PROP_CUSTOM_DATA,
   PROP_LAYOUT,
+  PROP_WORKERS,
 };
 
 /* pad templates */
@@ -117,6 +118,11 @@ gst_telemetry_class_init (GstTelemetryClass * klass)
       g_param_spec_string ("layout", "Layout",
         "Path to overlay layout XML file",
         NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_WORKERS,
+      g_param_spec_int ("workers", "Workers",
+        "Number of worker threads for rendering (0 = auto)",
+        0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -127,9 +133,11 @@ gst_telemetry_init (GstTelemetry *telemetry)
   telemetry->layout = NULL;
   telemetry->track = NULL;
   telemetry->custom_data = NULL;
+  telemetry->workers = 0;
   telemetry->gl_mode = FALSE;
 
   telemetry->manager = manager_new ();
+  telemetry->buffer_pool = NULL;
 }
 
 void
@@ -162,6 +170,11 @@ gst_telemetry_set_property (GObject * object, guint property_id,
       GST_OBJECT_LOCK (telemetry);
       g_free(telemetry->layout);
       telemetry->layout = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
+    case PROP_WORKERS:
+      GST_OBJECT_LOCK (telemetry);
+      telemetry->workers = g_value_get_int (value);
       GST_OBJECT_UNLOCK (telemetry);
       break;
     default:
@@ -199,6 +212,11 @@ gst_telemetry_get_property (GObject * object, guint property_id,
       g_value_set_string (value, telemetry->layout);
       GST_OBJECT_UNLOCK (telemetry);
       break;
+    case PROP_WORKERS:
+      GST_OBJECT_LOCK (telemetry);
+      g_value_set_int (value, telemetry->workers);
+      GST_OBJECT_UNLOCK (telemetry);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -226,6 +244,7 @@ gst_telemetry_finalize (GObject * object)
 
   /* clean up object here */
   manager_free (telemetry->manager);
+  buffer_pool_destroy (telemetry->buffer_pool);
 
   G_OBJECT_CLASS (gst_telemetry_parent_class)->finalize (object);
 }
@@ -244,14 +263,47 @@ gst_telemetry_start (GstBaseTransform * trans)
   int ret = 0;
 
   GST_OBJECT_LOCK (telemetry);
-  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->custom_data, telemetry->layout);
-  GST_OBJECT_UNLOCK (telemetry);
+  ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track,
+                      telemetry->custom_data, telemetry->layout, telemetry->workers);
 
-  TRACE_EVENT_END(EV_GST_START);
   if (ret != 0) {
+    TRACE_EVENT_END(EV_GST_START);
+    GST_OBJECT_UNLOCK (telemetry);
     GST_ERROR_OBJECT (telemetry, "Failed to initialize telemetry manager");
     return FALSE;
   }
+
+  ret = manager_get_overlay_dimensions(telemetry->manager,
+            &telemetry->overlay_width, &telemetry->overlay_height, &telemetry->overlay_stride);
+  if (ret != 0) {
+    TRACE_EVENT_END(EV_GST_START);
+    GST_OBJECT_UNLOCK (telemetry);
+    GST_ERROR_OBJECT (telemetry, "Failed to retrieve overlay dimensions");
+    return FALSE;
+  }
+  GST_INFO_OBJECT (telemetry, "Overlay dimensions: %zu x %zu, stride: %zu",
+                   telemetry->overlay_width, telemetry->overlay_height, telemetry->overlay_stride);
+
+  ret = manager_get_overlay_format(telemetry->manager, &telemetry->overlay_format);
+  if (ret != 0) {
+    TRACE_EVENT_END(EV_GST_START);
+    GST_OBJECT_UNLOCK (telemetry);
+    GST_ERROR_OBJECT (telemetry, "Failed to retrieve overlay format");
+    return FALSE;
+  }
+  GST_INFO_OBJECT (telemetry, "Overlay format: %d", telemetry->overlay_format);
+
+  telemetry->buffer_pool = buffer_pool_create(telemetry->overlay_stride * telemetry->overlay_height);
+
+  if (telemetry->buffer_pool == NULL) {
+    TRACE_EVENT_END(EV_GST_START);
+    GST_OBJECT_UNLOCK (telemetry);
+    GST_ERROR_OBJECT (telemetry, "Failed to create buffer pool");
+    return FALSE;
+  }
+
+  TRACE_EVENT_END(EV_GST_START);
+  GST_OBJECT_UNLOCK (telemetry);
   return TRUE;
 }
 
@@ -380,21 +432,12 @@ gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
 
 /* transform */
 static GstFlowReturn
-gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
+gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame) //FIXME instrument and verify why this function half of the time takes twice as long
 {
   TRACE_EVENT_BEGIN(EV_GST_TRANSFORM_FRAME);
 
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
   GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
-
-  TRACE_EVENT_BEGIN(EV_GST_PREPARE_SURFACE);
-
-  gint width = filter->out_info.width;
-  gint height = filter->out_info.height;
-
-  // Create Cairo surface for drawing
-  cairo_surface_t *surface = cairo_image_surface_create(
-    CAIRO_FORMAT_ARGB32, width, height);
 
   // Calculate timestamp relative to initial frame
   gint64 timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
@@ -403,27 +446,57 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   }
   timestamp -= telemetry->initial_timestamp;
 
-  TRACE_EVENT_END(EV_GST_PREPARE_SURFACE);
+  // Acquire GstBuffer
+  TRACE_EVENT_BEGIN(EV_GST_ACQUIRE_BUFFER);
+  GstBuffer *overlay_buffer = buffer_pool_acquire(telemetry->buffer_pool);
+  TRACE_EVENT_END(EV_GST_ACQUIRE_BUFFER);
+  if (overlay_buffer == NULL) {
+    GST_ERROR_OBJECT (telemetry, "Failed to acquire buffer from pool");
+    TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
+    TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
+    return GST_FLOW_ERROR;
+  }
+
+  // Retrieve data pointer from GstBuffer
+  GstMemory *memory = gst_buffer_get_memory(overlay_buffer, 0); //ensure memory is mapped
+  GstMapInfo info;
+  gst_memory_map(memory, &info, GST_MAP_WRITE);
+
+  cairo_surface_t *surface = cairo_image_surface_create_for_data(info.data, telemetry->overlay_format,
+                              telemetry->overlay_width, telemetry->overlay_height, telemetry->overlay_stride);
+
+  if (surface == NULL) {
+    GST_ERROR_OBJECT (telemetry, "Failed to create Cairo surface for overlay");
+    TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
+    TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
+    // Cleanup
+    gst_memory_unmap(memory, &info);
+    return GST_FLOW_ERROR;
+  }
 
   // Call manager to draw telemetry onto Cairo surface
   GST_DEBUG_OBJECT (telemetry, "drawing telemetry for timestamp: %ld us", timestamp);
-  draw(telemetry->manager, timestamp, surface);
+  int ret = manager_draw(telemetry->manager, timestamp, surface);
+  if (ret != 0) {
+    GST_ERROR_OBJECT (telemetry, "Failed to draw telemetry overlay");
+    TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
+    TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
+    // Cleanup
+    gst_memory_unmap(memory, &info);
+    cairo_surface_destroy(surface); 
+    return GST_FLOW_ERROR;
+  }
 
-  // Flush Cairo surface to ensure all drawing operations are complete
-  cairo_surface_flush(surface);
+  // Unmap memory
+  gst_memory_unmap(memory, &info);
+  cairo_surface_destroy(surface); 
 
   TRACE_EVENT_BEGIN(EV_GST_PREPARE_BUFFER);
-  // Get Cairo surface data and stride
-  guint8 *cairo_data = cairo_image_surface_get_data(surface);
-  gint cairo_stride = cairo_image_surface_get_stride(surface);
-
-  // Create GstBuffer from Cairo surface data
-  GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * height, NULL);
-  gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * height);
 
   // Add video meta
   gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
-                            GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, width, height);
+                            GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
+                            telemetry->overlay_width, telemetry->overlay_height);
 
   TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
 
@@ -432,7 +505,7 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(
       overlay_buffer,
       0, 0,  // x, y position on video
-      width, height,  // render width, height
+      telemetry->overlay_width, telemetry->overlay_height,  // render width, height
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
   // Create composition
@@ -464,12 +537,14 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   old_comp = gst_video_overlay_composition_ref(comp);
   //END ugly hack
 
+  GST_DEBUG_OBJECT (telemetry, "Buffer Pool: total=%zu, in_use=%zu",
+      buffer_pool_count(telemetry->buffer_pool),
+      buffer_pool_count_in_use(telemetry->buffer_pool));
+
   TRACE_EVENT_BEGIN(EV_GST_CLEANUP_RESOURCES);
   // Cleanup
   gst_video_overlay_composition_unref(comp);
   gst_video_overlay_rectangle_unref(rect);
-  gst_buffer_unref(overlay_buffer);
-  cairo_surface_destroy(surface);
 
   TRACE_EVENT_END(EV_GST_CLEANUP_RESOURCES);
 
