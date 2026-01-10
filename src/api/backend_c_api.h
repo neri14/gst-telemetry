@@ -15,6 +15,7 @@ void manager_free(ManagerHandle* handle);
 int manager_init(ManagerHandle* handle, float offset, char* track, char* custom_data, char* layout);
 int manager_deinit(ManagerHandle* handle);
 
+uint64_t manager_get_overlay_raw_size(ManagerHandle* handle);
 cairo_surface_t* manager_draw(ManagerHandle* handle, int64_t timestamp);
 
 #ifdef __cplusplus

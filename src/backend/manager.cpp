@@ -89,6 +89,14 @@ bool Manager::deinit() {
     return true;
 }
 
+uint64_t Manager::get_overlay_raw_size() const {
+    if (surface_ == nullptr) {
+        log.error("get_overlay_raw_size: no cairo surface available");
+        return 0;
+    }
+    return cairo_image_surface_get_stride(surface_) * cairo_image_surface_get_height(surface_);
+}
+
 cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
     TRACE_EVENT_BEGIN(EV_MANAGER_DRAW);
 

@@ -21,6 +21,10 @@ int manager_deinit(ManagerHandle* handle) {
     return ok ? 0 : -1;
 }
 
+uint64_t manager_get_overlay_raw_size(ManagerHandle* handle) {
+    return reinterpret_cast<telemetry::Manager*>(handle)->get_overlay_raw_size();
+}
+
 cairo_surface_t* manager_draw(ManagerHandle* handle, int64_t timestamp) {
     return reinterpret_cast<telemetry::Manager*>(handle)->draw(timestamp);
 }

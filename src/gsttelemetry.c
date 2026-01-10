@@ -130,6 +130,7 @@ gst_telemetry_init (GstTelemetry *telemetry)
   telemetry->gl_mode = FALSE;
 
   telemetry->manager = manager_new ();
+  telemetry->buffer_pool = NULL;
 }
 
 void
@@ -226,6 +227,7 @@ gst_telemetry_finalize (GObject * object)
 
   /* clean up object here */
   manager_free (telemetry->manager);
+  buffer_pool_destroy (telemetry->buffer_pool);
 
   G_OBJECT_CLASS (gst_telemetry_parent_class)->finalize (object);
 }
@@ -245,13 +247,25 @@ gst_telemetry_start (GstBaseTransform * trans)
 
   GST_OBJECT_LOCK (telemetry);
   ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->custom_data, telemetry->layout);
-  GST_OBJECT_UNLOCK (telemetry);
 
-  TRACE_EVENT_END(EV_GST_START);
   if (ret != 0) {
+    TRACE_EVENT_END(EV_GST_START);
+    GST_OBJECT_UNLOCK (telemetry);
     GST_ERROR_OBJECT (telemetry, "Failed to initialize telemetry manager");
     return FALSE;
   }
+
+  telemetry->buffer_pool = buffer_pool_create(manager_get_overlay_raw_size(telemetry->manager));
+
+  if (telemetry->buffer_pool == NULL) {
+    TRACE_EVENT_END(EV_GST_START);
+    GST_OBJECT_UNLOCK (telemetry);
+    GST_ERROR_OBJECT (telemetry, "Failed to create buffer pool");
+    return FALSE;
+  }
+
+  TRACE_EVENT_END(EV_GST_START);
+  GST_OBJECT_UNLOCK (telemetry);
   return TRUE;
 }
 
@@ -412,7 +426,19 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   gint height = cairo_image_surface_get_height(surface);
 
   // Create GstBuffer from Cairo surface data
-  GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * height, NULL);
+  GstBuffer *overlay_buffer = buffer_pool_acquire(telemetry->buffer_pool);
+  if (overlay_buffer == NULL) {
+    GST_ERROR_OBJECT (telemetry, "Failed to acquire buffer from pool");
+    TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
+    TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
+    return GST_FLOW_ERROR;
+  }
+  if (gst_buffer_get_size(overlay_buffer) < (gsize)(cairo_stride * height)) {
+    GST_ERROR_OBJECT (telemetry, "Acquired buffer is too small for overlay data");
+    TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
+    TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
+    return GST_FLOW_ERROR;
+  }
   gst_buffer_fill(overlay_buffer, 0, cairo_data, cairo_stride * height);
 
   // Add video meta
@@ -458,11 +484,14 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   old_comp = gst_video_overlay_composition_ref(comp);
   //END ugly hack
 
+  GST_DEBUG_OBJECT (telemetry, "Buffer Pool: total=%zu, in_use=%zu",
+      buffer_pool_count(telemetry->buffer_pool),
+      buffer_pool_count_in_use(telemetry->buffer_pool));
+
   TRACE_EVENT_BEGIN(EV_GST_CLEANUP_RESOURCES);
   // Cleanup
   gst_video_overlay_composition_unref(comp);
   gst_video_overlay_rectangle_unref(rect);
-  gst_buffer_unref(overlay_buffer);
 
   TRACE_EVENT_END(EV_GST_CLEANUP_RESOURCES);
 

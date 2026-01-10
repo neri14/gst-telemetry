@@ -18,10 +18,11 @@ public:
     bool init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path);
     bool deinit();
 
+    uint64_t get_overlay_raw_size() const;
     cairo_surface_t* draw(time::microseconds_t timestamp);
 
 private:
-    utils::logging::Logger log{"manager"};
+    mutable utils::logging::Logger log{"manager"};
 
     std::shared_ptr<track::Track> track_;
     std::shared_ptr<overlay::Layout> layout_;
