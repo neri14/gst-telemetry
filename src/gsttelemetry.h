@@ -24,6 +24,12 @@ struct _GstTelemetry
 
   ManagerHandle *manager;
   BufferPool *buffer_pool;
+
+  gsize overlay_width;
+  gsize overlay_height;
+  gsize overlay_stride;
+  cairo_format_t overlay_format;
+
   gint64 initial_timestamp;
 
   float offset;

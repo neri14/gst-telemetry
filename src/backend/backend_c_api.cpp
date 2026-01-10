@@ -21,12 +21,19 @@ int manager_deinit(ManagerHandle* handle) {
     return ok ? 0 : -1;
 }
 
-uint64_t manager_get_overlay_raw_size(ManagerHandle* handle) {
-    return reinterpret_cast<telemetry::Manager*>(handle)->get_overlay_raw_size();
+int manager_get_overlay_dimensions(ManagerHandle* handle, size_t* width, size_t* height, size_t* stride) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->get_overlay_dimensions(width, height, stride);
+    return ok ? 0 : -1;
 }
 
-cairo_surface_t* manager_draw(ManagerHandle* handle, int64_t timestamp) {
-    return reinterpret_cast<telemetry::Manager*>(handle)->draw(timestamp);
+int manager_get_overlay_format(ManagerHandle* handle, cairo_format_t* format) {
+    bool ok = reinterpret_cast<telemetry::Manager*>(handle)->get_overlay_format(format);
+    return ok ? 0 : -1;
+}
+
+int manager_draw(ManagerHandle* handle, int64_t timestamp, cairo_surface_t* surface) {
+    bool ok =reinterpret_cast<telemetry::Manager*>(handle)->draw(timestamp, surface);
+    return ok ? 0 : -1;
 }
 
 } // extern "C"

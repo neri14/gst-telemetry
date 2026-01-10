@@ -24,8 +24,10 @@ public:
         int worker_count);
     bool deinit();
 
-    uint64_t get_overlay_raw_size() const;
-    cairo_surface_t* draw(time::microseconds_t timestamp);
+    bool get_overlay_dimensions(size_t* width, size_t* height, size_t* stride) const;
+    bool get_overlay_format(cairo_format_t* format) const;
+
+    bool draw(time::microseconds_t timestamp, cairo_surface_t* surface);
 
 private:
     mutable utils::logging::Logger log{"manager"};
@@ -33,7 +35,7 @@ private:
     std::shared_ptr<track::Track> track_;
     std::shared_ptr<overlay::Layout> layout_;
 
-    cairo_surface_t *surface_ = nullptr;
+    cairo_format_t format_ = CAIRO_FORMAT_ARGB32;
 
     BlockingQueue<std::function<void()>> draw_queue_;
     std::vector<std::jthread> workers;

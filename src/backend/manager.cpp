@@ -108,11 +108,9 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
     }
     log.info("Layout loaded successfully");
 
-    surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, layout_->get_width(), layout_->get_height());
-
     if (worker_count <= 0) {
         log.info("Worker count not configured or incorrect, using auto configuration");
-        worker_count = std::thread::hardware_concurrency() / 2;
+        worker_count = std::thread::hardware_concurrency() * 3 / 4;
         if (worker_count <= 0) {
             log.info("Failed to detect hardware concurrency, using default worker count");
             worker_count = consts::default_worker_count;
@@ -139,9 +137,6 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
 bool Manager::deinit() {
     TRACE_EVENT_BEGIN(EV_MANAGER_DEINIT);
 
-    cairo_surface_destroy(surface_);
-    surface_ = nullptr;
-
     log.info("Stopping worker threads");
     draw_queue_.close();
 
@@ -158,21 +153,29 @@ bool Manager::deinit() {
     return true;
 }
 
-uint64_t Manager::get_overlay_raw_size() const {
-    if (surface_ == nullptr) {
-        log.error("get_overlay_raw_size: no cairo surface available");
-        return 0;
+bool Manager::get_overlay_dimensions(size_t* width, size_t* height, size_t* stride) const {
+    if (layout_ == nullptr) {
+        log.error("get_overlay_dimensions: layout not initialized");
+        return false;
     }
-    return cairo_image_surface_get_stride(surface_) * cairo_image_surface_get_height(surface_);
+    *width = layout_->get_width();
+    *height = layout_->get_height();
+    *stride = cairo_format_stride_for_width(format_, *width);
+    return true;
 }
 
-cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
+bool Manager::get_overlay_format(cairo_format_t* format) const {
+    *format = format_;
+    return true;
+}
+
+bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
     TRACE_EVENT_BEGIN(EV_MANAGER_DRAW);
 
-    if (surface_ == nullptr) {
-        log.error("draw: no cairo surface available");
+    if (surface == nullptr) {
+        log.error("draw: no cairo surface provided");
         TRACE_EVENT_END(EV_MANAGER_DRAW);
-        return nullptr;
+        return false;
     }
 
     std::deque<std::shared_ptr<SurfaceWrapper>> results;
@@ -189,7 +192,7 @@ cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
     log.debug("Drawing overlay at time {} us", timestamp);
     layout_->draw(timestamp, schedule_drawing);
 
-    cairo_t *cr = cairo_create(surface_);
+    cairo_t *cr = cairo_create(surface);
 
     TRACE_EVENT_BEGIN(EV_MANAGER_CLEAR_SURFACE);
     cairo_save(cr);
@@ -209,11 +212,11 @@ cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
         TRACE_EVENT_END(EV_MANAGER_DRAW_CACHE);
     }
 
-    cairo_surface_flush(surface_);
+    cairo_surface_flush(surface);
     cairo_destroy(cr);
 
     TRACE_EVENT_END(EV_MANAGER_DRAW);
-    return surface_;
+    return true;
 }
 
 } // namespace telemetry
