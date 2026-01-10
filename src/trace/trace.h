@@ -57,8 +57,11 @@ void trace_event(trace_event_type_t type, trace_event_names_t event);
 #else // ENABLE_TRACING
 
 #define TRACE_INIT() // empty
-
 #define TRACE_DEINIT() // empty
+#define TRACE_EVENT(type, event) // empty
+#define TRACE_EVENT_BEGIN(event) // empty
+#define TRACE_EVENT_END(event) // empty
+#define TRACE_EVENT_INSTANT(event) // empty
 
 #endif // ENABLE_TRACING
 
