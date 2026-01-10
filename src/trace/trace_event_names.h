@@ -23,6 +23,7 @@ TRACE_EVENT_NAME(EV_CHART_WIDGET_UPDATE_LINE_CACHE, "chart_widget::draw update l
 TRACE_EVENT_NAME(EV_CHART_WIDGET_UPDATE_POINT_CACHE, "chart_widget::draw update point cache")
 TRACE_EVENT_NAME(EV_CHART_WIDGET_DRAW_LINE_CACHE, "chart_widget::draw draw line from cache")
 TRACE_EVENT_NAME(EV_CHART_WIDGET_DRAW_POINT_CACHE, "chart_widget::draw draw point from cache")
+TRACE_EVENT_NAME(EV_CHART_WIDGET_DRAW_COMBINED_CACHE, "chart_widget::draw draw combined from cache")
 
 TRACE_EVENT_NAME(EV_CIRCLE_WIDGET_DRAW, "circle_widget::draw")
 TRACE_EVENT_NAME(EV_CIRCLE_WIDGET_UPDATE_CACHE, "circle_widget::draw update cache")

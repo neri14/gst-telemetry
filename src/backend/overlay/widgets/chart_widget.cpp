@@ -16,6 +16,44 @@ namespace defaults {
     const int line_width = 2;
 } // namespace defaults
 
+
+bool compare(std::shared_ptr<NumericParameter::sections_t> a, std::shared_ptr<NumericParameter::sections_t> b) {
+    bool changed = false;
+
+    if (a && !b) {
+        changed = true;
+    } else if (!a && b) {
+        changed = true;
+    } else if (a && b) {
+        if (a->size() != b->size()) {
+            changed = true;
+        } else {
+            for (size_t i = 0; i < a->size(); i++) {
+                if (a->at(i).size() != b->at(i).size()) {
+                    changed = true;
+                    break;
+                }
+                auto it1 = a->at(i).begin();
+                auto it2 = b->at(i).begin();
+                while (it1 != a->at(i).end() && it2 != b->at(i).end()) {
+                    if (it1->first != it2->first || it1->second != it2->second) {
+                        changed = true;
+                        break;
+                    }
+                    ++it1;
+                    ++it2;
+                }
+                if (changed) {
+                    break;
+                }
+            }
+        }
+    }
+
+    return changed;
+}
+
+
 std::shared_ptr<ChartWidget> ChartWidget::create(parameter_map_ptr parameters) {
     utils::logging::Logger log{"ChartWidget::create"};
     log.info("Creating ChartWidget");
@@ -189,16 +227,16 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
     }
     // update filtering parameters
     if (filter_value_ && filter_value_->update(timestamp)) {
-        invalidate_line_cache = true;
-        invalidate_point_cache = true;
+        // invalidate_line_cache = true;
+        // invalidate_point_cache = true;
     }
     if (filter_max_ && filter_max_->update(timestamp)) {
-        invalidate_line_cache = true;
-        invalidate_point_cache = true;
+        // invalidate_line_cache = true;
+        // invalidate_point_cache = true;
     }
     if (filter_min_ && filter_min_->update(timestamp)) {
-        invalidate_line_cache = true;
-        invalidate_point_cache = true;
+        // invalidate_line_cache = true;
+        // invalidate_point_cache = true;
     }
     if (zoom_to_filter_x_ && zoom_to_filter_x_->update(timestamp)) {
         invalidate_line_cache = true;
@@ -237,18 +275,24 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
         }
     }
 
+    // read filter values
+    bool filter_active = !!filter_value_;
+    double filter_min = filter_min_ ? filter_min_->get_value(timestamp) : std::numeric_limits<double>::min();
+    double filter_max = filter_max_ ? filter_max_->get_value(timestamp) : std::numeric_limits<double>::max();
+    auto filter_values = filter_value_ ? filter_value_->get_values(value_step, filter_min, filter_max) : nullptr;
+
+    if (filter_active && compare(last_filter_values_, filter_values)) {
+        invalidate_line_cache = true;
+        invalidate_point_cache = true;
+        last_filter_values_ = filter_values;
+    }
+
     // redraw line cache if needed
     if (invalidate_line_cache) {
         TRACE_EVENT_BEGIN(EV_CHART_WIDGET_UPDATE_LINE_CACHE);
 
-        // read filter values
-        bool filter_active = !!filter_value_;
         bool filter_zoom_x = filter_active && zoom_to_filter_x_ && zoom_to_filter_x_->get_value(timestamp);
         bool filter_zoom_y = filter_active && zoom_to_filter_y_ && zoom_to_filter_y_->get_value(timestamp);
-
-        double filter_min = filter_min_ ? filter_min_->get_value(timestamp) : std::numeric_limits<double>::min();
-        double filter_max = filter_max_ ? filter_max_->get_value(timestamp) : std::numeric_limits<double>::max();
-        auto filter_values = filter_value_ ? filter_value_->get_values(value_step, filter_min, filter_max) : nullptr;
 
         std::shared_ptr<NumericParameter::sections_t> x_values = nullptr;
         std::shared_ptr<NumericParameter::sections_t> y_values = nullptr;
@@ -327,6 +371,7 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
     }
 
     if (invalidate_line_cache || invalidate_point_cache) {
+        TRACE_EVENT_BEGIN(EV_CHART_WIDGET_DRAW_COMBINED_CACHE);
         int surface_width = 0;
         int surface_height = 0;
 
@@ -372,6 +417,7 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
 
         cairo_destroy(cache_cr);
         combined_cache_drawn_ = true;
+        TRACE_EVENT_END(EV_CHART_WIDGET_DRAW_COMBINED_CACHE);
     }
 
     surface.x =  x - margin_;

@@ -111,6 +111,8 @@ private:
 
     bool stretch_chart_ = false;
 
+    std::shared_ptr<NumericParameter::sections_t> last_filter_values_ = nullptr;
+
     bool invalid_ = false;
 };
 
