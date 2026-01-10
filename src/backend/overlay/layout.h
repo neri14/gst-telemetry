@@ -22,6 +22,9 @@ public:
 
     bool load(const std::string& path);
 
+    int get_width() const;
+    int get_height() const;
+
 private:
     mutable utils::logging::Logger log{"layout"};
 

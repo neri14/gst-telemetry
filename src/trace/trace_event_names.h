@@ -1,7 +1,6 @@
 TRACE_EVENT_NAME(EV_GST_START, "gst_telemetry_start")
 TRACE_EVENT_NAME(EV_GST_STOP, "gst_telemetry_stop")
 TRACE_EVENT_NAME(EV_GST_TRANSFORM_FRAME, "gst_telemetry_transform_frame_ip")
-TRACE_EVENT_NAME(EV_GST_PREPARE_SURFACE, "gst_telemetry_transform_frame_ip prepare surface")
 TRACE_EVENT_NAME(EV_GST_PREPARE_BUFFER, "gst_telemetry_transform_frame_ip prepare buffer")
 TRACE_EVENT_NAME(EV_GST_PREPARE_COMPOSITION, "gst_telemetry_transform_frame_ip prepare composition")
 TRACE_EVENT_NAME(EV_GST_BLEND_OVERLAY, "gst_telemetry_transform_frame_ip blend overlay (CPU mode)")
@@ -10,6 +9,7 @@ TRACE_EVENT_NAME(EV_GST_CLEANUP_RESOURCES, "gst_telemetry_transform_frame_ip cle
 TRACE_EVENT_NAME(EV_MANAGER_INIT, "manager::init")
 TRACE_EVENT_NAME(EV_MANAGER_DEINIT, "manager::deinit")
 TRACE_EVENT_NAME(EV_MANAGER_DRAW, "manager::draw")
+TRACE_EVENT_NAME(EV_MANAGER_CLEAR_SURFACE, "manager::draw clear surface")
 
 TRACE_EVENT_NAME(EV_TRACK_LOAD, "track::load")
 TRACE_EVENT_NAME(EV_TRACK_LOAD_CUSTOM_DATA, "track::load_custom_data")

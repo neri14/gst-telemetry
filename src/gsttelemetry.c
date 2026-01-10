@@ -387,15 +387,6 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
   GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
 
-  TRACE_EVENT_BEGIN(EV_GST_PREPARE_SURFACE);
-
-  gint width = filter->out_info.width;
-  gint height = filter->out_info.height;
-
-  // Create Cairo surface for drawing
-  cairo_surface_t *surface = cairo_image_surface_create(
-    CAIRO_FORMAT_ARGB32, width, height);
-
   // Calculate timestamp relative to initial frame
   gint64 timestamp = GST_TIME_AS_USECONDS(GST_BUFFER_PTS(frame->buffer));
   if (telemetry->initial_timestamp == GST_CLOCK_TIME_NONE) {
@@ -403,19 +394,22 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   }
   timestamp -= telemetry->initial_timestamp;
 
-  TRACE_EVENT_END(EV_GST_PREPARE_SURFACE);
-
   // Call manager to draw telemetry onto Cairo surface
   GST_DEBUG_OBJECT (telemetry, "drawing telemetry for timestamp: %ld us", timestamp);
-  draw(telemetry->manager, timestamp, surface);
+  cairo_surface_t *surface = manager_draw(telemetry->manager, timestamp);
 
-  // Flush Cairo surface to ensure all drawing operations are complete
-  cairo_surface_flush(surface);
+  if (surface == NULL) {
+    GST_ERROR_OBJECT (telemetry, "Failed to draw telemetry overlay");
+    TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
+    return GST_FLOW_ERROR;
+  }
 
   TRACE_EVENT_BEGIN(EV_GST_PREPARE_BUFFER);
   // Get Cairo surface data and stride
   guint8 *cairo_data = cairo_image_surface_get_data(surface);
   gint cairo_stride = cairo_image_surface_get_stride(surface);
+  gint width = cairo_image_surface_get_width(surface);
+  gint height = cairo_image_surface_get_height(surface);
 
   // Create GstBuffer from Cairo surface data
   GstBuffer *overlay_buffer = gst_buffer_new_allocate(NULL, cairo_stride * height, NULL);
@@ -469,7 +463,6 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   gst_video_overlay_composition_unref(comp);
   gst_video_overlay_rectangle_unref(rect);
   gst_buffer_unref(overlay_buffer);
-  cairo_surface_destroy(surface);
 
   TRACE_EVENT_END(EV_GST_CLEANUP_RESOURCES);
 

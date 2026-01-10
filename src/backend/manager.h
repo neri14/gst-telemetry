@@ -18,13 +18,15 @@ public:
     bool init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path);
     bool deinit();
 
-    bool draw(time::microseconds_t timestamp, cairo_surface_t* surface);
+    cairo_surface_t* draw(time::microseconds_t timestamp);
 
 private:
     utils::logging::Logger log{"manager"};
 
     std::shared_ptr<track::Track> track_;
     std::shared_ptr<overlay::Layout> layout_;
+
+    cairo_surface_t *surface_ = nullptr;
 };
 
 } // namespace telemetry

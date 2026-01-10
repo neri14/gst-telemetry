@@ -1,4 +1,4 @@
-<layout>
+<layout width="3840" height="2160">
     <if condition="exists(countdown)">
         <if condition="exists(custom_event)">
             <text x="100" y="100" font-name="DejaVu Sans" font-size="64" align="left"

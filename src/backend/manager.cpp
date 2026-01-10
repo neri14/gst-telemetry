@@ -72,64 +72,49 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
     }
     log.info("Layout loaded successfully");
 
+    surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, layout_->get_width(), layout_->get_height());
+
     TRACE_EVENT_END(EV_MANAGER_INIT);
     return true;
 }
 
 bool Manager::deinit() {
     TRACE_EVENT_BEGIN(EV_MANAGER_DEINIT);
-    // Deinitialization code
-    log.info("Manager deinitialized");
+    
+    cairo_surface_destroy(surface_);
+    surface_ = nullptr;
 
+    log.info("Manager deinitialized");
     TRACE_EVENT_END(EV_MANAGER_DEINIT);
     return true;
 }
 
-bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
+cairo_surface_t* Manager::draw(time::microseconds_t timestamp) {
     TRACE_EVENT_BEGIN(EV_MANAGER_DRAW);
 
-    if (surface == nullptr) {
-        log.error("draw: no cairo surface provided");
-        return false;
+    if (surface_ == nullptr) {
+        log.error("draw: no cairo surface available");
+        TRACE_EVENT_END(EV_MANAGER_DRAW);
+        return nullptr;
     }
 
+    cairo_t *cr = cairo_create(surface_);
+
+    TRACE_EVENT_BEGIN(EV_MANAGER_CLEAR_SURFACE);
+    cairo_save(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
+    cairo_paint(cr);
+    cairo_restore(cr);
+    TRACE_EVENT_END(EV_MANAGER_CLEAR_SURFACE);
+
     log.debug("Drawing overlay at time {} us", timestamp);
-
-    cairo_t *cr = cairo_create(surface);
-
     layout_->draw(timestamp, cr);
 
-    cairo_surface_flush(surface);
+    cairo_surface_flush(surface_);
     cairo_destroy(cr);
 
-    // /** TEST CAIRO DRAWING **/
-    // cairo_t *cr = cairo_create(surface);
-    // // Clear to transparent
-    // cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    // cairo_paint(cr);
-    // cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    // // Draw your overlay content
-    // cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 0.8); // semi-transparent red
-    // cairo_rectangle(cr, 10, 10, 100, 100);
-    // cairo_fill(cr);
-    // // Draw text
-    // cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-    // cairo_select_font_face(cr, "Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-    // cairo_set_font_size(cr, 24);
-    // cairo_move_to(cr, 10, 150);
-
-    // // auto val = track_->get("point.timer", timestamp);
-    // auto val = track_->get("time_elapsed", timestamp);
-    // cairo_show_text(cr, val ? val.as_string().c_str() : "unknown");
-    // // cairo_show_text(cr, "Telemetry");
-
-    // // Flush and destroy
-    // cairo_surface_flush(surface);
-    // cairo_destroy(cr);
-    // /** TEST CAIRO DRAWING **/
-
     TRACE_EVENT_END(EV_MANAGER_DRAW);
-    return true;
+    return surface_;
 }
 
 } // namespace telemetry

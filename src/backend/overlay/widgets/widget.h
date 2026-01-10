@@ -23,7 +23,10 @@ public:
     virtual void draw(time::microseconds_t timestamp, cairo_t* cr,
                       double x_offset = 0, double y_offset = 0);
 
-    inline static parameter_type_map_t parameter_types = {};
+    inline static parameter_type_map_t parameter_types = {
+        {"width", ParameterType::Numeric},
+        {"height", ParameterType::Numeric},
+    };
 
 protected:
     mutable utils::logging::Logger log;

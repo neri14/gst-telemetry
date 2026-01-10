@@ -110,8 +110,18 @@ void LineWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 log.info("Allocated new line cache surface: {}x{}", surface_width, surface_height);
             }
 
-            // draw line onto cache surface
             cairo_t* cache_cr = cairo_create(cache);
+
+            if (cache_drawn) {
+                // clear cache
+                cairo_save(cache_cr);
+                cairo_set_operator(cache_cr, CAIRO_OPERATOR_CLEAR);
+                cairo_paint(cache_cr);
+                cairo_restore(cache_cr);
+                cache_drawn = false;
+            }
+
+            // draw line onto cache surface
             cairo_set_source_rgba(cache_cr, line_color.r, line_color.g, line_color.b, line_color.a);
             cairo_set_line_width(cache_cr, line_width);
             cairo_move_to(cache_cr, x1 - min_x, y1 - min_y);

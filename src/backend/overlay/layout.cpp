@@ -7,6 +7,7 @@
 #include "backend/utils/text_align.h"
 #include "backend/utils/color.h"
 
+#include "widgets/root_widget.h"
 #include "widgets/container_widget.h"
 #include "widgets/conditional_widget.h"
 #include "widgets/timestamp_widget.h"
@@ -119,6 +120,14 @@ bool Layout::load(const std::string& path) {
     return root_ != nullptr;
 }
 
+int Layout::get_width() const {
+    return root_ ? static_pointer_cast<RootWidget>(root_)->get_width(0) : 0;
+}
+
+int Layout::get_height() const {
+    return root_ ? static_pointer_cast<RootWidget>(root_)->get_height(0) : 0;
+}
+
 std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     log.debug("Parsing layout node: {}", node.name());
 
@@ -126,8 +135,8 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     std::shared_ptr<Widget> widget = nullptr;
 
     if (name == "layout") {
-        widget = parse_widget<Widget>(node);
-        log.debug("Created base widget");
+        widget = parse_widget<RootWidget>(node);
+        log.debug("Created Root widget");
     } else if (name == "container") {
         widget = parse_widget<ContainerWidget>(node);
         log.debug("Created Container widget");
