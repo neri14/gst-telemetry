@@ -1,5 +1,6 @@
 #include "line_widget.h"
 #include "backend/utils/color.h"
+#include "trace/trace.h"
 #include <cmath>
 
 extern "C" {
@@ -69,6 +70,8 @@ void LineWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
     visible_->update(timestamp);
 
     if (visible_->get_value(timestamp)) {
+        TRACE_EVENT_BEGIN(EV_LINE_WIDGET_DRAW);
+
         bool cache_update_needed = !cache_drawn;
         for (auto& param : std::vector<parameter_ptr_t>{x_, y_, x2_, y2_, line_width_, line_color_}) {
             if (param->update(timestamp)) {
@@ -77,6 +80,7 @@ void LineWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         }
 
         if (cache_update_needed) {
+            TRACE_EVENT_BEGIN(EV_LINE_WIDGET_UPDATE_CACHE);
             // get parameter values
             double x1 = x_->get_value(timestamp);
             double y1 = y_->get_value(timestamp);
@@ -118,10 +122,16 @@ void LineWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             origin_x_ = min_x;
             origin_y_ = min_y;
             cache_drawn = true;
+
+            TRACE_EVENT_END(EV_LINE_WIDGET_UPDATE_CACHE);
         }
 
+        TRACE_EVENT_BEGIN(EV_LINE_WIDGET_DRAW_CACHE);
         cairo_set_source_surface(cr, cache, origin_x_ + x_offset, origin_y_ + y_offset);
         cairo_paint(cr);
+        TRACE_EVENT_END(EV_LINE_WIDGET_DRAW_CACHE);
+
+        TRACE_EVENT_END(EV_LINE_WIDGET_DRAW);
 
         // draw childern relative to first point
         double x = x_offset + x_->get_value(timestamp);

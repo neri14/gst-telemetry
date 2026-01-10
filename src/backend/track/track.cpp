@@ -1,7 +1,9 @@
 #include "track.h"
 
-#include "backend/utils/time.h"
 #include <cmath>
+
+#include "backend/utils/time.h"
+#include "trace/trace.h"
 
 
 std::string drop_ns(const std::string& name) {
@@ -179,6 +181,7 @@ Track::Track(time::microseconds_t offset): start_offset_(offset) {
 }
 
 bool Track::load(const std::string& path) {
+    TRACE_EVENT_BEGIN(EV_TRACK_LOAD);
     log.info("Loading track from path: {}", path);
 
     pugi::xml_document doc;
@@ -186,31 +189,38 @@ bool Track::load(const std::string& path) {
 
     if (!result) {
         log.error("Failed to load track file: {}. Error description: {}", path, result.description());
+        TRACE_EVENT_END(EV_TRACK_LOAD);
         return false;
     }
 
     if (doc.children().empty()) {
         log.error("Empty track file: {}", path);
+        TRACE_EVENT_END(EV_TRACK_LOAD);
         return false;
     }
 
     if (std::distance(doc.children().begin(), doc.children().end()) > 1) {
         log.error("More than one root node in track file");
+        TRACE_EVENT_END(EV_TRACK_LOAD);
         return false;
     }
 
     pugi::xml_node root = doc.child("gpx");
     if (!root) {
         log.error("No <gpx> root node found in track file");
+        TRACE_EVENT_END(EV_TRACK_LOAD);
         return false;
     }
 
     bool ok = parse_gpx(root);
 
+    TRACE_EVENT_END(EV_TRACK_LOAD);
     return ok;
 }
 
 bool Track::load_custom_data(const std::string& path) {
+    TRACE_EVENT_BEGIN(EV_TRACK_LOAD_CUSTOM_DATA);
+
     log.info("Loading custom data from path: {}", path);
 
     pugi::xml_document doc;
@@ -218,22 +228,26 @@ bool Track::load_custom_data(const std::string& path) {
 
     if (!result) {
         log.error("Failed to load custom data file: {}. Error description: {}", path, result.description());
+        TRACE_EVENT_END(EV_TRACK_LOAD_CUSTOM_DATA);
         return false;
     }
 
     if (doc.children().empty()) {
         log.error("Empty custom data file: {}", path);
+        TRACE_EVENT_END(EV_TRACK_LOAD_CUSTOM_DATA);
         return false;
     }
 
     if (std::distance(doc.children().begin(), doc.children().end()) > 1) {
         log.error("More than one root node in custom data file");
+        TRACE_EVENT_END(EV_TRACK_LOAD_CUSTOM_DATA);
         return false;
     }
 
     pugi::xml_node root = doc.child("custom");
     if (!root) {
         log.error("No <custom> root node found in custom data file");
+        TRACE_EVENT_END(EV_TRACK_LOAD_CUSTOM_DATA);
         return false;
     }
 
@@ -274,6 +288,7 @@ bool Track::load_custom_data(const std::string& path) {
         }
     }
 
+    TRACE_EVENT_END(EV_TRACK_LOAD_CUSTOM_DATA);
     return ok;
 }
 

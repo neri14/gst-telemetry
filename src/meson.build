@@ -18,6 +18,7 @@ headers = [
 # Include backend subdirectory
 subdir('api')
 subdir('backend')
+subdir('trace')
 
 shlib = shared_library('gsttelemetry',
   c_sources + cpp_sources,

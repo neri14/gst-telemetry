@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+#include "trace/trace.h"
+
 #include "backend/utils/text_align.h"
 #include "backend/utils/color.h"
 
@@ -48,12 +50,16 @@ Layout::Layout(std::shared_ptr<track::Track> track)
 }
 
 void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
+    TRACE_EVENT_BEGIN(EV_LAYOUT_DRAW);
+
     if (cr == nullptr) {
         log.error("draw: no cairo canvas provided");
+        TRACE_EVENT_END(EV_LAYOUT_DRAW);
         return;
     }
     if (root_ == nullptr) {
         log.warning("draw: no root widget defined");
+        TRACE_EVENT_END(EV_LAYOUT_DRAW);
         return;
     }
     //TODO future optimization idea (probably first tracing needs to be ported to verify gains):
@@ -70,9 +76,13 @@ void Layout::draw(time::microseconds_t timestamp, cairo_t* cr) {
 
     std::chrono::duration<double, std::milli> elapsed = t2 - t1;
     log.debug("Layout drawing time: {} ms", elapsed.count());
+
+    TRACE_EVENT_END(EV_LAYOUT_DRAW);
 }
 
 bool Layout::load(const std::string& path) {
+    TRACE_EVENT_BEGIN(EV_LAYOUT_LOAD);
+
     log.info("Loading layout from path: {}", path);
     
     pugi::xml_document doc;
@@ -80,27 +90,32 @@ bool Layout::load(const std::string& path) {
 
     if (!result) {
         log.error("Failed to load layout file: {}. Error description: {}", path, result.description());
+        TRACE_EVENT_END(EV_LAYOUT_LOAD);
         return false;
     }
 
     if (doc.children().empty()) {
         log.error("Empty layout file: {}", path);
+        TRACE_EVENT_END(EV_LAYOUT_LOAD);
         return false;
     }
 
     if (std::distance(doc.children().begin(), doc.children().end()) > 1) {
         log.error("More than one root node in layout file");
+        TRACE_EVENT_END(EV_LAYOUT_LOAD);
         return false;
     }
 
     pugi::xml_node node = doc.child("layout");
     if (!node) {
         log.error("No <layout> root node found in layout file");
+        TRACE_EVENT_END(EV_LAYOUT_LOAD);
         return false;
     }
 
     root_ = parse_node(node);
 
+    TRACE_EVENT_END(EV_LAYOUT_LOAD);
     return root_ != nullptr;
 }
 

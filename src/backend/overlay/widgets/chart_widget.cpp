@@ -1,5 +1,6 @@
 #include "chart_widget.h"
 #include "backend/utils/color.h"
+#include "trace/trace.h"
 #include <cmath>
 
 extern "C" {
@@ -115,6 +116,8 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
     visible_->update(timestamp);
 
     if (visible_->get_value(timestamp)) {
+        TRACE_EVENT_BEGIN(EV_CHART_WIDGET_DRAW);
+
         // if cache is not drawn, mark for redraw
         bool invalidate_line_cache = !line_cache_drawn_;
         bool invalidate_point_cache = !point_cache_drawn_;
@@ -216,6 +219,8 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
         // redraw line cache if needed
         if (invalidate_line_cache) {
+            TRACE_EVENT_BEGIN(EV_CHART_WIDGET_UPDATE_LINE_CACHE);
+
             // read filter values
             bool filter_active = !!filter_value_;
             bool filter_zoom_x = filter_active && zoom_to_filter_x_ && zoom_to_filter_x_->get_value(timestamp);
@@ -267,12 +272,16 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
             if (invalid_) {
                 log.error("ChartWidget is in invalid state, aborting drawing");
+                TRACE_EVENT_END(EV_CHART_WIDGET_UPDATE_LINE_CACHE);
+                TRACE_EVENT_END(EV_CHART_WIDGET_DRAW);
                 return;
             }
 
             redraw_line_cache(width, height,
                 line_color_->get_value(timestamp), line_width, x_values, y_values);
             line_cache_drawn_ = true;
+
+            TRACE_EVENT_END(EV_CHART_WIDGET_UPDATE_LINE_CACHE);
         }
 
         // recalutate x and y values after possible track cache update
@@ -289,10 +298,12 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
         // redraw point cache if needed
         if (invalidate_point_cache) {
+            TRACE_EVENT_BEGIN(EV_CHART_WIDGET_UPDATE_POINT_CACHE);
             redraw_point_cache(width, height,
                 point_color_ ? point_color_->get_value(timestamp) : color::transparent,
                 point_size, x_value, y_value);
             point_cache_drawn_ = true;
+            TRACE_EVENT_END(EV_CHART_WIDGET_UPDATE_POINT_CACHE);
         }
 
         // calculate widget position
@@ -307,19 +318,26 @@ void ChartWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
 
         // draw caches onto surface
         if (line_cache_) {
+            TRACE_EVENT_BEGIN(EV_CHART_WIDGET_DRAW_LINE_CACHE);
             cairo_set_source_surface(cr, line_cache_, draw_x, draw_y);
             cairo_paint(cr);
+            TRACE_EVENT_END(EV_CHART_WIDGET_DRAW_LINE_CACHE);
         }
         if (point_cache_) {
+            TRACE_EVENT_BEGIN(EV_CHART_WIDGET_DRAW_POINT_CACHE);
             cairo_set_source_surface(cr, point_cache_, draw_x, draw_y);
             cairo_paint(cr);
+            TRACE_EVENT_END(EV_CHART_WIDGET_DRAW_POINT_CACHE);
         }
+
+        TRACE_EVENT_END(EV_CHART_WIDGET_DRAW);
 
         // draw childern relative to chart top-left
         Widget::draw(timestamp, cr, x, y);
     } else {
         log.debug("Visibility is false, skipping drawing");
     }
+    
 }
 
 void ChartWidget::redraw_line_cache(double width, double height,
