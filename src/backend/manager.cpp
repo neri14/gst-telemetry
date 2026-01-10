@@ -18,7 +18,7 @@ Manager::~Manager() {
 };
 
 bool Manager::init(float offset, const char* track_path, const char* custom_data_path, const char* layout_path) {
-    TRACE_EVENT_BEGIN(CAT_MANAGER, EV_MANAGER_INIT);
+    TRACE_EVENT_BEGIN(EV_MANAGER_INIT);
 
     // Initialization code using the offset
     log.info("Manager initialization started");
@@ -34,7 +34,7 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
     }
     if (!ok) {
         log.error("Insufficient parameters provided for initialization");
-        TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_INIT);
+        TRACE_EVENT_END(EV_MANAGER_INIT);
         return false;
     }
 
@@ -48,7 +48,7 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
     ok = track_->load(track_path);
     if (!ok) {
         log.error("Failed to load track from path: {}", track_path);
-        TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_INIT);
+        TRACE_EVENT_END(EV_MANAGER_INIT);
         return false;
     }
     log.info("Track loaded successfully");
@@ -57,7 +57,7 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
         ok = track_->load_custom_data(custom_data_path);
         if (!ok) {
             log.error("Failed to load custom data from path: {}", custom_data_path);
-            TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_INIT);
+            TRACE_EVENT_END(EV_MANAGER_INIT);
             return false;
         }
         log.info("Custom data loaded successfully");
@@ -67,26 +67,26 @@ bool Manager::init(float offset, const char* track_path, const char* custom_data
     ok = layout_->load(layout_path);
     if (!ok) {
         log.error("Failed to load layout from path: {}", layout_path);
-        TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_INIT);
+        TRACE_EVENT_END(EV_MANAGER_INIT);
         return false;
     }
     log.info("Layout loaded successfully");
 
-    TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_INIT);
+    TRACE_EVENT_END(EV_MANAGER_INIT);
     return true;
 }
 
 bool Manager::deinit() {
-    TRACE_EVENT_BEGIN(CAT_MANAGER, EV_MANAGER_DEINIT);
+    TRACE_EVENT_BEGIN(EV_MANAGER_DEINIT);
     // Deinitialization code
     log.info("Manager deinitialized");
 
-    TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_DEINIT);
+    TRACE_EVENT_END(EV_MANAGER_DEINIT);
     return true;
 }
 
 bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
-    TRACE_EVENT_BEGIN(CAT_MANAGER, EV_MANAGER_DRAW);
+    TRACE_EVENT_BEGIN(EV_MANAGER_DRAW);
 
     if (surface == nullptr) {
         log.error("draw: no cairo surface provided");
@@ -128,7 +128,7 @@ bool Manager::draw(time::microseconds_t timestamp, cairo_surface_t* surface) {
     // cairo_destroy(cr);
     // /** TEST CAIRO DRAWING **/
 
-    TRACE_EVENT_END(CAT_MANAGER, EV_MANAGER_DRAW);
+    TRACE_EVENT_END(EV_MANAGER_DRAW);
     return true;
 }
 

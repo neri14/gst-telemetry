@@ -236,7 +236,7 @@ gst_telemetry_start (GstBaseTransform * trans)
   GstTelemetry *telemetry = GST_TELEMETRY (trans);
   GST_DEBUG_OBJECT (telemetry, "start");
   TRACE_INIT();
-  TRACE_EVENT_BEGIN(CAT_GST_TELEMETRY, EV_GST_START);
+  TRACE_EVENT_BEGIN(EV_GST_START);
 
   gst_base_transform_set_passthrough (trans, FALSE);
   gst_base_transform_set_in_place (trans, TRUE);
@@ -247,7 +247,7 @@ gst_telemetry_start (GstBaseTransform * trans)
   ret = manager_init (telemetry->manager, telemetry->offset, telemetry->track, telemetry->custom_data, telemetry->layout);
   GST_OBJECT_UNLOCK (telemetry);
 
-  TRACE_EVENT_END(CAT_GST_TELEMETRY, EV_GST_START);
+  TRACE_EVENT_END(EV_GST_START);
   if (ret != 0) {
     GST_ERROR_OBJECT (telemetry, "Failed to initialize telemetry manager");
     return FALSE;
@@ -258,7 +258,7 @@ gst_telemetry_start (GstBaseTransform * trans)
 static gboolean
 gst_telemetry_stop (GstBaseTransform * trans)
 {
-  TRACE_EVENT_BEGIN(CAT_GST_TELEMETRY, EV_GST_STOP);
+  TRACE_EVENT_BEGIN(EV_GST_STOP);
   GstTelemetry *telemetry = GST_TELEMETRY (trans);
 
   GST_DEBUG_OBJECT (telemetry, "stop");
@@ -269,7 +269,7 @@ gst_telemetry_stop (GstBaseTransform * trans)
   ret = manager_deinit (telemetry->manager);
   GST_OBJECT_UNLOCK (telemetry);
 
-  TRACE_EVENT_END(CAT_GST_TELEMETRY, EV_GST_STOP);
+  TRACE_EVENT_END(EV_GST_STOP);
   TRACE_DEINIT();
 
   if (ret != 0) {
@@ -382,10 +382,12 @@ gst_telemetry_set_info (GstVideoFilter * filter, GstCaps * incaps,
 static GstFlowReturn
 gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame)
 {
-  TRACE_EVENT_BEGIN(CAT_GST_TELEMETRY, EV_GST_TRANSFORM_FRAME);
+  TRACE_EVENT_BEGIN(EV_GST_TRANSFORM_FRAME);
 
   GstTelemetry *telemetry = GST_TELEMETRY (filter);
   GST_DEBUG_OBJECT (telemetry, "transform_frame_ip");
+
+  TRACE_EVENT_BEGIN(EV_GST_PREPARE_SURFACE);
 
   gint width = filter->out_info.width;
   gint height = filter->out_info.height;
@@ -401,6 +403,8 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   }
   timestamp -= telemetry->initial_timestamp;
 
+  TRACE_EVENT_END(EV_GST_PREPARE_SURFACE);
+
   // Call manager to draw telemetry onto Cairo surface
   GST_DEBUG_OBJECT (telemetry, "drawing telemetry for timestamp: %ld us", timestamp);
   draw(telemetry->manager, timestamp, surface);
@@ -408,6 +412,7 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   // Flush Cairo surface to ensure all drawing operations are complete
   cairo_surface_flush(surface);
 
+  TRACE_EVENT_BEGIN(EV_GST_PREPARE_BUFFER);
   // Get Cairo surface data and stride
   guint8 *cairo_data = cairo_image_surface_get_data(surface);
   gint cairo_stride = cairo_image_surface_get_stride(surface);
@@ -420,6 +425,9 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   gst_buffer_add_video_meta(overlay_buffer, GST_VIDEO_FRAME_FLAG_NONE,
                             GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, width, height);
 
+  TRACE_EVENT_END(EV_GST_PREPARE_BUFFER);
+
+  TRACE_EVENT_BEGIN(EV_GST_PREPARE_COMPOSITION);
   // Create overlay rectangle
   GstVideoOverlayRectangle *rect = gst_video_overlay_rectangle_new_raw(
       overlay_buffer,
@@ -430,14 +438,18 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   // Create composition
   GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(rect);
 
+  TRACE_EVENT_END(EV_GST_PREPARE_COMPOSITION);
+
   if (telemetry->gl_mode) {
     // In GL mode, attach as metadata
     GST_DEBUG_OBJECT (telemetry, "Attaching overlay as metadata for GL pipeline");
     gst_buffer_add_video_overlay_composition_meta(frame->buffer, comp);
   } else {
+    TRACE_EVENT_BEGIN(EV_GST_BLEND_OVERLAY);
     // In CPU mode, blend directly
     GST_DEBUG_OBJECT (telemetry, "Blending overlay directly in CPU pipeline");
     gst_video_overlay_composition_blend(comp, frame);
+    TRACE_EVENT_END(EV_GST_BLEND_OVERLAY);
   }
 
   //BEGIN ugly hack - hold on to the old composition reference until next frame is drawn;
@@ -452,12 +464,15 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
   old_comp = gst_video_overlay_composition_ref(comp);
   //END ugly hack
 
+  TRACE_EVENT_BEGIN(EV_GST_CLEANUP_RESOURCES);
   // Cleanup
   gst_video_overlay_composition_unref(comp);
   gst_video_overlay_rectangle_unref(rect);
   gst_buffer_unref(overlay_buffer);
   cairo_surface_destroy(surface);
 
-  TRACE_EVENT_END(CAT_GST_TELEMETRY, EV_GST_TRANSFORM_FRAME);
+  TRACE_EVENT_END(EV_GST_CLEANUP_RESOURCES);
+
+  TRACE_EVENT_END(EV_GST_TRANSFORM_FRAME);
   return GST_FLOW_OK;
 }

@@ -7,6 +7,5 @@ endif
 
 headers += files(
   'trace.h',
-  'trace_categories.h',
   'trace_event_names.h',
 )

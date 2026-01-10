@@ -1,5 +1,6 @@
 #include "circle_widget.h"
 #include "backend/utils/color.h"
+#include "trace/trace.h"
 #include <cmath>
 
 extern "C" {
@@ -75,6 +76,7 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
     //visibility change does not invalidate cache
 
     if (visible_->get_value(timestamp)) {
+        TRACE_EVENT_BEGIN(EV_CIRCLE_WIDGET_DRAW);
         for (auto& param : {x_, y_}) {
             param->update(timestamp);
             // discarding return value since x,y change does not invalidate cache
@@ -91,6 +93,7 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         }
 
         if (cache_update_needed) {
+            TRACE_EVENT_BEGIN(EV_CIRCLE_WIDGET_UPDATE_CACHE);
             double radius = radius_->get_value(timestamp);
             double border_width = border_width_->get_value(timestamp);
 
@@ -141,13 +144,18 @@ void CircleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             }
 
             cairo_destroy(cache_cr);
+            TRACE_EVENT_END(EV_CIRCLE_WIDGET_UPDATE_CACHE);
         }
 
         double x = x_offset + x_->get_value(timestamp);
         double y = y_offset + y_->get_value(timestamp);
 
+        TRACE_EVENT_BEGIN(EV_CIRCLE_WIDGET_DRAW_CACHE)
         cairo_set_source_surface(cr, cache, x - cache_width / 2.0, y - cache_height / 2.0);
         cairo_paint(cr);
+        TRACE_EVENT_END(EV_CIRCLE_WIDGET_DRAW_CACHE)
+
+        TRACE_EVENT_END(EV_CIRCLE_WIDGET_DRAW);
 
         // draw childern relative to circle center
         // (only if circle is visible)

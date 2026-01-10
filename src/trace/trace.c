@@ -20,19 +20,12 @@ typedef struct Event {
     uint64_t timestamp;
     pid_t thread_id;
     uint8_t type;
-    uint8_t category;
     uint16_t event;
 } Event;
 
 static atomic_uint_fast32_t trace_count = 0;
 static Event *trace_buffer = NULL;
 static uint32_t trace_buffer_size = 0;
-
-const char *trace_catorgy_names[TRACE_CAT_COUNT] = {
-#define TRACE_CAT(id, name) name,
-#include "trace_categories.h"
-#undef TRACE_CAT
-};
 
 const char *trace_event_names[TRACE_EVENT_NAME_COUNT] = {
 #define TRACE_EVENT_NAME(id, name) name,
@@ -49,11 +42,11 @@ void trace_init() {
     }
 
     printf("Tracing initialized with buffer size: %.2f MB (%u events)\n", (TRACE_SIZE / 1048576.0), trace_buffer_size);
-    (void)trace_count;
 }
 
 void trace_deinit() {
-    printf("Total trace events recorded: %u of %u max\n", (uint32_t)atomic_load(&trace_count), trace_buffer_size);
+    uint32_t recorded_events = atomic_load(&trace_count);
+    printf("Total trace events recorded: %u (%.2f MB) of %u (%.2f MB) max\n", recorded_events, recorded_events * sizeof(Event) / 1048576.0, trace_buffer_size, TRACE_SIZE / 1048576.0);
 
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -66,16 +59,15 @@ void trace_deinit() {
     if (file) {
         fprintf(file, "[\n");
 
-        for (uint32_t i = 0; i < atomic_load(&trace_count); i++) {
+        for (uint32_t i = 0; i < recorded_events; i++) {
             Event *e = &trace_buffer[i];
-            fprintf(file, "{\"cat\": \"%s\", \"name\": \"%s\", \"ph\": \"%c\", \"ts\": %lu, \"pid\": %d, \"tid\": %d}",
-                    trace_catorgy_names[e->category],    
+            fprintf(file, "{\"name\": \"%s\", \"ph\": \"%c\", \"ts\": %lu, \"pid\": %d, \"tid\": %d}",
                     trace_event_names[e->event],
                     e->type == EVT_BEGIN ? 'B' : (e->type == EVT_END ? 'E' : 'i'),
                     e->timestamp,
                     pid,
                     e->thread_id);
-            if (i + 1 < atomic_load(&trace_count)) {
+            if (i + 1 < recorded_events) {
                 fprintf(file, ",\n");
             }
         }
@@ -94,7 +86,7 @@ void trace_deinit() {
     printf("Tracing deinitialized\n");
 }
 
-void trace_event(trace_event_type_t type, trace_category_t category, trace_event_names_t event) {
+void trace_event(trace_event_type_t type, trace_event_names_t event) {
     if (!trace_buffer) {
         return;
     }
@@ -115,7 +107,6 @@ void trace_event(trace_event_type_t type, trace_category_t category, trace_event
     e->timestamp = (uint64_t)tv.tv_sec * 1000000 + tv.tv_usec;
     e->thread_id = syscall(SYS_gettid);
     e->type = (uint8_t)type;
-    e->category = (uint8_t)category;
     e->event = (uint16_t)event;
 }
 

@@ -1,6 +1,7 @@
 #include "string_widget.h"
 #include "backend/utils/color.h"
 #include "backend/utils/text_align.h"
+#include "trace/trace.h"
 #include <cmath>
 
 extern "C" {
@@ -95,6 +96,8 @@ void StringWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
     //visibility change does not invalidate cache
 
     if (visible_->get_value(timestamp)) {
+        TRACE_EVENT_BEGIN(EV_STRING_WIDGET_DRAW);
+
         for (auto& param : {x_, y_}) {
             param->update(timestamp);
             // discarding return value since x,y change does not invalidate cache
@@ -117,6 +120,8 @@ void StringWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         int margin = static_cast<int>(border_width_->get_value(timestamp) + font_size_->get_value(timestamp) * 0.5);
 
         if (cache_update_needed) {
+            TRACE_EVENT_BEGIN(EV_STRING_WIDGET_UPDATE_CACHE);
+
             std::string text = get_value(timestamp);
             int font_size = static_cast<int>(std::round(font_size_->get_value(timestamp)));
 
@@ -159,6 +164,8 @@ void StringWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                       border_color_->get_value(timestamp));
             cairo_destroy(cache_cr);
             cache_drawn = true;
+
+            TRACE_EVENT_END(EV_STRING_WIDGET_UPDATE_CACHE);
         }
 
         double x = x_offset + x_->get_value(timestamp);
@@ -179,8 +186,12 @@ void StringWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
                 break;
         }
 
+        TRACE_EVENT_BEGIN(EV_STRING_WIDGET_DRAW_CACHE);
         cairo_set_source_surface(cr, cache, draw_x, draw_y);
         cairo_paint(cr);
+        TRACE_EVENT_END(EV_STRING_WIDGET_DRAW_CACHE);
+
+        TRACE_EVENT_END(EV_STRING_WIDGET_DRAW);
 
         // draw childern relative to text anchor point (only if text visible)
         Widget::draw(timestamp, cr, x, y);

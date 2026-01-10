@@ -1,5 +1,6 @@
 #include "rectangle_widget.h"
 #include "backend/utils/color.h"
+#include "trace/trace.h"
 #include <cmath>
 
 extern "C" {
@@ -76,6 +77,8 @@ void RectangleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
     visible_->update(timestamp);
 
     if (visible_->get_value(timestamp)) {
+        TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_DRAW);
+
         for (auto& param : {x_, y_}) {
             param->update(timestamp);
         }
@@ -88,6 +91,8 @@ void RectangleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
         }
 
         if (cache_update_needed) {
+            TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_UPDATE_CACHE);
+
             double width = width_->get_value(timestamp);
             double height = height_->get_value(timestamp);
             double border_width = border_width_->get_value(timestamp);
@@ -139,13 +144,19 @@ void RectangleWidget::draw(time::microseconds_t timestamp, cairo_t* cr,
             cache_drawn = true;
 
             cairo_destroy(cache_cr);
+
+            TRACE_EVENT_END(EV_RECTANGLE_WIDGET_UPDATE_CACHE);
         }
 
         double x = x_offset + x_->get_value(timestamp);
         double y = y_offset + y_->get_value(timestamp);
 
+        TRACE_EVENT_BEGIN(EV_RECTANGLE_WIDGET_DRAW_CACHE);
         cairo_set_source_surface(cr, cache, x - margin_, y - margin_);
         cairo_paint(cr);
+        TRACE_EVENT_END(EV_RECTANGLE_WIDGET_DRAW_CACHE);
+
+        TRACE_EVENT_END(EV_RECTANGLE_WIDGET_DRAW);
 
         // draw childern relative to circle center
         // (only if circle is visible)
