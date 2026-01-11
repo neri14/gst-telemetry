@@ -50,8 +50,7 @@ public:
 private:
     void draw_impl(Surface& surface, time::microseconds_t timestamp, double x, double y);
 
-    void redraw_line_cache(double width, double height,
-                       rgb line_color, double line_width,
+    void redraw_line_cache(double width, double height, double line_width,
                        std::shared_ptr<NumericParameter::sections_t> x_values,
                        std::shared_ptr<NumericParameter::sections_t> y_values);
     void redraw_point_cache(double width, double height, 

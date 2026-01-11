@@ -213,9 +213,6 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
         invalidate_line_cache = true;
         invalidate_point_cache = true;
     }
-    if (line_color_ && line_color_->update(timestamp)) {
-        invalidate_line_cache = true;
-    }
     if (line_width_ && line_width_->update(timestamp)) {
         invalidate_line_cache = true;
     }
@@ -343,8 +340,7 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
             return;
         }
 
-        redraw_line_cache(width, height,
-            line_color_->get_value(timestamp), line_width, x_values, y_values);
+        redraw_line_cache(width, height, line_width, x_values, y_values);
         line_cache_drawn_ = true;
 
         TRACE_EVENT_END(EV_CHART_WIDGET_UPDATE_LINE_CACHE);
@@ -430,8 +426,7 @@ void ChartWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
 }
 
 
-void ChartWidget::redraw_line_cache(double width, double height,
-                                    rgb line_color, double line_width,
+void ChartWidget::redraw_line_cache(double width, double height, double line_width,
                                     std::shared_ptr<NumericParameter::sections_t> x_values,
                                     std::shared_ptr<NumericParameter::sections_t> y_values) {
     int surface_width = 0;
@@ -463,13 +458,19 @@ void ChartWidget::redraw_line_cache(double width, double height,
         line_cache_drawn_ = false;
     }
 
+    bool static_color = line_color_->is_static();
+
     //draw line
     if (line_width > 0) {
         cairo_set_line_cap(cache_cr, CAIRO_LINE_CAP_SQUARE);
         cairo_set_line_join(cache_cr, CAIRO_LINE_JOIN_BEVEL);
 
         cairo_set_line_width(cache_cr, line_width);
-        cairo_set_source_rgba(cache_cr, line_color.r, line_color.g, line_color.b, line_color.a);
+
+        if (static_color) {
+            rgb static_color = line_color_->get_value(time::INVALID_TIME);
+            cairo_set_source_rgba(cache_cr, static_color.r, static_color.g, static_color.b, static_color.a);
+        }
 
         auto find_y_value = [&](time::microseconds_t ts) -> double {
             for (const auto& section : *y_values) {
@@ -487,7 +488,6 @@ void ChartWidget::redraw_line_cache(double width, double height,
                 double y_val = find_y_value(ts);
 
                 if (std::isnan(x_val) || std::isnan(y_val)) {
-                    cairo_stroke(cache_cr); // finish current section
                     last_point_valid = false;
                     continue; // skip NaN values
                 }
@@ -497,13 +497,18 @@ void ChartWidget::redraw_line_cache(double width, double height,
                 y_pos += margin_;
 
                 if (last_point_valid && cairo_has_current_point(cache_cr)) {
+                    if (!static_color) {
+                        line_color_->update(ts);
+                        rgb dynamic_color = line_color_->get_value(ts);
+                        cairo_set_source_rgba(cache_cr, dynamic_color.r, dynamic_color.g, dynamic_color.b, dynamic_color.a);
+                    }
                     cairo_line_to(cache_cr, x_pos, y_pos);
+                    cairo_stroke(cache_cr);
                 } else {
                     cairo_move_to(cache_cr, x_pos, y_pos);
                 }
                 last_point_valid = true;
             }
-            cairo_stroke(cache_cr); // finish section
         }
     }
 
