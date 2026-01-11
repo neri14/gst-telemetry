@@ -25,6 +25,14 @@ std::shared_ptr<TextWidget> TextWidget::create(parameter_map_ptr parameters) {
             widget->value_ = std::dynamic_pointer_cast<FormattedParameter>(param);
         } else if (name == "format") {
             format = std::dynamic_pointer_cast<StringParameter>(param);
+        } else if (name == "override-time") {
+            auto num_param = std::dynamic_pointer_cast<NumericParameter>(param);
+            if (num_param) {
+                widget->override_time_set = true;
+                widget->override_time_ = num_param->get_value(0);
+            } else {
+                log.error("Invalid parameter type for 'override-time', expected NumericParameter");
+            }
         }
     }
 
@@ -41,6 +49,7 @@ std::shared_ptr<TextWidget> TextWidget::create(parameter_map_ptr parameters) {
 
     parameters->erase("value");
     parameters->erase("format");
+    parameters->erase("override-time");
     StringWidget::load_params(widget, parameters);
 
     return widget;
@@ -51,10 +60,16 @@ TextWidget::TextWidget()
 }
 
 bool TextWidget::update_value(time::microseconds_t timestamp) {
+    if (override_time_set) {
+        timestamp = static_cast<time::microseconds_t>(override_time_ * 1'000'000);
+    }
     return value_->update(timestamp);
 }
 
 std::string TextWidget::get_value(time::microseconds_t timestamp) const {
+    if (override_time_set) {
+        timestamp = static_cast<time::microseconds_t>(override_time_ * 1'000'000);
+    }
     return value_->get_value(timestamp);
 }
 

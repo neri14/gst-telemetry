@@ -1,6 +1,742 @@
-<layout>
-    <text x="1920" y="300" font-name="DejaVu Sans" font-size="64" align="center"
+<layout width="3840" height="2160" >
+    <text x="1920" y="10" font-name="DejaVu Sans" font-size="32" align="center"
             color="white" border-width="4" border-color="black"
             value="key(video_time)" format="{:.6f}" />
+
+    <text x="300" y="70" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="KM/H" />
+    <text x="400" y="70" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="W" />
+    <text x="500" y="70" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="W 3s" />
+    <text x="650" y="70" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="offset" />
+
+    <text x="200" y="150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=0" />
+    <text x="300" y="150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="0"/>
+    <text x="400" y="150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="0"/>
+    <text x="500" y="150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="0"/>
+    <text x="650" y="150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-0)" format="{:.6f}" />
+
+    <text x="200" y="200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=1" />
+    <text x="300" y="200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="1"/>
+    <text x="400" y="200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="1"/>
+    <text x="500" y="200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="1"/>
+    <text x="650" y="200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-1)" format="{:.6f}" />
+
+    <text x="200" y="250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=2" />
+    <text x="300" y="250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="2"/>
+    <text x="400" y="250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="2"/>
+    <text x="500" y="250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="2"/>
+    <text x="650" y="250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-2)" format="{:.6f}" />
+
+    <text x="200" y="300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=3" />
+    <text x="300" y="300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="3"/>
+    <text x="400" y="300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="3"/>
+    <text x="500" y="300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="3"/>
+    <text x="650" y="300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-3)" format="{:.6f}" />
+
+    <text x="200" y="350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=4" />
+    <text x="300" y="350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="4"/>
+    <text x="400" y="350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="4"/>
+    <text x="500" y="350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="4"/>
+    <text x="650" y="350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-4)" format="{:.6f}" />
+
+    <text x="200" y="400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=5" />
+    <text x="300" y="400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="5"/>
+    <text x="400" y="400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="5"/>
+    <text x="500" y="400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="5"/>
+    <text x="650" y="400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-5)" format="{:.6f}" />
+
+    <text x="200" y="450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=6" />
+    <text x="300" y="450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="6"/>
+    <text x="400" y="450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="6"/>
+    <text x="500" y="450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="6"/>
+    <text x="650" y="450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-6)" format="{:.6f}" />
+
+    <text x="200" y="500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=7" />
+    <text x="300" y="500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="7"/>
+    <text x="400" y="500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="7"/>
+    <text x="500" y="500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="7"/>
+    <text x="650" y="500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-7)" format="{:.6f}" />
+
+    <text x="200" y="550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=8" />
+    <text x="300" y="550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="8"/>
+    <text x="400" y="550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="8"/>
+    <text x="500" y="550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="8"/>
+    <text x="650" y="550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-8)" format="{:.6f}" />
+
+    <text x="200" y="600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=9" />
+    <text x="300" y="600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="9"/>
+    <text x="400" y="600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="9"/>
+    <text x="500" y="600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="9"/>
+    <text x="650" y="600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-9)" format="{:.6f}" />
+
+    <text x="200" y="650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=10" />
+    <text x="300" y="650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="10"/>
+    <text x="400" y="650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="10"/>
+    <text x="500" y="650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="10"/>
+    <text x="650" y="650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-10)" format="{:.6f}" />
+
+    <text x="200" y="700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=11" />
+    <text x="300" y="700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="11"/>
+    <text x="400" y="700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="11"/>
+    <text x="500" y="700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="11"/>
+    <text x="650" y="700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-11)" format="{:.6f}" />
+
+    <text x="200" y="750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=12" />
+    <text x="300" y="750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="12"/>
+    <text x="400" y="750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="12"/>
+    <text x="500" y="750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="12"/>
+    <text x="650" y="750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-12)" format="{:.6f}" />
+
+    <text x="200" y="800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=13" />
+    <text x="300" y="800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="13"/>
+    <text x="400" y="800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="13"/>
+    <text x="500" y="800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="13"/>
+    <text x="650" y="800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-13)" format="{:.6f}" />
+
+    <text x="200" y="850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=14" />
+    <text x="300" y="850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="14"/>
+    <text x="400" y="850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="14"/>
+    <text x="500" y="850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="14"/>
+    <text x="650" y="850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-14)" format="{:.6f}" />
+
+    <text x="200" y="900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=15" />
+    <text x="300" y="900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="15"/>
+    <text x="400" y="900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="15"/>
+    <text x="500" y="900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="15"/>
+    <text x="650" y="900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-15)" format="{:.6f}" />
+
+    <text x="200" y="950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=16" />
+    <text x="300" y="950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="16"/>
+    <text x="400" y="950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="16"/>
+    <text x="500" y="950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="16"/>
+    <text x="650" y="950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-16)" format="{:.6f}" />
+
+    <text x="200" y="1000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=17" />
+    <text x="300" y="1000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="17"/>
+    <text x="400" y="1000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="17"/>
+    <text x="500" y="1000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="17"/>
+    <text x="650" y="1000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-17)" format="{:.6f}" />
+
+    <text x="200" y="1050" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=18" />
+    <text x="300" y="1050" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="18"/>
+    <text x="400" y="1050" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="18"/>
+    <text x="500" y="1050" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="18"/>
+    <text x="650" y="1050" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-18)" format="{:.6f}" />
+
+    <text x="200" y="1100" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=19" />
+    <text x="300" y="1100" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="19"/>
+    <text x="400" y="1100" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="19"/>
+    <text x="500" y="1100" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="19"/>
+    <text x="650" y="1100" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-19)" format="{:.6f}" />
+
+    <text x="200" y="1150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=20" />
+    <text x="300" y="1150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="20"/>
+    <text x="400" y="1150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="20"/>
+    <text x="500" y="1150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="20"/>
+    <text x="650" y="1150" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-20)" format="{:.6f}" />
+
+    <text x="200" y="1200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=21" />
+    <text x="300" y="1200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="21"/>
+    <text x="400" y="1200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="21"/>
+    <text x="500" y="1200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="21"/>
+    <text x="650" y="1200" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-21)" format="{:.6f}" />
+
+    <text x="200" y="1250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=22" />
+    <text x="300" y="1250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="22"/>
+    <text x="400" y="1250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="22"/>
+    <text x="500" y="1250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="22"/>
+    <text x="650" y="1250" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-22)" format="{:.6f}" />
+
+    <text x="200" y="1300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=23" />
+    <text x="300" y="1300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="23"/>
+    <text x="400" y="1300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="23"/>
+    <text x="500" y="1300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="23"/>
+    <text x="650" y="1300" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-23)" format="{:.6f}" />
+
+    <text x="200" y="1350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=24" />
+    <text x="300" y="1350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="24"/>
+    <text x="400" y="1350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="24"/>
+    <text x="500" y="1350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="24"/>
+    <text x="650" y="1350" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-24)" format="{:.6f}" />
+
+    <text x="200" y="1400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=25" />
+    <text x="300" y="1400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="25"/>
+    <text x="400" y="1400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="25"/>
+    <text x="500" y="1400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="25"/>
+    <text x="650" y="1400" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-25)" format="{:.6f}" />
+
+    <text x="200" y="1450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=26" />
+    <text x="300" y="1450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="26"/>
+    <text x="400" y="1450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="26"/>
+    <text x="500" y="1450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="26"/>
+    <text x="650" y="1450" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-26)" format="{:.6f}" />
+
+    <text x="200" y="1500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=27" />
+    <text x="300" y="1500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="27"/>
+    <text x="400" y="1500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="27"/>
+    <text x="500" y="1500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="27"/>
+    <text x="650" y="1500" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-27)" format="{:.6f}" />
+
+    <text x="200" y="1550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=28" />
+    <text x="300" y="1550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="28"/>
+    <text x="400" y="1550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="28"/>
+    <text x="500" y="1550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="28"/>
+    <text x="650" y="1550" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-28)" format="{:.6f}" />
+
+    <text x="200" y="1600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=29" />
+    <text x="300" y="1600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="29"/>
+    <text x="400" y="1600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="29"/>
+    <text x="500" y="1600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="29"/>
+    <text x="650" y="1600" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-29)" format="{:.6f}" />
+
+    <text x="200" y="1650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=30" />
+    <text x="300" y="1650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="30"/>
+    <text x="400" y="1650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="30"/>
+    <text x="500" y="1650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="30"/>
+    <text x="650" y="1650" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-30)" format="{:.6f}" />
+
+    <text x="200" y="1700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=31" />
+    <text x="300" y="1700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="31"/>
+    <text x="400" y="1700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="31"/>
+    <text x="500" y="1700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="31"/>
+    <text x="650" y="1700" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-31)" format="{:.6f}" />
+
+    <text x="200" y="1750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=32" />
+    <text x="300" y="1750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="32"/>
+    <text x="400" y="1750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="32"/>
+    <text x="500" y="1750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="32"/>
+    <text x="650" y="1750" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-32)" format="{:.6f}" />
+
+    <text x="200" y="1800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=33" />
+    <text x="300" y="1800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="33"/>
+    <text x="400" y="1800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="33"/>
+    <text x="500" y="1800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="33"/>
+    <text x="650" y="1800" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-33)" format="{:.6f}" />
+
+    <text x="200" y="1850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=34" />
+    <text x="300" y="1850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="34"/>
+    <text x="400" y="1850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="34"/>
+    <text x="500" y="1850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="34"/>
+    <text x="650" y="1850" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-34)" format="{:.6f}" />
+
+    <text x="200" y="1900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=35" />
+    <text x="300" y="1900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="35"/>
+    <text x="400" y="1900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="35"/>
+    <text x="500" y="1900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="35"/>
+    <text x="650" y="1900" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-35)" format="{:.6f}" />
+
+    <text x="200" y="1950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=36" />
+    <text x="300" y="1950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="36"/>
+    <text x="400" y="1950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="36"/>
+    <text x="500" y="1950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="36"/>
+    <text x="650" y="1950" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-36)" format="{:.6f}" />
+
+    <text x="200" y="2000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="T=37" />
+    <text x="300" y="2000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_speed*36)/10.0)" format="{:.1f}"
+            override-time="37"/>
+    <text x="400" y="2000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="key(point_power)" format="{:.0f}"
+            override-time="37"/>
+    <text x="500" y="2000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(round(point_power3s*10)/10.0)" format="{:.1f}"
+            override-time="37"/>
+    <text x="650" y="2000" font-name="DejaVu Sans" font-size="24" align="left"
+            color="white" border-width="2" border-color="black"
+            value="eval(video_time-37)" format="{:.6f}" />
+
 </layout>
 
