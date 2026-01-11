@@ -5,7 +5,7 @@ OUTPUT_FILE=""
 TRACK_FILE=""
 LAYOUT_FILE=""
 CUSTOM_DATA_FILE=""
-OFFSET_VALUE="3.5"
+OFFSET_VALUE="0"
 GPU_MODE=false
 
 while [[ $# -gt 0 ]]; do

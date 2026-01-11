@@ -20,6 +20,7 @@ public:
         auto types = StringWidget::parameter_types;
         types["value"] = ParameterType::Formatted; // text value to display
         types["format"] = ParameterType::String; // string format for value parameter
+        types["override-time"] = ParameterType::Numeric; // override timestamp for value parameter
         return types;
     }();
 
@@ -28,6 +29,8 @@ private:
     virtual std::string get_value(time::microseconds_t timestamp) const;
 
     std::shared_ptr<FormattedParameter> value_ = nullptr;
+    bool override_time_set = false;
+    double override_time_ = std::numeric_limits<double>::quiet_NaN();
 };
 
 } // namespace overlay
