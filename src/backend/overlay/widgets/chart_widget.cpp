@@ -488,6 +488,7 @@ void ChartWidget::redraw_line_cache(double width, double height, double line_wid
                 double y_val = find_y_value(ts);
 
                 if (std::isnan(x_val) || std::isnan(y_val)) {
+                    cairo_stroke(cache_cr);
                     last_point_valid = false;
                     continue; // skip NaN values
                 }
@@ -497,19 +498,20 @@ void ChartWidget::redraw_line_cache(double width, double height, double line_wid
                 y_pos += margin_;
 
                 if (last_point_valid && cairo_has_current_point(cache_cr)) {
+                    cairo_line_to(cache_cr, x_pos, y_pos);
                     if (!static_color) {
                         line_color_->update(ts);
                         rgb dynamic_color = line_color_->get_value(ts);
                         cairo_set_source_rgba(cache_cr, dynamic_color.r, dynamic_color.g, dynamic_color.b, dynamic_color.a);
+                        cairo_stroke(cache_cr);
                     }
-                    cairo_line_to(cache_cr, x_pos, y_pos);
-                    cairo_stroke(cache_cr);
                 } else {
                     cairo_move_to(cache_cr, x_pos, y_pos);
                 }
                 last_point_valid = true;
             }
         }
+        cairo_stroke(cache_cr);
     }
 
     cairo_destroy(cache_cr);
