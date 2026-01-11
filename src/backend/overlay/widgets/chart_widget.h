@@ -31,6 +31,8 @@ public:
         {"line-width", ParameterType::Numeric}, // line width
         {"point-color", ParameterType::Color}, // point color
         {"point-size", ParameterType::Numeric}, // point size
+        {"point-border-color", ParameterType::Color}, // point border color
+        {"point-border-width", ParameterType::Numeric}, // point border width
         {"x-value", ParameterType::Numeric}, // track key for x values
         {"y-value", ParameterType::Numeric}, // track key for y values
         {"value-time-step", ParameterType::Numeric}, // time step for values
@@ -55,6 +57,7 @@ private:
                        std::shared_ptr<NumericParameter::sections_t> y_values);
     void redraw_point_cache(double width, double height, 
                         rgb point_color, double point_size,
+                        rgb point_border_color, double point_border_width,
                         double x_value, double y_value);
 
     void recalculate_extremes(std::shared_ptr<NumericParameter::sections_t> x_values,
@@ -69,6 +72,8 @@ private:
     std::shared_ptr<NumericParameter> line_width_ = nullptr;
     std::shared_ptr<ColorParameter> point_color_ = nullptr;
     std::shared_ptr<NumericParameter> point_size_ = nullptr;
+    std::shared_ptr<ColorParameter> point_border_color_ = nullptr;
+    std::shared_ptr<NumericParameter> point_border_width_ = nullptr;
     std::shared_ptr<NumericParameter> x_value_ = nullptr;
     std::shared_ptr<NumericParameter> y_value_ = nullptr;
     std::shared_ptr<NumericParameter> value_time_step_ = nullptr;

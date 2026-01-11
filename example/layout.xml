@@ -486,6 +486,8 @@
                    x-value="key(point_dist)"
                    y-value="key(point_smoothele)" />
         </container>
+        <!-- example: color based on grade -->
+        <!-- rgb(eval(point_grade < -15.0 ? 0.0 : (point_grade < 0.0 ? 0.0 : (point_grade <= 15.0 ? (point_grade / 15.0) : 0.545))), eval(point_grade < -15.0 ? 0.0 : (point_grade < 0.0 ? ((point_grade + 15.0) / 15.0) : (point_grade <= 15.0 ? (1.0 - (point_grade / 15.0)) : 0.0))), eval(point_grade < -15.0 ? 0.545 : (point_grade < 0.0 ? (1.0 - ((point_grade + 15.0) / 15.0)) : 0.0))) -->
 
         <!-- upcoming climb map & chart highlight -->
         <if condition="exists(s_climb_next_0_meta_index)">
@@ -531,12 +533,14 @@
         <container x="2990" y="50">
             <chart x="0" y="0" width="800" height="800" stretch-to-fill="false"
                    line-color="transparent" line-width="6"
-                   point-color="red" point-size="16"
+                   point-color="red" point-size="20"
+                   point-border-color="black" point-border-width="4"
                    x-value="eval(1 + (point_lon / 180))"
                    y-value="eval(log(tan(((90 + point_lat) * 3.14159265359)/360))/3.14159265359)" />
             <chart x="0" y="850" width="800" height="100"
                    line-color="transparent" line-width="6"
-                   point-color="red" point-size="16"
+                   point-color="red" point-size="20"
+                   point-border-color="black" point-border-width="4"
                    x-value="key(point_dist)"
                    y-value="key(point_smoothele)" />
         </container>
