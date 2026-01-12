@@ -141,6 +141,9 @@ rgb ColorParameter::get_value(time::microseconds_t timestamp) const {
     return value_;
 }
 
+bool ColorParameter::is_static() const {
+    return update_strategy_ == UpdateStrategy::Static;
+}
 
 } // namespace telemetry
 } // namespace overlay

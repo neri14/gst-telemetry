@@ -28,6 +28,8 @@ public:
     bool update(time::microseconds_t timestamp) override;
     rgb get_value(time::microseconds_t timestamp) const;
 
+    bool is_static() const;
+
 private:
     mutable utils::logging::Logger log{"ColorParameter"};
 
