@@ -33,6 +33,7 @@ public:
         {"point-size", ParameterType::Numeric}, // point size
         {"point-border-color", ParameterType::Color}, // point border color
         {"point-border-width", ParameterType::Numeric}, // point border width
+        {"background-below", ParameterType::Color}, // background below color
         {"x-value", ParameterType::Numeric}, // track key for x values
         {"y-value", ParameterType::Numeric}, // track key for y values
         {"value-time-step", ParameterType::Numeric}, // time step for values
@@ -74,6 +75,8 @@ private:
     std::shared_ptr<NumericParameter> point_size_ = nullptr;
     std::shared_ptr<ColorParameter> point_border_color_ = nullptr;
     std::shared_ptr<NumericParameter> point_border_width_ = nullptr;
+    std::shared_ptr<ColorParameter> background_below_ = nullptr;
+
     std::shared_ptr<NumericParameter> x_value_ = nullptr;
     std::shared_ptr<NumericParameter> y_value_ = nullptr;
     std::shared_ptr<NumericParameter> value_time_step_ = nullptr;

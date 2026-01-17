@@ -557,13 +557,14 @@
 
         <!-- speed moving chart -->
         <container x="720" y="1808">
-            <rectangle x="0" y="0" width="900" height="308" color="rgba(0,0,0,0.5)" border-color="white" border-width="4" />
+            <!-- <rectangle x="0" y="0" width="900" height="308" color="rgba(0,0,0,0.5)" border-color="white" border-width="4" /> -->
 
-            <chart x="0" y="4" width="900" height="300" line-color="white" line-width="4"
+            <chart x="0" y="4" width="900" height="300" line-color="white" line-width="6"
                    x-value="key(video_time)" y-value="key(pchip_point_speed)" value-time-step = "0.03"
                    filter-value="key(video_time)" filter-min="eval(video_time-30)" filter-max="key(video_time)"
                    zoom-to-filter-y="false"
-                   min-x="eval(video_time-30)" max-x="eval(video_time)" />
+                   min-x="eval(video_time-30)" max-x="eval(video_time)"
+                   background-below="rgba(0,0,0,0.5)" />
 
             <text x="1110" y="eval(284-300*pchip_point_speed/meta_maxspeed)" align="right"
                   font-name="DejaVu Sans" font-size="28" color="white" border-color="black" border-width="3"
