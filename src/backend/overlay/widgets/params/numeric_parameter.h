@@ -37,6 +37,8 @@ public:
     
     std::shared_ptr<value_map_t> get_all_values();
 
+    bool is_static() const;
+
 private:
     mutable utils::logging::Logger log{"NumericParameter"};
 

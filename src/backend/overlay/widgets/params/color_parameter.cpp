@@ -142,6 +142,12 @@ rgb ColorParameter::get_value(time::microseconds_t timestamp) const {
 }
 
 bool ColorParameter::is_static() const {
+    if (update_strategy_ == UpdateStrategy::SubParameter) {
+        return (!r_param_ || r_param_->is_static()) &&
+               (!g_param_ || g_param_->is_static()) &&
+               (!b_param_ || b_param_->is_static()) &&
+               (!a_param_ || a_param_->is_static());
+    }
     return update_strategy_ == UpdateStrategy::Static;
 }
 

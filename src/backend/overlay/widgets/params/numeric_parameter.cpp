@@ -167,5 +167,9 @@ std::shared_ptr<NumericParameter::value_map_t> NumericParameter::get_all_values(
     return values;
 }
 
+bool NumericParameter::is_static() const {
+    return update_strategy_ == UpdateStrategy::Static;
+}
+
 } // namespace telemetry
 } // namespace overlay
