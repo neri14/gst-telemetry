@@ -475,6 +475,32 @@ void ChartWidget::redraw_line_cache(double width, double height, double line_wid
         line_cache_drawn_ = false;
     }
 
+    
+
+    // draw background below line
+    if (background_below_) {
+        draw_background(cache_cr, width, height, line_width, x_values, y_values);
+    }
+
+    if (line_width > 0) {
+        draw_line(cache_cr, width, height, line_width, x_values, y_values);
+    }
+
+    cairo_destroy(cache_cr);
+    line_cache_drawn_ = true;
+}
+
+void ChartWidget::draw_background(cairo_t* cache_cr, double width, double height, double line_width,
+                                 std::shared_ptr<NumericParameter::sections_t> x_values,
+                                 std::shared_ptr<NumericParameter::sections_t> y_values) {
+    auto bg_color = background_below_->get_value(time::INVALID_TIME);
+    cairo_set_source_rgba(cache_cr, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
+
+    double y_base = height + margin_ + line_width;
+
+    double last_x_pos = std::numeric_limits<double>::quiet_NaN();
+    double first_x_pos = std::numeric_limits<double>::quiet_NaN();
+
     auto find_y_value = [&](time::microseconds_t ts) -> double {
         for (const auto& section : *y_values) {
             auto it = section.find(ts);
@@ -485,94 +511,91 @@ void ChartWidget::redraw_line_cache(double width, double height, double line_wid
         return std::numeric_limits<double>::quiet_NaN();
     };
 
-    // draw background below line
-    if (background_below_) {
-        auto bg_color = background_below_->get_value(time::INVALID_TIME);
-        cairo_set_source_rgba(cache_cr, bg_color.r, bg_color.g, bg_color.b, bg_color.a);
-
-        double y_base = height + margin_ + line_width;
-
-        double last_x_pos = std::numeric_limits<double>::quiet_NaN();
-        double first_x_pos = std::numeric_limits<double>::quiet_NaN();
-
-        for (const auto& section : *x_values) {
-            for (const auto& [ts, x_val] : section) {
-                double y_val = find_y_value(ts);
-                if (std::isnan(x_val) || std::isnan(y_val)) {
-                    continue; // skip NaN values
-                }
-
-                auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
-                x_pos += margin_;
-                y_pos += margin_;
-
-                if (std::isnan(first_x_pos)) {
-                    first_x_pos = x_pos;
-                }
-
-                if (cairo_has_current_point(cache_cr)) {
-                    cairo_line_to(cache_cr, x_pos, y_pos);
-                } else {
-                    cairo_move_to(cache_cr, x_pos, y_pos);
-                }
-
-                last_x_pos = x_pos;
+    for (const auto& section : *x_values) {
+        for (const auto& [ts, x_val] : section) {
+            double y_val = find_y_value(ts);
+            if (std::isnan(x_val) || std::isnan(y_val)) {
+                continue; // skip NaN values
             }
+
+            auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
+            x_pos += margin_;
+            y_pos += margin_;
+
+            if (std::isnan(first_x_pos)) {
+                first_x_pos = x_pos;
+            }
+
+            if (cairo_has_current_point(cache_cr)) {
+                cairo_line_to(cache_cr, x_pos, y_pos);
+            } else {
+                cairo_move_to(cache_cr, x_pos, y_pos);
+            }
+
+            last_x_pos = x_pos;
         }
-        
-        cairo_line_to(cache_cr, last_x_pos, y_base);
-        cairo_line_to(cache_cr, first_x_pos, y_base);
-        cairo_close_path(cache_cr);
-        cairo_fill(cache_cr);
+    }
+    
+    cairo_line_to(cache_cr, last_x_pos, y_base);
+    cairo_line_to(cache_cr, first_x_pos, y_base);
+    cairo_close_path(cache_cr);
+    cairo_fill(cache_cr);
+}
+
+void ChartWidget::draw_line(cairo_t* cache_cr, double width, double height, double line_width,
+                            std::shared_ptr<NumericParameter::sections_t> x_values,
+                            std::shared_ptr<NumericParameter::sections_t> y_values) {
+    cairo_set_line_cap(cache_cr, CAIRO_LINE_CAP_SQUARE);
+    cairo_set_line_join(cache_cr, CAIRO_LINE_JOIN_BEVEL);
+
+    cairo_set_line_width(cache_cr, line_width);
+
+    bool static_color = line_color_->is_static();
+    if (static_color) {
+        rgb static_color = line_color_->get_value(time::INVALID_TIME);
+        cairo_set_source_rgba(cache_cr, static_color.r, static_color.g, static_color.b, static_color.a);
     }
 
-    //draw line
-    if (line_width > 0) {
-        cairo_set_line_cap(cache_cr, CAIRO_LINE_CAP_SQUARE);
-        cairo_set_line_join(cache_cr, CAIRO_LINE_JOIN_BEVEL);
-
-        cairo_set_line_width(cache_cr, line_width);
-
-        bool static_color = line_color_->is_static();
-        if (static_color) {
-            rgb static_color = line_color_->get_value(time::INVALID_TIME);
-            cairo_set_source_rgba(cache_cr, static_color.r, static_color.g, static_color.b, static_color.a);
+    auto find_y_value = [&](time::microseconds_t ts) -> double {
+        for (const auto& section : *y_values) {
+            auto it = section.find(ts);
+            if (it != section.end()) {
+                return it->second;
+            }
         }
+        return std::numeric_limits<double>::quiet_NaN();
+    };
 
-        for (const auto& section : *x_values) {
-            bool last_point_valid = false;
-            for (const auto& [ts, x_val] : section) {
-                double y_val = find_y_value(ts);
+    for (const auto& section : *x_values) {
+        bool last_point_valid = false;
+        for (const auto& [ts, x_val] : section) {
+            double y_val = find_y_value(ts);
 
-                if (std::isnan(x_val) || std::isnan(y_val)) {
+            if (std::isnan(x_val) || std::isnan(y_val)) {
+                cairo_stroke(cache_cr);
+                last_point_valid = false;
+                continue; // skip NaN values
+            }
+
+            auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
+            x_pos += margin_;
+            y_pos += margin_;
+
+            if (last_point_valid && cairo_has_current_point(cache_cr)) {
+                cairo_line_to(cache_cr, x_pos, y_pos);
+                if (!static_color) {
+                    line_color_->update(ts);
+                    rgb dynamic_color = line_color_->get_value(ts);
+                    cairo_set_source_rgba(cache_cr, dynamic_color.r, dynamic_color.g, dynamic_color.b, dynamic_color.a);
                     cairo_stroke(cache_cr);
-                    last_point_valid = false;
-                    continue; // skip NaN values
                 }
-
-                auto [x_pos, y_pos] = translate(x_val, y_val, width, height);
-                x_pos += margin_;
-                y_pos += margin_;
-
-                if (last_point_valid && cairo_has_current_point(cache_cr)) {
-                    cairo_line_to(cache_cr, x_pos, y_pos);
-                    if (!static_color) {
-                        line_color_->update(ts);
-                        rgb dynamic_color = line_color_->get_value(ts);
-                        cairo_set_source_rgba(cache_cr, dynamic_color.r, dynamic_color.g, dynamic_color.b, dynamic_color.a);
-                        cairo_stroke(cache_cr);
-                    }
-                } else {
-                    cairo_move_to(cache_cr, x_pos, y_pos);
-                }
-                last_point_valid = true;
+            } else {
+                cairo_move_to(cache_cr, x_pos, y_pos);
             }
+            last_point_valid = true;
         }
-        cairo_stroke(cache_cr);
     }
-
-    cairo_destroy(cache_cr);
-    line_cache_drawn_ = true;
+    cairo_stroke(cache_cr);
 }
 
 void ChartWidget::redraw_point_cache(double width, double height,

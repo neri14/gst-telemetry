@@ -56,6 +56,14 @@ private:
     void redraw_line_cache(double width, double height, double line_width,
                        std::shared_ptr<NumericParameter::sections_t> x_values,
                        std::shared_ptr<NumericParameter::sections_t> y_values);
+    void draw_background(cairo_t* cache_cr, double width, double height, double line_width,
+                         std::shared_ptr<NumericParameter::sections_t> x_values,
+                         std::shared_ptr<NumericParameter::sections_t> y_values);
+    void draw_line(cairo_t* cache_cr, double width, double height, double line_width,
+                  std::shared_ptr<NumericParameter::sections_t> x_values,
+                  std::shared_ptr<NumericParameter::sections_t> y_values);
+
+
     void redraw_point_cache(double width, double height, 
                         rgb point_color, double point_size,
                         rgb point_border_color, double point_border_width,

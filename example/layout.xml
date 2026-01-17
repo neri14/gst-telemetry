@@ -564,7 +564,7 @@
                    filter-value="key(video_time)" filter-min="eval(video_time-30)" filter-max="key(video_time)"
                    zoom-to-filter-y="false"
                    min-x="eval(video_time-30)" max-x="eval(video_time)"
-                   background-below="rgba(0,0,0,0.5)" />
+                   background-below="rgba(eval(pchip_point_speed/meta_maxspeed),0,0,0.5)" />
 
             <text x="1110" y="eval(284-300*pchip_point_speed/meta_maxspeed)" align="right"
                   font-name="DejaVu Sans" font-size="28" color="white" border-color="black" border-width="3"
