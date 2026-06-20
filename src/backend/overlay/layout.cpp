@@ -17,6 +17,7 @@
 #include "widgets/circle_widget.h"
 #include "widgets/line_widget.h"
 #include "widgets/chart_widget.h"
+#include "widgets/image_widget.h"
 
 #include "widgets/params/color_parameter.h"
 #include "widgets/params/alignment_parameter.h"
@@ -159,6 +160,9 @@ std::shared_ptr<Widget> Layout::parse_node(pugi::xml_node node) {
     } else if (name == "chart") {
         widget = parse_widget<ChartWidget>(node);
         log.debug("Created Chart widget");
+    } else if (name == "image") {
+        widget = parse_widget<ImageWidget>(node);
+        log.debug("Created Image widget");
     } else {
         log.warning("Unknown widget defined: {}", name);
     }
