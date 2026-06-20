@@ -1,0 +1,3 @@
+<layout width="3840" height="2160">
+    <image path="images/test.png" anchor="center" x="1920" y="1080" width="1000" height="1000" rotation="0"/>
+</layout>
