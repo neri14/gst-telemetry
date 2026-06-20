@@ -1,0 +1,26 @@
+<layout width="3840" height="2160">
+    <rectangle x="670" y="280" width="500" height="500" color="transparent" border-width="2" border-color="red"/>
+    <!-- <image path="example/images/test.png" x="670" y="280" scale="1.0" rotation="0"/> -->
+    <image path="example/images/test.png" x="670" y="280" scale="1.0" rotation="eval(video_time*8)"/>
+
+    <rectangle x="1670" y="280" width="500" height="500" color="transparent" border-width="2" border-color="red"/>
+    <!-- <image path="example/images/test.png" x="1670" y="280" scale="1.5" rotation="0"/> -->
+    <image path="example/images/test.png" x="1670" y="280" scale="1.5" rotation="eval(video_time*8)"/>
+
+
+    <rectangle x="670" y="1330" width="500" height="500" color="transparent" border-width="2" border-color="red"/>
+    <!-- <image path="example/images/test.png" anchor="center" x="920" y="1580" scale="1.0" rotation="0"/> -->
+    <image path="example/images/test.png" anchor="center" x="920" y="1580" scale="1.0" rotation="eval(video_time*8)"/>
+
+    <rectangle x="1670" y="1330" width="500" height="500" color="transparent" border-width="2" border-color="red"/>
+    <!-- <image path="example/images/test.png" anchor="center" x="1920" y="1580" scale="1.5" rotation="0"/> -->
+    <image path="example/images/test.png" anchor="center" x="1920" y="1580" scale="1.5" rotation="eval(video_time*8)"/>
+
+
+    <rectangle x="3000" y="500" width="100" height="250" color="transparent" border-width="2" border-color="red"/>
+    <image path="example/images/arrow.png" anchor="center" x="3050" y="625" scale="0.5" rotation="eval(video_time*8)"/>
+
+    <rectangle x="3000" y="1500" width="100" height="250" color="transparent" border-width="2" border-color="red"/>
+    <image path="example/images/arrow.png" x="3000" y="1500" scale="0.5" rotation="eval(video_time*8)"/>
+
+</layout>

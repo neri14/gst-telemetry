@@ -7,6 +7,7 @@ cpp_sources += files(
   'color_parameter.cpp',
   'alignment_parameter.cpp',
   'boolean_parameter.cpp',
+  'anchor_parameter.cpp',
   'expression.cpp',
 )
 
@@ -19,5 +20,6 @@ headers += files(
   'color_parameter.h',
   'alignment_parameter.h',
   'boolean_parameter.h',
+  'anchor_parameter.h',
   'expression.h',
 )

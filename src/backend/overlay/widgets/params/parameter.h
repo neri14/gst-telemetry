@@ -13,6 +13,7 @@ enum class ParameterType {
     Numeric,
     Color,
     Alignment,
+    Anchor,
     String,
     Boolean,
     Formatted,
@@ -70,6 +71,12 @@ using parameter_type_map_t = std::map<std::string, ParameterType>;
     //    string value         -> use as is - only allowed: left, right, center
     //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
 
+
+    //TODO move to Layout.md
+    // --> class: AnchorParameter
+    // for string attributes (e.g. anchor point):
+    //    string value         -> use as is - only allowed: default, topleft, center
+    //    "key(...)"           -> get string value from track at timestamp using key name inside parentheses (interpreted as above)
 
     //TODO move to Layout.md
     // --> class: FormattedParameter

@@ -43,3 +43,6 @@ TRACE_EVENT_NAME(EV_STRING_WIDGET_DRAW, "string_widget::draw")
 TRACE_EVENT_NAME(EV_STRING_WIDGET_UPDATE_CACHE, "string_widget::draw update cache")
 TRACE_EVENT_NAME(EV_STRING_WIDGET_DRAW_CACHE, "string_widget::draw draw from cache")
 
+TRACE_EVENT_NAME(EV_IMAGE_WIDGET_DRAW, "image_widget::draw")
+TRACE_EVENT_NAME(EV_IMAGE_WIDGET_UPDATE_CACHE, "image_widget::draw update cache")
+TRACE_EVENT_NAME(EV_IMAGE_WIDGET_DRAW_CACHE, "image_widget::draw draw from cache")
