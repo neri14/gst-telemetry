@@ -40,6 +40,13 @@ std::shared_ptr<ImageWidget> ImageWidget::create(parameter_map_ptr parameters) {
         return nullptr;
     }
 
+    widget->image_ = cairo_image_surface_create_from_png(widget->path_->get_value(0).c_str());
+    cairo_status_t status = cairo_surface_status(widget->image_);
+    if (status != CAIRO_STATUS_SUCCESS) {
+        log.error("Failed to create image surface: {}", cairo_status_to_string(status));
+        return nullptr;
+    }
+
     if (!widget->scale_) {
         log.debug("Scale parameter not set, using default value");
         widget->scale_ = std::make_shared<NumericParameter>(defaults::scale);
@@ -93,8 +100,9 @@ void ImageWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
     if (cache_update_needed) {
         TRACE_EVENT_BEGIN(EV_IMAGE_WIDGET_UPDATE_CACHE);
 
-        double width = 100; //TODO get image width * scale
-        double height = 100; //TODO get image height * scale
+        double scale = scale_->get_value(timestamp);
+        double width = cairo_image_surface_get_width(image_) * scale;
+        double height = cairo_image_surface_get_height(image_) * scale;
 
         if (!cache || width > cache_width || height > cache_height) {
             // bigger image size require allocating bigger cache
@@ -120,7 +128,11 @@ void ImageWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
             cache_drawn = false;
         }
 
-        //TODO draw image to cache_cr
+        cairo_save(cache_cr);
+        cairo_scale(cache_cr, scale, scale);
+        cairo_set_source_surface(cache_cr, image_, 0, 0);
+        cairo_paint(cache_cr);
+        cairo_restore(cache_cr);
 
         cairo_surface_flush(cache);
         cache_drawn = true;

@@ -41,6 +41,8 @@ private:
     std::shared_ptr<NumericParameter> scale_ = nullptr;
     std::shared_ptr<BooleanParameter> visible_ = nullptr;
 
+    cairo_surface_t* image_ = nullptr;
+
     cairo_surface_t* cache = nullptr;
     bool cache_drawn = false;
     int cache_width = 0;

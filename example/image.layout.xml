@@ -1,3 +1,5 @@
 <layout width="3840" height="2160">
-    <image path="images/test.png" x="1670" y="830" scale="1.0" rotation="0"/>
+    <image path="example/images/test.png" x="710" y="830" scale="1.0" rotation="0"/>
+    <image path="example/images/test.png" x="1545" y="705" scale="1.5" rotation="0"/>
+    <image path="example/images/test.png" x="2380" y="580" scale="2.0" rotation="0"/>
 </layout>
