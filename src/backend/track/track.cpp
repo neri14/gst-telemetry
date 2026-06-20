@@ -1083,7 +1083,8 @@ bool Track::parse_trkpt(pugi::xml_node node) {
         if (key == "extensions") {
             for (pugi::xml_node ext_child : child.children()) {
                 std::string ext_key = drop_ns(ext_child.name());
-                if (ext_key == "TrackPointExtension" || ext_key == "ActivityTrackPointExtension") {
+                if (ext_key == "TrackPointExtension" || ext_key == "ActivityTrackPointExtension"
+                    || ext_key == "RaceTrackExtension" || ext_key == "CustomDataExtension") {
                     for (pugi::xml_node ext_data : ext_child.children()) {
                         std::string data_key = drop_ns(ext_data.name());
                         if (ext_data.text().empty()) {
