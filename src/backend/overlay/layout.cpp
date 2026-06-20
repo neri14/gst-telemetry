@@ -21,6 +21,7 @@
 
 #include "widgets/params/color_parameter.h"
 #include "widgets/params/alignment_parameter.h"
+#include "widgets/params/anchor_parameter.h"
 #include "widgets/params/numeric_parameter.h"
 #include "widgets/params/string_parameter.h"
 #include "widgets/params/formatted_parameter.h"
@@ -204,6 +205,9 @@ parameter_map_ptr Layout::parse_parameters(
                     break;
                 case ParameterType::Alignment:
                     (*params)[attr_name] = AlignmentParameter::create(attr_value, track_);
+                    break;
+                case ParameterType::Anchor:
+                    (*params)[attr_name] = AnchorParameter::create(attr_value, track_);
                     break;
                 case ParameterType::String:
                     (*params)[attr_name] = StringParameter::create(attr_value, track_);

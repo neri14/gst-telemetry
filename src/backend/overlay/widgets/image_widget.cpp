@@ -11,7 +11,12 @@ namespace telemetry {
 namespace overlay {
 namespace defaults {
     const double scale = 1.0;
+    const double rotation = 0.0;
+    const EAnchorPoint anchor_point = telemetry::defaults::anchor_point;
 } // namespace defaults
+namespace consts {
+    const double rotation_epsilon = 1e-6;
+} // namespace consts
 
 std::shared_ptr<ImageWidget> ImageWidget::create(parameter_map_ptr parameters) {
     utils::logging::Logger log{"ImageWidget::create"};
@@ -22,12 +27,16 @@ std::shared_ptr<ImageWidget> ImageWidget::create(parameter_map_ptr parameters) {
     for (const auto& [name, param] : *parameters) {
         if (name == "path") {
             widget->path_ = std::dynamic_pointer_cast<StringParameter>(param);
+        } else if (name == "anchor") {
+            widget->anchor_ = std::dynamic_pointer_cast<AnchorParameter>(param);
         } else if (name == "x") {
             widget->x_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "y") {
             widget->y_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "scale") {
             widget->scale_ = std::dynamic_pointer_cast<NumericParameter>(param);
+        } else if (name == "rotation") {
+            widget->rotation_ = std::dynamic_pointer_cast<NumericParameter>(param);
         } else if (name == "visible") {
             widget->visible_ = std::dynamic_pointer_cast<BooleanParameter>(param);
         } else {
@@ -47,9 +56,17 @@ std::shared_ptr<ImageWidget> ImageWidget::create(parameter_map_ptr parameters) {
         return nullptr;
     }
 
+    if (!widget->anchor_) {
+        log.debug("Anchor parameter not set, using default value");
+        widget->anchor_ = std::make_shared<AnchorParameter>(defaults::anchor_point);
+    }
     if (!widget->scale_) {
         log.debug("Scale parameter not set, using default value");
         widget->scale_ = std::make_shared<NumericParameter>(defaults::scale);
+    }
+    if (!widget->rotation_) {
+        log.debug("Rotation parameter not set, using default value");
+        widget->rotation_ = std::make_shared<NumericParameter>(defaults::rotation);
     }
     if (!widget->visible_) {
         log.debug("Visible parameter not set, defaulting to true");
@@ -91,7 +108,7 @@ void ImageWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
     TRACE_EVENT_BEGIN(EV_IMAGE_WIDGET_DRAW);
 
     bool cache_update_needed = !cache_drawn;
-    for (auto& param : std::vector<parameter_ptr_t>{x_, y_, scale_}) {
+    for (auto& param : std::vector<parameter_ptr_t>{x_, y_, scale_, rotation_}) {
         if (param->update(timestamp)) {
             cache_update_needed = true;
         }
@@ -100,18 +117,28 @@ void ImageWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
     if (cache_update_needed) {
         TRACE_EVENT_BEGIN(EV_IMAGE_WIDGET_UPDATE_CACHE);
 
-        double scale = scale_->get_value(timestamp);
-        double width = cairo_image_surface_get_width(image_) * scale;
-        double height = cairo_image_surface_get_height(image_) * scale;
+        const double scale = scale_->get_value(timestamp);
+        const double rotation = rotation_->get_value(timestamp);
 
-        if (!cache || width > cache_width || height > cache_height) {
+        const double image_width = cairo_image_surface_get_width(image_);
+        const double image_height = cairo_image_surface_get_height(image_);
+
+        const double width = image_width * scale;
+        const double height = image_height * scale;
+
+        const double max_span = std::sqrt(width * width + height * height);
+
+        offset_x_ = static_cast<int>((max_span - width) / 2.0);
+        offset_y_ = static_cast<int>((max_span - height) / 2.0);
+
+        if (!cache || max_span > cache_width || max_span > cache_height) {
             // bigger image size require allocating bigger cache
             if (cache) {
                 cairo_surface_destroy(cache);
                 cache = nullptr;
             }
-            cache_width = static_cast<int>(std::ceil(width));
-            cache_height = static_cast<int>(std::ceil(height));
+            cache_width = static_cast<int>(std::ceil(max_span));
+            cache_height = static_cast<int>(std::ceil(max_span));
             cache = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, cache_width, cache_height);
             cache_drawn = false;
             log.info("Allocated new cache surface: {}x{}", cache_width, cache_height);
@@ -129,8 +156,18 @@ void ImageWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
         }
 
         cairo_save(cache_cr);
+
+        // Draw in cache-centered coordinates so scaling/rotation keep the image centered.
+        cairo_translate(cache_cr, cache_width / 2.0, cache_height / 2.0);
+
+        if (std::abs(rotation) > consts::rotation_epsilon) {
+            cairo_rotate(cache_cr, rotation * (M_PI / 180.0));
+        }
+
         cairo_scale(cache_cr, scale, scale);
-        cairo_set_source_surface(cache_cr, image_, 0, 0);
+        cairo_translate(cache_cr, -image_width / 2.0, -image_height / 2.0);
+
+        cairo_set_source_surface(cache_cr, image_, 0.0, 0.0);
         cairo_paint(cache_cr);
         cairo_restore(cache_cr);
 
@@ -142,8 +179,12 @@ void ImageWidget::draw_impl(Surface& surface, time::microseconds_t timestamp, do
         TRACE_EVENT_END(EV_IMAGE_WIDGET_UPDATE_CACHE);
     }
 
-    surface.x = x;
-    surface.y = y;
+
+    anchor_->update(timestamp);
+    EAnchorPoint ap = anchor_->get_value(timestamp);
+
+    surface.x = EAnchorPoint::TopLeft == ap ? static_cast<int>(x - offset_x_) : static_cast<int>(x - cache_width / 2);
+    surface.y = EAnchorPoint::TopLeft == ap ? static_cast<int>(y - offset_y_) : static_cast<int>(y - cache_height / 2);
     surface.surface = cache;
 
     TRACE_EVENT_END(EV_IMAGE_WIDGET_DRAW);

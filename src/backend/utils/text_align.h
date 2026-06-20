@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef TEXT_ALIGN_H
+#define TEXT_ALIGN_H
 
 #include <string>
 
@@ -41,4 +41,4 @@ inline PangoAlignment to_pango_align(ETextAlign align) {
 
 } // namespace telemetry
 
-#endif // COMMON_H
+#endif // TEXT_ALIGN_H
