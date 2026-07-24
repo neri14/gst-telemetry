@@ -1,13 +1,14 @@
 #!/bin/bash
 #
-# video-overlay-docker.sh
+# transparent-overlay-docker.sh
 #
 # Builds the gst-telemetry Docker image (neri14/gst-telemetry) and runs the
-# GPU video-overlay pipeline inside the container.  GPU mode is always on.
+# transparent-overlay pipeline inside the container.  GPU mode is always on.
 #
 # Usage:
-#   ./video-overlay-docker.sh <input> <output> [--track FILE] [--layout FILE]
-#                             [--custom-data FILE] [--offset N]
+#   ./transparent-overlay-docker.sh --track FILE --layout FILE --output FILE
+#         [--custom-data FILE] [--offset N] [--length N] [--fps N]
+#         [--width N] [--height N]
 #
 # Limitations when running inside a container (vs. natively):
 #   1. The script auto-resolves all file arguments to absolute paths and
@@ -27,8 +28,11 @@ DOCKERFILE_DIR="$SCRIPT_DIR/.."
 IMAGE_NAME="neri14/gst-telemetry"
 
 # ── argument parsing ─────────────────────────────────────────────────────────
-INPUT_FILE=""
 OUTPUT_FILE=""
+OUTPUT_LENGTH=""
+OUTPUT_FPS="30"
+OUTPUT_WIDTH="3840"
+OUTPUT_HEIGHT="2160"
 TRACK_FILE=""
 LAYOUT_FILE=""
 CUSTOM_DATA_FILE=""
@@ -36,6 +40,16 @@ OFFSET_VALUE="0"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --output)
+            OUTPUT_FILE="$2"; shift 2 ;;
+        --length)
+            OUTPUT_LENGTH="$2"; shift 2 ;;
+        --fps)
+            OUTPUT_FPS="$2"; shift 2 ;;
+        --width)
+            OUTPUT_WIDTH="$2"; shift 2 ;;
+        --height)
+            OUTPUT_HEIGHT="$2"; shift 2 ;;
         --track)
             TRACK_FILE="$2"; shift 2 ;;
         --layout)
@@ -45,25 +59,22 @@ while [[ $# -gt 0 ]]; do
         --offset)
             OFFSET_VALUE="$2"; shift 2 ;;
         *)
-            if [ -z "$INPUT_FILE" ]; then
-                INPUT_FILE="$1"
-            elif [ -z "$OUTPUT_FILE" ]; then
-                OUTPUT_FILE="$1"
-            else
-                echo "Error: Unexpected argument '$1'" >&2
-                exit 1
-            fi
-            shift ;;
+            echo "Error: Unexpected argument '$1'" >&2
+            exit 1 ;;
     esac
 done
 
-if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track FILE] [--layout FILE] [--custom-data FILE] [--offset N]" >&2
+if [ -z "$OUTPUT_FILE" ] || [ -z "$TRACK_FILE" ] || [ -z "$LAYOUT_FILE" ]; then
+    echo "Usage: $0 --track FILE --layout FILE --output FILE [--custom-data FILE] [--offset N] [--length N] [--fps N] [--width N] [--height N]" >&2
+    exit 1
+fi
+
+if [[ "$OUTPUT_FILE" != *.mov ]]; then
+    echo "Error: Output file must have .mov extension." >&2
     exit 1
 fi
 
 # ── resolve all paths to absolutes ───────────────────────────────────────────
-INPUT_FILE="$(realpath "$INPUT_FILE")"
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 OUTPUT_FILE="$(realpath "$(dirname "$OUTPUT_FILE")")/$(basename "$OUTPUT_FILE")"
 
@@ -73,7 +84,6 @@ TMPDIR_HOST="$(dirname "$OUTPUT_FILE")/.gst-tmp"
 mkdir -p "$TMPDIR_HOST"
 
 declare -A MOUNT_DIRS
-MOUNT_DIRS["$(dirname "$INPUT_FILE")"]=1
 MOUNT_DIRS["$(dirname "$OUTPUT_FILE")"]=1
 
 resolve_optional() {
@@ -88,6 +98,18 @@ resolve_optional() {
 resolve_optional TRACK_FILE
 resolve_optional LAYOUT_FILE
 resolve_optional CUSTOM_DATA_FILE
+
+# ── calculate output length if not provided ──────────────────────────────────
+if [ -z "$OUTPUT_LENGTH" ]; then
+    OUTPUT_LENGTH=$(TZ=UTC awk -F'[<>]' '/<time>/{ts=$3; gsub(/[-:TZ]/," ",ts); t=mktime(ts); if(!start)start=t; end=t} END{print end-start}' "$TRACK_FILE")
+    echo "Calculated output length: $OUTPUT_LENGTH seconds"
+fi
+
+TOTAL_FRAMES=$(echo -e "$OUTPUT_LENGTH\t$OUTPUT_FPS" | awk '{print $1 * $2}')
+if [ "$TOTAL_FRAMES" -le 0 ]; then
+    echo "Error: Output length must be greater than 0." >&2
+    exit 1
+fi
 
 # ── build Docker image ───────────────────────────────────────────────────────
 echo "==> Building Docker image: $IMAGE_NAME"
@@ -106,17 +128,20 @@ PROPERTIES="offset=$OFFSET_VALUE"
 [ -n "$CUSTOM_DATA_FILE" ] && PROPERTIES="$PROPERTIES custom-data=$CUSTOM_DATA_FILE"
 
 # ── GPU pipeline (always on) ─────────────────────────────────────────────────
-PIPELINE="gst-launch-1.0 filesrc location=$INPUT_FILE ! decodebin name=dec \
-dec. ! queue ! video/x-raw ! videoconvert ! glupload ! \
-glvideoflip video-direction=auto ! taginject tags=\"image-orientation=rotate-0\" ! gltransformation ! 'video/x-raw(memory:GLMemory),width=3840,height=2160' ! \
-telemetry $PROPERTIES ! 'video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)' ! gloverlaycompositor ! nvh264enc bitrate=120000 ! h264parse ! queue ! mux. \
-dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
-mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE"
+PIPELINE="gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES \
+! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
+! alpha alpha=0.0 ! videoconvert ! glupload ! \"video/x-raw(memory:GLMemory),width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,format=RGBA\" \
+! telemetry $PROPERTIES ! \"video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)\" ! gloverlaycompositor ! gldownload \
+! videoconvert ! pngenc ! qtmux ! filesink location=$OUTPUT_FILE"
 
 # ── run ──────────────────────────────────────────────────────────────────────
 echo "==> Running pipeline in container..."
-echo "    Input:       $INPUT_FILE"
 echo "    Output:      $OUTPUT_FILE"
+echo "    Track:       $TRACK_FILE"
+echo "    Layout:      $LAYOUT_FILE"
+echo "    Length:      $OUTPUT_LENGTH s"
+echo "    FPS:         $OUTPUT_FPS"
+echo "    Resolution:  ${OUTPUT_WIDTH}x${OUTPUT_HEIGHT}"
 echo "    Tmp dir:     $TMPDIR_HOST"
 echo "    Mounts:      ${!MOUNT_DIRS[*]}"
 
