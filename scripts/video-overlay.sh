@@ -7,6 +7,7 @@ LAYOUT_FILE=""
 CUSTOM_DATA_FILE=""
 OFFSET_VALUE="0"
 GPU_MODE=false
+DEV_MODE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -30,6 +31,10 @@ while [[ $# -gt 0 ]]; do
             GPU_MODE=true
             shift
             ;;
+        --dev)
+            DEV_MODE=true
+            shift
+            ;;
         *)
             if [ -z "$INPUT_FILE" ]; then
                 INPUT_FILE="$1"
@@ -45,13 +50,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--custom-data <file>] [--offset <offset_value>] [--gpu]"
+    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--custom-data <file>] [--offset <offset_value>] [--gpu] [--dev]"
     exit 1
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GST_PLUGIN_PATH="$SCRIPT_DIR/../builddir"
-export GST_PLUGIN_PATH
+if $DEV_MODE; then
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    GST_PLUGIN_PATH="$SCRIPT_DIR/../builddir"
+    export GST_PLUGIN_PATH
+fi
 
 PROPERTIES="offset=$OFFSET_VALUE"
 if [ -n "$TRACK_FILE" ]; then
