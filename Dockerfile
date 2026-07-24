@@ -25,7 +25,7 @@ COPY src/ /build/src/
 COPY subprojects/ /build/subprojects/
 
 WORKDIR /build
-RUN meson setup builddir --werror --prefix /usr/ \
+RUN meson setup builddir --werror --prefix /usr/ --libdir=lib/x86_64-linux-gnu \
     && ninja -C builddir \
     && DESTDIR=/staging ninja -C builddir install
 
