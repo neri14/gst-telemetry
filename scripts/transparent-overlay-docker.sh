@@ -135,6 +135,8 @@ PIPELINE="gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES
 ! videoconvert ! pngenc ! qtmux ! filesink location=$OUTPUT_FILE"
 
 # ── run ──────────────────────────────────────────────────────────────────────
+# Clear stale GStreamer plugin registry so nvenc elements are freshly discovered
+rm -rf "$TMPDIR_HOST/.cache"
 echo "==> Running pipeline in container..."
 echo "    Output:      $OUTPUT_FILE"
 echo "    Track:       $TRACK_FILE"

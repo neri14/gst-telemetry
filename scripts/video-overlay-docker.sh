@@ -114,6 +114,8 @@ dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=12
 mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE"
 
 # ── run ──────────────────────────────────────────────────────────────────────
+# Clear stale GStreamer plugin registry so nvenc elements are freshly discovered
+rm -rf "$TMPDIR_HOST/.cache"
 echo "==> Running pipeline in container..."
 echo "    Input:       $INPUT_FILE"
 echo "    Output:      $OUTPUT_FILE"
