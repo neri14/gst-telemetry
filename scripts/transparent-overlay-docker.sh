@@ -6,7 +6,7 @@
 # transparent-overlay pipeline inside the container.  GPU mode is always on.
 #
 # Usage:
-#   ./transparent-overlay-docker.sh --track FILE --layout FILE --output FILE
+#   ./transparent-overlay-docker.sh --track FILE --layout FILE --output FILE.mov
 #         [--custom-data FILE] [--offset N] [--length N] [--fps N]
 #         [--width N] [--height N]
 #
@@ -65,7 +65,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$OUTPUT_FILE" ] || [ -z "$TRACK_FILE" ] || [ -z "$LAYOUT_FILE" ]; then
-    echo "Usage: $0 --track FILE --layout FILE --output FILE [--custom-data FILE] [--offset N] [--length N] [--fps N] [--width N] [--height N]" >&2
+    echo "Usage: $0 --track FILE --layout FILE --output FILE.mov [--custom-data FILE] [--offset N] [--length N] [--fps N] [--width N] [--height N]" >&2
     exit 1
 fi
 

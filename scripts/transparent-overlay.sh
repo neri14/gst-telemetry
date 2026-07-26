@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$OUTPUT_FILE" ] || [ -z "$TRACK_FILE" ] || [ -z "$LAYOUT_FILE" ]; then
-    echo "Usage: $0 --track <track_file> --layout <layout_file> [--custom-data <file>] [--offset <offset_value>] [--length <output_length_in_seconds>] [--width <output_width>] [--height <output_height>] [--fps <output_fps>] [--dev] --output <output_file>"
+    echo "Usage: $0 --track <track_file> --layout <layout_file> [--custom-data <file>] [--offset <offset_value>] [--length <output_length_in_seconds>] [--width <output_width>] [--height <output_height>] [--fps <output_fps>] [--dev] --output <output_file.mov>"
     exit 1
 fi
 

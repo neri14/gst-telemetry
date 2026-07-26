@@ -50,7 +50,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track <track_file>] [--layout <layout_file>] [--custom-data <file>] [--offset <offset_value>] [--gpu] [--dev]"
+    echo "Usage: $0 <input_file> <output_file.mp4> [--track <track_file>] [--layout <layout_file>] [--custom-data <file>] [--offset <offset_value>] [--gpu] [--dev]"
+    exit 1
+fi
+
+if [[ "$OUTPUT_FILE" != *.mp4 ]]; then
+    echo "Error: Output file must have .mp4 extension." >&2
     exit 1
 fi
 

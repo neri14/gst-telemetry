@@ -6,7 +6,7 @@
 # GPU video-overlay pipeline inside the container.  GPU mode is always on.
 #
 # Usage:
-#   ./video-overlay-docker.sh <input> <output> [--track FILE] [--layout FILE]
+#   ./video-overlay-docker.sh <input> <output.mp4> [--track FILE] [--layout FILE]
 #                             [--custom-data FILE] [--offset N]
 #
 # Limitations when running inside a container (vs. natively):
@@ -58,7 +58,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
-    echo "Usage: $0 <input_file> <output_file> [--track FILE] [--layout FILE] [--custom-data FILE] [--offset N]" >&2
+    echo "Usage: $0 <input_file> <output_file.mp4> [--track FILE] [--layout FILE] [--custom-data FILE] [--offset N]" >&2
+    exit 1
+fi
+
+if [[ "$OUTPUT_FILE" != *.mp4 ]]; then
+    echo "Error: Output file must have .mp4 extension." >&2
     exit 1
 fi
 
