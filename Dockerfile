@@ -42,6 +42,7 @@ RUN apt-get update && apt-get install -y \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-gl \
     gstreamer1.0-libav \
+    ffmpeg \
     mesa-utils \
     libegl1 \
     libgl1 \

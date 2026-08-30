@@ -132,7 +132,7 @@ PIPELINE="gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES
 ! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
 ! alpha alpha=0.0 ! videoconvert ! glupload ! \"video/x-raw(memory:GLMemory),width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,format=RGBA\" \
 ! telemetry $PROPERTIES ! \"video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)\" ! gloverlaycompositor ! gldownload \
-! videoconvert ! pngenc ! qtmux ! filesink location=$OUTPUT_FILE"
+! videoconvert ! video/x-raw,format=A444_10LE ! avenc_prores_ks profile=4 threads=0 ! qtmux ! filesink location=$OUTPUT_FILE"
 
 # ── run ──────────────────────────────────────────────────────────────────────
 # Clear stale GStreamer plugin registry so nvenc elements are freshly discovered
