@@ -37,6 +37,28 @@ TRACK_FILE=""
 LAYOUT_FILE=""
 CUSTOM_DATA_FILE=""
 OFFSET_VALUE="0"
+TEST_MODE=false
+TEST_BG_COLOR="0x808080ff"
+
+normalize_test_bg_color() {
+    local input="$1"
+    case "${input,,}" in
+        black) echo "0x000000ff" ;;
+        gray|grey) echo "0x808080ff" ;;
+        white) echo "0xffffffff" ;;
+        red) echo "0xff0000ff" ;;
+        green) echo "0x00ff00ff" ;;
+        lime) echo "0x00ff00ff" ;;
+        blue) echo "0x0000ffff" ;;
+        pink) echo "0xffc0cbff" ;;
+        transparent) echo "0x00000000" ;;
+        0x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]) echo "$input" ;;
+        *)
+            echo "Error: Unsupported test background color '$input'. Use black/gray/pink/lime/white/red/green/blue or 0xRRGGBBAA." >&2
+            exit 1
+            ;;
+    esac
+}
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -58,6 +80,19 @@ while [[ $# -gt 0 ]]; do
             CUSTOM_DATA_FILE="$2"; shift 2 ;;
         --offset)
             OFFSET_VALUE="$2"; shift 2 ;;
+        --test|test)
+            TEST_MODE=true
+            if [[ $# -gt 1 && "$2" != --* ]]; then
+                TEST_BG_COLOR="$(normalize_test_bg_color "$2")"
+                shift 2
+            else
+                shift
+            fi
+            ;;
+        --test-bg-color)
+            TEST_BG_COLOR="$(normalize_test_bg_color "$2")"
+            shift 2
+            ;;
         *)
             echo "Error: Unexpected argument '$1'" >&2
             exit 1 ;;
@@ -65,13 +100,20 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$OUTPUT_FILE" ] || [ -z "$TRACK_FILE" ] || [ -z "$LAYOUT_FILE" ]; then
-    echo "Usage: $0 --track FILE --layout FILE --output FILE.mov [--custom-data FILE] [--offset N] [--length N] [--fps N] [--width N] [--height N]" >&2
+    echo "Usage: $0 --track FILE --layout FILE --output FILE.mov|FILE.mp4 [--custom-data FILE] [--offset N] [--length N] [--fps N] [--width N] [--height N] [test|--test [color]] [--test-bg-color color]" >&2
     exit 1
 fi
 
-if [[ "$OUTPUT_FILE" != *.mov ]]; then
-    echo "Error: Output file must have .mov extension." >&2
-    exit 1
+if $TEST_MODE; then
+    if [[ "$OUTPUT_FILE" != *.mp4 ]]; then
+        echo "Error: Test mode output file must have .mp4 extension." >&2
+        exit 1
+    fi
+else
+    if [[ "$OUTPUT_FILE" != *.mov ]]; then
+        echo "Error: Output file must have .mov extension." >&2
+        exit 1
+    fi
 fi
 
 # ── resolve all paths to absolutes ───────────────────────────────────────────
@@ -128,11 +170,21 @@ PROPERTIES="offset=$OFFSET_VALUE"
 [ -n "$CUSTOM_DATA_FILE" ] && PROPERTIES="$PROPERTIES custom-data=$CUSTOM_DATA_FILE"
 
 # ── GPU pipeline (always on) ─────────────────────────────────────────────────
-PIPELINE="gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES \
+if $TEST_MODE; then
+    PIPELINE="gst-launch-1.0 -e videotestsrc pattern=solid-color foreground-color=$TEST_BG_COLOR num-buffers=$TOTAL_FRAMES \
+! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
+! videoconvert ! glupload ! \"video/x-raw(memory:GLMemory),width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,format=RGBA\" \
+! telemetry $PROPERTIES ! \"video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)\" ! gloverlaycompositor \
+! glcolorscale ! \"video/x-raw(memory:GLMemory),width=1920,height=1080\" \
+! glcolorconvert ! \"video/x-raw(memory:GLMemory),format=NV12\" \
+! nvh264enc bitrate=60000 ! h264parse ! mp4mux faststart=true ! filesink location=$OUTPUT_FILE"
+else
+    PIPELINE="gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES \
 ! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
 ! alpha alpha=0.0 ! videoconvert ! glupload ! \"video/x-raw(memory:GLMemory),width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,format=RGBA\" \
 ! telemetry $PROPERTIES ! \"video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)\" ! gloverlaycompositor ! gldownload \
 ! videoconvert ! video/x-raw,format=A444_10LE ! avenc_prores_ks profile=4 threads=0 ! qtmux ! filesink location=$OUTPUT_FILE"
+fi
 
 # ── run ──────────────────────────────────────────────────────────────────────
 # Clear stale GStreamer plugin registry so nvenc elements are freshly discovered
@@ -144,6 +196,10 @@ echo "    Layout:      $LAYOUT_FILE"
 echo "    Length:      $OUTPUT_LENGTH s"
 echo "    FPS:         $OUTPUT_FPS"
 echo "    Resolution:  ${OUTPUT_WIDTH}x${OUTPUT_HEIGHT}"
+echo "    Test mode:   $TEST_MODE"
+if $TEST_MODE; then
+    echo "    BG color:    $TEST_BG_COLOR"
+fi
 echo "    Tmp dir:     $TMPDIR_HOST"
 echo "    Mounts:      ${!MOUNT_DIRS[*]}"
 
