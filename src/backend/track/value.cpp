@@ -1,5 +1,6 @@
 #include "value.h"
 #include <format>
+#include <limits>
 
 namespace telemetry {
 namespace track {
@@ -51,7 +52,7 @@ double Value::as_double() const {
     if (is_bool()) {
         return std::get<bool>(*data) ? 1.0 : 0.0;
     }
-    return 0.0;
+    return std::numeric_limits<double>::quiet_NaN();
 }
 
 bool Value::as_bool() const {
