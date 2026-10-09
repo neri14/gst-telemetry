@@ -28,9 +28,11 @@ Answers to the questions:
 * **Can "everything" move to the GPU?** Decode, scale/flip, composition and
   encode can (verified). Telemetry rasterisation (Cairo + Pango) could also, but a
   full rewrite is not worth it now: it's the cheapest stage in the measurements,
-  and text shaping/rendering is the hardest part to port. The worthwhile step is
-  moving **composition** to the GPU (per-widget overlay rectangles, §5.1). That
-  removes the per-frame full-4K CPU clear/composite/upload.
+  and text shaping/rendering is the hardest part to port. Composition should
+  **stay** as it is: one CPU-composited surface, one rectangle. Moving it to the
+  GPU with per-widget overlay rectangles was tried on `origin/dev/perf` and made
+  the run ~23% slower (§5.1). The single 33 MB upload per frame is not a
+  bottleneck.
 
 ---
 
@@ -49,9 +51,11 @@ gsttelemetry.c                        wrap the 33 MB buffer in ONE GstVideoOverl
 ```
 
 Widget-level caching is good (only dirty widgets re-rasterise). The full-frame
-work is the expensive part: a 33 MB clear plus composite on the CPU, a new
-rectangle every frame (so `gloverlaycompositor` re-uploads a 33 MB texture every
-frame), and on the CPU path a full-frame blend.
+work per frame is a 33 MB clear plus composite on the CPU, one new rectangle (so
+`gloverlaycompositor` uploads one 33 MB texture), and on the CPU path a
+full-frame blend. In the measurements these are not the bottleneck. 33 MB × 30
+fps ≈ 1 GB/s, a small fraction of PCIe 4.0 x16, and it is a single large upload,
+which is the cheap case for the driver (§5.1).
 
 ### 1.2 `transparent-overlay.sh` (non-test mode)
 
@@ -198,9 +202,12 @@ Also: audio is decoded and re-encoded to AAC even when the source is AAC.
 Passthrough (`demux.audio_0 ! aacparse ! mux.`) is lossless and free.
 
 ### F5. Plugin internals worth fixing (low–medium)
-* **Per-frame full-frame CPU work.** Clear + composite of 33 MB, plus a new
-  rectangle every frame, which means a 33 MB texture upload every frame. See
-  §5.1.
+* **Per-frame full-frame CPU work.** Clear + composite of 33 MB, plus one 33 MB
+  texture upload. This is acceptable: splitting it into per-widget uploads was
+  measured to be slower (§5.1). If the clear ever shows up in traces, clear only
+  the regions that were drawn into this pool buffer the last time it was used,
+  not the whole surface. That needs per-buffer dirty-rect tracking, because the
+  pool rotates buffers.
 * **Process-global hack.** `static GstVideoOverlayComposition *old_comp`
   (`gsttelemetry.c:532`) is shared by *all* element instances in the process,
   and it keeps one composition alive after `stop`. A plausible root cause for
@@ -208,8 +215,9 @@ Passthrough (`demux.audio_0 ! aacparse ! mux.`) is lossless and free.
   rectangle's pixel memory (`gst_gl_video_allocation_params_new_wrapped_data`)
   and uploads lazily. Once the composition is released, `buffer_pool_acquire`
   sees the buffer as writable and reuses it, possibly before the lazy upload has
-  happened. This is not verified. Per-widget immutable rectangles (§5.1) would
-  remove the reuse race entirely.
+  happened. This is not verified. If it holds, the fix belongs in the pool: don't
+  hand out a buffer again until the compositor has released it, rather than
+  holding the previous composition in a process-global.
 * **Unused-in-GL buffers.** Overlay buffers are plain system memory
   (`buffer_pool.c:99`). That's fine for the CPU path; in GL mode it guarantees an
   upload.
@@ -281,29 +289,59 @@ with alpha.
 
 ## 5. Moving the telemetry plugin itself to the GPU
 
-### 5.1 Level 1, recommended: GPU composition with per-widget overlay rectangles
-Instead of compositing all widget caches into one 4K surface (`Manager::draw`),
-attach **one `GstVideoOverlayRectangle` per widget cache** to the composition,
-with `FLAG_PREMULTIPLIED_ALPHA`. Then `gloverlaycompositor` (or
-`vulkanoverlaycompositor`) blends them on the GPU.
-* `gloverlaycompositor` caches textures **per rectangle pointer** [4]. If a widget
-  is unchanged, reuse the same rectangle object across frames and its texture
-  isn't re-uploaded. Only dirty widgets (small surfaces) get uploaded.
-* This removes, per frame, the 33 MB clear, the CPU composite and the 33 MB
-  upload. It needs no new GPU code and keeps CPU-mode compatibility:
-  `gst_video_overlay_composition_blend` handles N rectangles.
-* Rules:
-  * A rectangle's pixels must not be modified while it's referenced, so give
-    each widget a small double buffer, or copy into a fresh `GstBuffer` when its
-    cache changes.
-  * Moved widgets get a new rectangle (cheap; only that widget re-uploads).
-  * This also makes the `old_comp` hack unnecessary.
+### 5.1 Level 1: GPU composition with per-widget overlay rectangles (tried, rejected)
+The idea: instead of compositing all widget caches into one 4K surface
+(`Manager::draw`), attach one `GstVideoOverlayRectangle` per widget cache and
+let `gloverlaycompositor` blend them.
+
+This was already implemented and measured on `origin/dev/perf` (`cf1edc1`,
+`RESULT.md`), about 2970 frames with `example/layout.xml`:
+
+| | widget drawing | wall | CPU (user) |
+|---|---|---|---|
+| single surface, one rectangle | 30.5 ms/frame | 2m38s | 2m41s |
+| one rectangle per widget, composited on GPU | 26.9 ms/frame | **3m14s** | **3m17s** |
+
+Drawing got cheaper, because the clear and composite were gone, but the run was
+~23% slower overall. User CPU grew by the same ~37 s as wall time, ~12 ms per
+frame. That points at per-rectangle CPU and driver overhead, not PCIe bandwidth.
+For every rectangle it hasn't seen before, `gloverlaycompositor` [4]:
+* creates a `GstGLCompositionOverlay` with its own VAO plus position, texcoord
+  and index buffers, set up on the GL thread;
+* allocates a new `GstGLMemory` texture wrapping the rectangle's pixels and maps
+  it, which is a texture allocation plus a synchronous upload on the GL thread;
+* frees the overlays (textures, VAOs, buffers) that are no longer in the
+  composition;
+* draws each overlay as its own draw call.
+
+The cost scales with the **number of changed rectangles**, not with bytes. One
+33 MB upload into one texture is the cheap case. Dozens of small
+create/upload/destroy cycles per frame, each crossing to the GL thread, are the
+expensive case.
+
+The original version of this section claimed that reusing rectangle objects for
+unchanged widgets would avoid the problem. That only helps static widgets: every
+widget whose value changes each frame (speed, power, time, the chart, the
+position marker) still needs a new rectangle, and therefore a new texture and a
+new VAO, every frame. Real layouts have many such widgets, so the per-rectangle
+overhead stays. `cf1edc1` also created a new rectangle for every widget on every
+frame. With reuse, the result would be somewhere between the two rows above, and
+there's no reason to expect it to beat the single surface.
+
+**Conclusion: keep the single surface and single rectangle.** If upload ever
+needs to shrink, the GPU-side way is §5.2: one persistent full-frame texture,
+updated with `glTexSubImage2D` (ideally through a PBO) for only the union of
+dirty widget rectangles. That means few calls, no per-frame allocations and no
+per-widget VAOs. It only makes sense if a trace shows the upload as a
+bottleneck, and the measurements here don't.
 
 ### 5.2 Level 2: telemetry as a `GstGLFilter`
-Own the GL step. Upload the widget caches as textures, draw quads with
-premultiplied blending, and optionally output the unpremultiplied or matte
-variant directly. This gives more control (fused unpremultiply/matte, no meta
-negotiation), but you'd maintain GL code that 5.1 gets for free.
+Own the GL step. Keep one persistent overlay texture, update only its dirty
+regions with `glTexSubImage2D`, blend it with premultiplied blending, and
+optionally output the unpremultiplied or matte variant directly. This gives more
+control (fused unpremultiply/matte, no meta negotiation, no per-frame texture
+allocation), but you'd maintain your own GL code. Don't use per-widget textures
+here either, for the reasons in §5.1.
 
 ### 5.3 Level 2b: `telemetrysrc` for the transparent mode
 For transparent output there is no input video. A `GstPushSrc` that pushes the
@@ -336,8 +374,8 @@ incremental chart drawing.
    `GST_GL_API=opengl3`. Pass AAC audio through.
 2. **Small code fix:** `FLAG_PREMULTIPLIED_ALPHA` (F2) + unpremultiply shader
    for ProRes. This is a correctness fix for both outputs.
-3. **Medium:** per-widget rectangles (§5.1). Removes the 4K CPU
-   clear/composite/upload and the `old_comp` hack.
+3. ~~Per-widget rectangles (§5.1).~~ Tried on `origin/dev/perf`; slower. Keep
+   the single surface.
 4. **Medium:** `telemetrysrc` (§5.3) for the transparent mode.
 5. **Optional:** fill + matte NVENC mode (§4.2) as a fast "preview/draft"
    transparent output.
@@ -423,7 +461,11 @@ and the same with `MATTE`.
 
 ## 8. Not verified / caveats
 * Benchmarks use a light synthetic layout. Heavy real layouts make rendering a
-  larger share, though §5.1 helps exactly there.
+  larger share. Per-widget caching already limits re-rasterisation; per-widget
+  GPU composition does not help (§5.1).
+* The per-rectangle overhead explanation in §5.1 is read from the
+  `gloverlaycompositor` source and agrees with the `origin/dev/perf`
+  measurement. It wasn't profiled separately.
 * F2's fix was derived from GStreamer source and measured output, but not built
   and tested.
 * The `decodebin` + GLMemory deadlock wasn't root-caused (decodebin3 and explicit
