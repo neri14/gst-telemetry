@@ -42,14 +42,6 @@ private:
 
     void draw_impl(Surface& surface, time::microseconds_t timestamp, double x, double y);
 
-    void draw_text(cairo_t* cr, int width, int height, int margin,
-                   const std::string& text,
-                   const std::string& font,
-                   ETextAlign align,
-                   rgb color,
-                   double border_width,
-                   rgb border_color);
-
     std::shared_ptr<NumericParameter> x_ = nullptr;
     std::shared_ptr<NumericParameter> y_ = nullptr;
     std::shared_ptr<StringParameter> font_name_ = nullptr;

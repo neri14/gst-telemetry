@@ -1,6 +1,8 @@
 #ifndef COLOR_H
 #define COLOR_H
 
+#include "backend/utils/logging/logger.h"
+
 #include <string>
 #include <map>
 #include <limits>
