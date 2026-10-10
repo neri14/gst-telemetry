@@ -110,13 +110,42 @@ PROPERTIES="offset=$OFFSET_VALUE"
 [ -n "$LAYOUT_FILE" ]      && PROPERTIES="$PROPERTIES layout=$LAYOUT_FILE"
 [ -n "$CUSTOM_DATA_FILE" ] && PROPERTIES="$PROPERTIES custom-data=$CUSTOM_DATA_FILE"
 
-# ── GPU pipeline (always on) ─────────────────────────────────────────────────
-PIPELINE="gst-launch-1.0 filesrc location=$INPUT_FILE ! decodebin name=dec \
-dec. ! queue ! video/x-raw ! videoconvert ! glupload ! \
-glvideoflip video-direction=auto ! taginject tags=\"image-orientation=rotate-0\" ! gltransformation ! 'video/x-raw(memory:GLMemory),width=3840,height=2160' ! \
+# ── GPU pipeline (always on), runs inside the container ─────────────────────
+PIPELINE=$(cat <<'EOF'
+set -uo pipefail
+
+# NVDEC outputs GL memory only into a desktop GL context (not GLES)
+export GST_GL_API=opengl3
+
+# AAC is passed through, other audio is re-encoded, no audio stream means no audio branch
+AUDIO_CODEC=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of csv=p=0 "$INPUT_FILE")
+case "$AUDIO_CODEC" in
+    aac)
+        DECODE_CAPS="video/x-raw(ANY);audio/mpeg,mpegversion=4"
+        AUDIO_BRANCH="dec. ! queue ! aacparse ! queue ! mux."
+        ;;
+    "")
+        DECODE_CAPS="video/x-raw(ANY)"
+        AUDIO_BRANCH=""
+        ;;
+    *)
+        DECODE_CAPS="video/x-raw(ANY);audio/x-raw(ANY)"
+        AUDIO_BRANCH="dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux."
+        ;;
+esac
+echo "    Audio:       ${AUDIO_CODEC:-none}"
+
+# decodebin3, not decodebin: decodebin deadlocks when the decoder negotiates GL memory.
+# NVDEC GL memory passes through videoconvert; software-decoded frames are converted to NV12
+# (glupload accepts e.g. I422_10LE from ProRes but renders it wrong).
+exec gst-launch-1.0 filesrc location=$INPUT_FILE ! decodebin3 name=dec caps="\"$DECODE_CAPS\"" \
+dec. ! queue ! videoconvert ! 'video/x-raw(memory:GLMemory);video/x-raw,format=NV12' ! glupload ! glcolorconvert ! 'video/x-raw(memory:GLMemory),format=RGBA' ! \
+glvideoflip video-direction=auto ! taginject tags="image-orientation=rotate-0" ! gltransformation ! 'video/x-raw(memory:GLMemory),width=3840,height=2160' ! \
 telemetry $PROPERTIES ! 'video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)' ! gloverlaycompositor ! nvh264enc bitrate=120000 ! h264parse ! queue ! mux. \
-dec. ! queue ! audio/x-raw ! audioconvert ! audioresample ! avenc_aac bitrate=128000 ! queue ! mux. \
-mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE"
+$AUDIO_BRANCH \
+mp4mux name=mux faststart=true ! filesink location=$OUTPUT_FILE
+EOF
+)
 
 # ── run ──────────────────────────────────────────────────────────────────────
 # Clear stale GStreamer plugin registry so nvenc elements are freshly discovered
@@ -133,6 +162,9 @@ docker run --rm \
     --user "$(id -u):$(id -g)" \
     -t \
     -e GST_GL_WINDOW=surfaceless \
+    -e "INPUT_FILE=$INPUT_FILE" \
+    -e "OUTPUT_FILE=$OUTPUT_FILE" \
+    -e "PROPERTIES=$PROPERTIES" \
     -e "TMPDIR=$TMPDIR_HOST" \
     -e "HOME=$TMPDIR_HOST" \
     $VOLUME_ARGS \
