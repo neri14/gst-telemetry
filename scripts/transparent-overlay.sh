@@ -13,6 +13,7 @@ CUSTOM_DATA_FILE=""
 OFFSET_VALUE="0"
 DEV_MODE=false
 TEST_MODE=false
+CPU_PRORES=false
 TEST_BG_COLOR="0x808080ff"
 
 normalize_test_bg_color() {
@@ -86,6 +87,10 @@ while [[ $# -gt 0 ]]; do
                 shift
             fi
             ;;
+        --cpu-prores)
+            CPU_PRORES=true
+            shift
+            ;;
         --test-bg-color)
             TEST_BG_COLOR="$(normalize_test_bg_color "$2")"
             shift 2
@@ -99,7 +104,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ -z "$OUTPUT_FILE" ] || [ -z "$TRACK_FILE" ] || [ -z "$LAYOUT_FILE" ]; then
-    echo "Usage: $0 --track <track_file> --layout <layout_file> [--custom-data <file>] [--offset <offset_value>] [--length <output_length_in_seconds>] [--width <output_width>] [--height <output_height>] [--fps <output_fps>] [--dev] [test|--test [color]] [--test-bg-color <color>] --output <output_file.mov|output_file.mp4>"
+    echo "Usage: $0 --track <track_file> --layout <layout_file> [--custom-data <file>] [--offset <offset_value>] [--length <output_length_in_seconds>] [--width <output_width>] [--height <output_height>] [--fps <output_fps>] [--dev] [test|--test [color]] [--test-bg-color <color>] [--cpu-prores] --output <output_file.mov|output_file.mp4>"
     exit 1
 fi
 
@@ -140,6 +145,16 @@ fi
 export TMPDIR=".tmp"
 export GST_GL_WINDOW="surfaceless"
 
+# Transparent background generated on the GPU (gltestsrc has no transparent pattern).
+CLEAR_SHADER='#ifdef GL_ES
+precision mediump float;
+#endif
+varying vec2 v_texcoord;
+uniform sampler2D tex;
+void main () {
+  gl_FragColor = vec4 (0.0);
+}'
+
 # The plugin's overlay is premultiplied (cairo ARGB32); ProRes 4444 alpha is read
 # as straight by NLEs, so unpremultiply after compositing onto the transparent frame.
 UNPREMULTIPLY_SHADER='#ifdef GL_ES
@@ -156,6 +171,13 @@ void main () {
   gl_FragColor = c.a > 0.0 ? vec4 (c.rgb / c.a, c.a) : vec4 (0.0);
 }'
 
+# GPU ProRes encoder, FFmpeg >= 8.1 with a working Vulkan device
+prores_vulkan_available() {
+    ffmpeg -hide_banner -loglevel error -f lavfi -i color=black:s=64x64:d=0.1 \
+        -init_hw_device vulkan=vk -filter_hw_device vk -vf format=yuva444p10le,hwupload \
+        -c:v prores_ks_vulkan -profile:v 4444 -f null - >/dev/null 2>&1
+}
+
 if $TEST_MODE; then
     gst-launch-1.0 -e videotestsrc pattern=solid-color foreground-color=$TEST_BG_COLOR num-buffers=$TOTAL_FRAMES \
         ! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
@@ -164,13 +186,34 @@ if $TEST_MODE; then
         ! glcolorscale ! "video/x-raw(memory:GLMemory),width=1920,height=1080" \
         ! glcolorconvert ! "video/x-raw(memory:GLMemory),format=NV12" \
         ! nvh264enc bitrate=60000 ! h264parse ! mp4mux faststart=true ! filesink location=$OUTPUT_FILE
+elif ! $CPU_PRORES && prores_vulkan_available; then
+    echo "Encoder: prores_ks_vulkan"
+    gst-launch-1.0 -q -e gltestsrc pattern=black num-buffers=$TOTAL_FRAMES \
+        ! "video/x-raw(memory:GLMemory),format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1" \
+        ! glshader fragment="\"$CLEAR_SHADER\"" \
+        ! telemetry $PROPERTIES ! "video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)" ! queue \
+        ! gloverlaycompositor ! glshader fragment="\"$UNPREMULTIPLY_SHADER\"" ! gldownload \
+        ! video/x-raw,format=RGBA ! queue ! fdsink fd=1 \
+    | ffmpeg -hide_banner -loglevel warning -stats -y \
+        -f rawvideo -pix_fmt rgba -s "${OUTPUT_WIDTH}x${OUTPUT_HEIGHT}" -framerate "$OUTPUT_FPS" -i - \
+        -init_hw_device vulkan=vk -filter_hw_device vk \
+        -vf scale=out_color_matrix=bt709:out_range=tv,format=yuva444p10le,setparams=color_primaries=bt709:color_trc=bt709:colorspace=bt709:range=tv,hwupload \
+        -c:v prores_ks_vulkan -profile:v 4444 -async_depth 4 \
+        "$OUTPUT_FILE"
+    STATUS=("${PIPESTATUS[@]}")
+    if [ "${STATUS[0]}" -ne 0 ] || [ "${STATUS[1]}" -ne 0 ]; then
+        echo "Error: pipeline failed (gst-launch=${STATUS[0]}, ffmpeg=${STATUS[1]})." >&2
+        rm -rf "$TMPDIR"
+        exit 1
+    fi
 else
-    gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES \
-        ! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
-        ! alpha alpha=0.0 ! videoconvert ! glupload ! "video/x-raw(memory:GLMemory),width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,format=RGBA" \
+    echo "Encoder: avenc_prores_ks (CPU)"
+    gst-launch-1.0 -e gltestsrc pattern=black num-buffers=$TOTAL_FRAMES \
+        ! "video/x-raw(memory:GLMemory),format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1" \
+        ! glshader fragment="\"$CLEAR_SHADER\"" \
         ! telemetry $PROPERTIES ! "video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)" ! gloverlaycompositor \
         ! glshader fragment="\"$UNPREMULTIPLY_SHADER\"" ! gldownload \
-        ! videoconvert ! video/x-raw,format=A444_10LE ! avenc_prores_ks profile=4 threads=0 ! qtmux ! filesink location=$OUTPUT_FILE
+        ! videoconvert n-threads=0 ! video/x-raw,format=A444_10LE ! avenc_prores_ks profile=4 threads=0 ! qtmux ! filesink location=$OUTPUT_FILE
 fi
 
 rm -rf "$TMPDIR"
