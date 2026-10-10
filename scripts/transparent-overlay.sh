@@ -140,6 +140,22 @@ fi
 export TMPDIR=".tmp"
 export GST_GL_WINDOW="surfaceless"
 
+# The plugin's overlay is premultiplied (cairo ARGB32); ProRes 4444 alpha is read
+# as straight by NLEs, so unpremultiply after compositing onto the transparent frame.
+UNPREMULTIPLY_SHADER='#ifdef GL_ES
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+#endif
+varying vec2 v_texcoord;
+uniform sampler2D tex;
+void main () {
+  vec4 c = texture2D (tex, v_texcoord);
+  gl_FragColor = c.a > 0.0 ? vec4 (c.rgb / c.a, c.a) : vec4 (0.0);
+}'
+
 if $TEST_MODE; then
     gst-launch-1.0 -e videotestsrc pattern=solid-color foreground-color=$TEST_BG_COLOR num-buffers=$TOTAL_FRAMES \
         ! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
@@ -152,7 +168,8 @@ else
     gst-launch-1.0 -e videotestsrc pattern=black num-buffers=$TOTAL_FRAMES \
         ! video/x-raw,format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1 \
         ! alpha alpha=0.0 ! videoconvert ! glupload ! "video/x-raw(memory:GLMemory),width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,format=RGBA" \
-        ! telemetry $PROPERTIES ! "video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)" ! gloverlaycompositor ! gldownload \
+        ! telemetry $PROPERTIES ! "video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)" ! gloverlaycompositor \
+        ! glshader fragment="\"$UNPREMULTIPLY_SHADER\"" ! gldownload \
         ! videoconvert ! video/x-raw,format=A444_10LE ! avenc_prores_ks profile=4 threads=0 ! qtmux ! filesink location=$OUTPUT_FILE
 fi
 

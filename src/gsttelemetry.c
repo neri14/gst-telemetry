@@ -506,7 +506,7 @@ gst_telemetry_transform_frame_ip (GstVideoFilter * filter, GstVideoFrame * frame
       overlay_buffer,
       0, 0,  // x, y position on video
       telemetry->overlay_width, telemetry->overlay_height,  // render width, height
-      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);  // cairo ARGB32 is premultiplied
 
   // Create composition
   GstVideoOverlayComposition *comp = gst_video_overlay_composition_new(rect);
