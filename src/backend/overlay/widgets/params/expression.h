@@ -26,6 +26,7 @@ private:
     double value_ = std::numeric_limits<double>::quiet_NaN();
 
     exprtk::expression<double> expression_;
+    std::string expression_str_;
     std::map<track::field_id_t, double> variables_;
     std::shared_ptr<track::Track> track_;
 

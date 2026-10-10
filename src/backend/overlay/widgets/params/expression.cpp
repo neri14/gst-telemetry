@@ -5,7 +5,7 @@ namespace overlay {
 
 Expression::Expression(const std::string& expression_str,
                        std::shared_ptr<track::Track> track)
-            : track_(track) {
+            : expression_str_(expression_str), track_(track) {
     std::vector<std::string> variable_list;
     if (!exprtk::collect_variables(expression_str, variable_list)) {
         log.error("Failed to collect variables from expression: {}", expression_str);
@@ -65,7 +65,8 @@ double Expression::evaluate(time::microseconds_t timestamp) {
         }
     }
     if (invalid) {
-        log.warning("One or more variables are NaN at timestamp {}, expression evaluation skipped.", timestamp);
+        log.debug("One or more variables are NaN at timestamp {}, expression evaluation skipped.", timestamp);
+        log.debug("In expression: {}", expression_str_);
         return 0.0;
     }
 
