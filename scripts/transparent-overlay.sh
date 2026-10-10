@@ -188,12 +188,13 @@ if $TEST_MODE; then
         ! nvh264enc bitrate=60000 ! h264parse ! mp4mux faststart=true ! filesink location=$OUTPUT_FILE
 elif ! $CPU_PRORES && prores_vulkan_available; then
     echo "Encoder: prores_ks_vulkan"
+    # Frames go through fd 3; stdout goes to stderr so plugin logs can't end up in the video stream.
     gst-launch-1.0 -q -e gltestsrc pattern=black num-buffers=$TOTAL_FRAMES \
         ! "video/x-raw(memory:GLMemory),format=RGBA,width=$OUTPUT_WIDTH,height=$OUTPUT_HEIGHT,framerate=$OUTPUT_FPS/1" \
         ! glshader fragment="\"$CLEAR_SHADER\"" \
         ! telemetry $PROPERTIES ! "video/x-raw(memory:GLMemory,meta:GstVideoOverlayComposition)" ! queue \
         ! gloverlaycompositor ! glshader fragment="\"$UNPREMULTIPLY_SHADER\"" ! gldownload \
-        ! video/x-raw,format=RGBA ! queue ! fdsink fd=1 \
+        ! video/x-raw,format=RGBA ! queue ! fdsink fd=3 3>&1 1>&2 \
     | ffmpeg -hide_banner -loglevel warning -stats -y \
         -f rawvideo -pix_fmt rgba -s "${OUTPUT_WIDTH}x${OUTPUT_HEIGHT}" -framerate "$OUTPUT_FPS" -i - \
         -init_hw_device vulkan=vk -filter_hw_device vk \
